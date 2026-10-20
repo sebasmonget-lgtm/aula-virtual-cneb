@@ -21,7 +21,8 @@ export function createAIProviderForPlan(executionPlan, options = {}) {
     return new OpenAIProvider({
       apiKey: options.apiKey,
       client: options.client,
-      timeoutMs: options.timeoutMs,
+      // A family report contains all competencies; brief individual analyses keep their budget.
+      timeoutMs: options.timeoutMs ?? (executionPlan.workflow === "family_report" ? 90_000 : undefined),
       model: executionPlan.model,
       background: options.background,
       resumeResponseId: options.resumeResponseId,

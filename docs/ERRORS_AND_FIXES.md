@@ -2,6 +2,8 @@
 
 ## 2026-10-20 — Lenguaje formal heredado en el informe familiar
 
+Durante el smoke real de diez lecturas familiares, cinco propuestas quedaron preparadas y cinco agotaron los 30 s del proveedor. La prueba individual había durado 31,4 s con presupuesto explícito de 90 s: el factory seguía usando el límite general de 30 s en cloud. Se asignan 90 s a informes completos, sin cambiar análisis/conclusiones ni concurrencia, reintentos automáticos o datos guardados. Recuperar solo pendientes tras desplegar; verificar diez propuestas completas antes del alias. Prueba del factory cubre presupuesto específico y override.
+
 Síntoma: un mejor diseño seguía mostrando explicaciones difíciles o propuestas como apoyos realizados. Causa: copia literal de la conclusión formal y encabezado «Qué ayudó» para un campo que también contiene propuestas. Corrección: original preservado y lectura familiar separada, editable y vinculada por huella; instrucciones distinguen hechos, apoyos realizados y futuras propuestas, con ayudas concretas. Lector común en interfaz, Documentos y Word; compatibilidad histórica y actualización explícita.
 
 Validación: fuente intacta al editar la lectura, fuente cambiada rechazada, controles de suficiencia y contenido prohibido también en la lectura, Word imprime versión sencilla sin modificar nota ni fuente. Muestra real de doce competencias válida sin fallback y doce páginas inspeccionadas. Conciliación QA antes/después en recibos privados. Prevención: no convertir una mejora de redacción en edición silenciosa de la evaluación docente ni inventar dificultades/apoyos para llenar campos. Ver QA_LENGUAJE_SENCILLO_2026-10-20.md para límites y publicación.

@@ -14,6 +14,8 @@ Prueba real de un informe con doce competencias: Luna medium, 31,4 s, una llamad
 
 La publicación Preview, smoke y conciliación de fuentes se registran en deploy.json, smoke.json, data-after.json y release.json de esa carpeta. No considerar publicación completada sin esos recibos. Solo QA aislado, funciones gru1; Producción conserva su deployment.
 
+La prueba cloud de diez informes detectó cinco timeouts del proveedor a los 30 s; cinco propuestas quedaron guardadas. El informe de doce competencias necesita un margen distinto del análisis breve. Se configura 90 s solo para `family_report`, manteniendo override explícito, concurrencia seis, lease 210 s y función 300 s. Reintentar únicamente los pendientes de forma explícita conserva los resultados completos. El tiempo del resto de workflows no cambia. Validación y recuperación efectiva en recibos privados posteriores.
+
 ## Referencias pedagógicas
 
 CNEB, apartado de evaluación formativa: conclusiones desde evidencia variada con avances, dificultades y recomendaciones. FAQ Minedu 2024: personalizadas, por competencia, con apoyos/ajustes cuando correspondan. No se encontró extensión obligatoria en los documentos consultados; el rango es propio de Ayni. RVM 048-2024 modifica 094-2020: Inicial ciclo II requiere conclusiones A/B/C; AD a criterio docente. El requisito familiar de contar con un texto por competencia es una decisión del producto y no cambia esa regla de cierre.
