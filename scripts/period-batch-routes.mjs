@@ -11,12 +11,14 @@ import { assessmentStudentNames } from "../src/lib/assessment-v4-service.mjs";
 import { buildDescriptiveConclusionInput, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
 import { preserveConfirmedFamilySections, buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, validateFamilyReport } from "../src/lib/family-report-v4-service.mjs";
 import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
-import { loadComputedAssessmentContext } from "./assessment-master-routes.mjs";
+import { loadAssessmentMasterSources, loadComputedAssessmentContext } from "./assessment-master-routes.mjs";
 import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs";
 import { evaluationNeedsEarlyWarning } from '../src/lib/evaluation-preparation.mjs';
+import {analysisFailure,analysisOutcome,nextAnalysisTasks,allowManualAnalysisRetry} from '../src/lib/evaluation-analysis-recovery.mjs';
 import { limaToday } from '../src/lib/activity-schedule-integrity.mjs';
 
 const WORKFLOW = "period_evaluation_batch_v1";
+const ANALYSIS_CONCURRENCY = 8;
 import { stableFingerprint } from "../src/lib/source-fingerprint-v4.mjs";
 const hash = stableFingerprint;
 const taskSource = task => ({key:key(task),snapshot:task.snapshot,...(task.family_context_fingerprint?{family_context_fingerprint:task.family_context_fingerprint}:{})});
@@ -171,43 +173,58 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson
         if(Date.parse(current.lease_until)>Date.now())throw new VersionConflictError("La preparación sigue en curso. Consulta el avance.");
         if(body.retryUncertain!==true)throw new VersionConflictError("La respuesta se interrumpió. Confirma Reintentar para repetir solo el texto pendiente.");
       }
+      if(current.kind==='analysis'&&body.retryUncertain===true)current.failures=allowManualAnalysisRetry(current.failures);
       const prior=current.lease_token;current.lease_token=randomUUID();current.lease_until=new Date(Date.now()+210000).toISOString();current.status="running";current.error=null;
       await put(id,current,prior,tx);return current;
     });
     if(action==="save"||["ready","saved"].includes(job.status)){send(response,200,publicJob(id,job),origin);return true;}
     if(job.kind==='analysis'){
-      const todo=job.tasks.filter(task=>!job.results.some(result=>key(result)===key(task))).slice(0,3);
+      const todo=nextAnalysisTasks(job,ANALYSIS_CONCURRENCY);
+      job.failures??={};
+      if(!todo.length){Object.assign(job,analysisOutcome(job));job.revision++;await put(id,job,job.lease_token);send(response,200,publicJob(id,job),origin);return true;}
+      // Read the shared classroom context once per group; never cache it across requests.
+      const shared=context(data.classroom.id,data.period.id).then(async fresh=>({
+        fresh,preparedSource:await loadAssessmentMasterSources(db,fresh.classroom,fresh.period),
+        names:assessmentStudentNames(fresh.model.students),
+        cachedTasks:new Map(batchTasks(fresh.model,'analysis').map(item=>[key(item),item])),
+      }));
       let checkpoint=Promise.resolve();
-      const completed=await Promise.allSettled(todo.map(async task=>{
-        const fresh=await context(data.classroom.id,data.period.id);
+      // Provider calls overlap; each validated result is saved and checkpointed by one writer.
+      // A failed save must not prevent the other independent results from being preserved.
+      const persist=build=>{
+        const saved=checkpoint.then(async()=>{const result=await build();job.results.push(result);delete job.failures[key(result)];job.revision++;await put(id,job,job.lease_token);});
+        checkpoint=saved.catch(()=>{});return saved;
+      };
+      await Promise.allSettled(todo.map(async task=>{
+        let phase='prepare';
+        try{
+        const {fresh,preparedSource,names,cachedTasks}=await shared;
         const row=fresh.model.rows.find(row=>row.student_id===task.student_id&&row.competency_v4_id===task.competency_id);
         if(!row||hash(assessmentSourceSnapshot(row.sourceRows))!==hash(task.snapshot))throw new VersionConflictError('Las observaciones cambiaron. Revisa los análisis pendientes.');
-        const cached=batchTasks(fresh.model,'analysis').find(item=>key(item)===key(task))?.existing;
-        let result;
-        if(cached)result={...task,proposal:cached.details,saved_id:cached.id,metadata:{source:'existing_canonical'}};
+        const cached=cachedTasks.get(key(task))?.existing;
+        if(cached){phase='save';await persist(async()=>({...task,proposal:cached.details,saved_id:cached.id,metadata:{source:'existing_canonical'}}));}
         else{
-          const names=assessmentStudentNames(fresh.model.students),person=fresh.model.students.find(student=>student.id===task.student_id);
-          const computed=await loadComputedAssessmentContext(db,fresh.classroom,fresh.period,fresh.cards,row.sourceRows,task.competency_id,names);
+          const person=fresh.model.students.find(student=>student.id===task.student_id);
+          const computed=await loadComputedAssessmentContext(db,fresh.classroom,fresh.period,fresh.cards,row.sourceRows,task.competency_id,names,preparedSource);
           const input=buildBriefAssessmentInput({age:Number(fresh.classroom.age),competencyId:task.competency_id,studentName:[person.first_name,person.last_name].filter(Boolean).join(' '),sourceRows:row.sourceRows,period:fresh.period,
             applicability:{castellanoL2Applicable:fresh.classroom.castellano_l2_applicable,religionApplicable:fresh.classroom.religion_applicable}});
           const plan={...resolveAIExecutionPlan({workflow:'assessment',task:'brief_trial'}),fallback:null};
-          const response=await generate(input,{executionPlan:plan,providerFactory:createProvider});
+          phase='generation';const response=await generate(input,{executionPlan:plan,providerFactory:createProvider});
+          phase='validation';
           const brief=validateBriefAssessment(response.output,input),generated={...response,output:briefAssessmentAsAnalysis(brief)};
           validateAssessmentProposal(generated.output,task.competency_id,row.sourceRows.length);
           const metadata={analysis:metadataForAudit(generated.metadata),source_batch_id:id,brief_assessment:brief};
-          const saved=await savePeriodEvaluationDraft(db,{studentId:task.student_id,competencyId:task.competency_id,period:fresh.period,sourceRows:row.sourceRows,analysis:generated.output,metadata,
+          phase='save';await persist(async()=>{const saved=await savePeriodEvaluationDraft(db,{studentId:task.student_id,competencyId:task.competency_id,period:fresh.period,sourceRows:row.sourceRows,analysis:generated.output,metadata,
             teacherAnalysis:generated.output.evidence_overview,provisionalLevel:row.draft?.provisional_level??row.assessment?.achievement_level??null,teacherJustification:row.draft?.draft_teacher_justification??row.assessment?.teacher_justification??'',
             assessmentMasterId:computed.id,assessmentMasterSnapshot:computed.source_snapshot,expectedDraftRevision:row.draft?Number(row.draft.revision):null,expectedEvidenceFingerprint:createHash('sha256').update(JSON.stringify(task.snapshot)).digest('hex'),
             loadCurrent:async tx=>{await assertPeriodOpen(tx,fresh.classroom.id,fresh.period.id);const latest=await loadRows(tx,{classroomId:fresh.classroom.id,period:fresh.period,applicableIds:new Set(fresh.cards.map(card=>card.id))});return latest.rows.find(item=>item.student_id===task.student_id&&item.competency_v4_id===task.competency_id)?.sourceRows??[];}});
-          result={...task,proposal:generated.output,saved_id:saved.id,metadata};
+          return {...task,proposal:generated.output,saved_id:saved.id,metadata};});
         }
-        job.results.push(result);job.revision++;
-        checkpoint=checkpoint.then(()=>put(id,job,job.lease_token));await checkpoint;
+        }catch(error){job.failures[key(task)]=analysisFailure(error,phase,job.failures[key(task)]);throw error;}
       }));
       await checkpoint;
-      const failure=completed.find(result=>result.status==='rejected');
-      job.status=job.results.length===job.tasks.length?'ready':failure?'paused':'queued';
-      job.error=failure?'Algunos análisis necesitan reintento. Los que ya están guardados se conservan.':null;
+      // Each settled failure has a safe category in the durable payload, without raw observations or SQL errors.
+      Object.assign(job,analysisOutcome(job));
       job.revision++;await put(id,job,job.lease_token);send(response,200,publicJob(id,job),origin);return true;
     }
     const task=job.tasks.find(task=>!job.results.some(result=>key(result)===key(task)));

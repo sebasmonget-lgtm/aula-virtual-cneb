@@ -1050,3 +1050,17 @@ Antes de publicar: rama remota sincronizada en 78bb172, 89 regresiones y lint/ty
 ## 2026-10-20 — Observaciones visibles y entrada a Evaluar por fecha
 
 No hubo pérdida de datos: Chrome mostraba B1 con reloj QA 16/02, mientras las 140 observaciones están en B4; hashes cloud idénticos a la publicación anterior. Entrar desde Evaluar vuelve al bimestre de la fecha del servidor; selector manual y enlaces explícitos conservados. Contadores positivos de niños/competencias observadas, sin «por confirmar». Captura y revisión dicen Guardar, sin confirmación adicional de observaciones; estados internos/decisión docente de competencias y notas intactos. Preparación breve y vacío específico del bimestre. 92 regresiones distintas, lint/typecheck/builds y UI local escritorio/390px PASS; cero IA pagada. Detalle y rollback: docs/qa/QA_EVALUAR_CLARIDAD_PERIODO_2026-10-20.md. Solo Preview; recibo real se verifica después del commit.
+
+
+## 2026-10-20 — Evaluación: ocho análisis paralelos y preparación compartida
+
+Se mide el proveedor con 3/6/8/12 concurrencias: 48 llamadas reales Luna low, cero fallos de API/timeout; 47 salidas válidas y una rechazada por nombre/párrafo. Coste adicional estimado USD0,01299834, guardia previa bajo máximo QA6. Doce pasa el proveedor, ocho queda como techo conservador por grupo. Se comparte contexto/fuente del aula solo en la petición y se serializan guardado/checkpoint; se revalidan evidencia/revisión/cierre por resultado. Carga local 20×6=120,15 grupos, ocho proveedores/un escritor, sin duplicar ni confirmar notas; conflicto conserva otros siete y lectura fallida no llama IA.57 regresiones, lint/typecheck/Vinext PASS; Next/publicación se verifican antes de entrega. No reiniciar el lote QA activo. Detalle: docs/qa/QA_EVALUAR_CONCURRENCIA_2026-10-20.md.
+
+
+Cierre de verificación de concurrencia:57 pruebas, lint/typecheck y ambos builds PASS. Código local preparado con techo8; sin commit/push/publicación de esta ronda. El lote cloud previo permanece pausado con41/120, causa individual no disponible en su payload; no se reinicia ni se atribuye ese fallo a concurrencia.
+
+## 2026-10-20 — Recuperación del lote y tolerancia editorial
+
+Tras la captura estancada, el mismo lote se retoma desde UI y avanza de41 a61/120 sin reset; vuelve a pausarse en la versión previa, que no registra causa individual. Se corrige que cualquier rechazo detenga todos los pares, más error local que bloquea una cola ya reconciliada y consulta fallida que no vuelve a programarse. Categorías seguras por par, primero pendientes nuevos y como máximo un reintento automático solo de respuesta recibida/rechazada; timeouts inciertos requieren acción explícita, saldo/acceso/límites/contexto/fuentes detienen con causa. Ocho proveedores/un escritor y fuentes compartidas por grupo.
+
+Nueva indicación del usuario: 30–70 palabras orientativas, aceptación20–100, sin contar rígidamente oraciones y normalizando espacios. Prompt explica actuación/interpretación/apoyo o foco; conserva fuentes, identidad y prohibición de notas.80 regresiones distintas PASS; UI local simulada comprueba recuperación de POST/consulta y reanudación. Los resultados efectivos de lint/typecheck/builds, publicación Preview y continuación cloud se registran en recibos locales de entrega. No migración, eliminación ni notas confirmadas;10 niños/140 observaciones/430 asistencias y análisis previos conservados. QA_EVALUAR_RECUPERACION_2026-10-20.md documenta límites y rollback.

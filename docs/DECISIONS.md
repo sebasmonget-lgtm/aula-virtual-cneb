@@ -1447,3 +1447,12 @@ High comparativo histórico:12 llamadas válidas, promedio11,29s y proyección n
 ## 2026-10-20 — Fecha al entrar; observaciones se guardan
 
 Nueva entrada desde la navegación principal Evaluar usa la fecha vigente del servidor; el reloj de QA solo afecta a la cuenta Preview habilitada. La profesora puede cambiar bimestre y usar enlaces históricos explícitos. Nunca elegir automáticamente un período por tener más observaciones. El vacío se refiere al bimestre seleccionado. Eliminar lenguaje de confirmación de observaciones de la interfaz: Guardar incluye la selección docente disponible; conservar versionado, permisos y trazabilidad interna. Las valoraciones AD/A/B/C, informes y cierres sí requieren decisión docente. Contadores de consulta muestran niños y competencias observadas, sin confundirlos con notas.
+
+
+## 2026-10-20 — Paralelismo acotado del análisis
+
+Tras solicitud de reducir espera, ocho análisis simultáneos por grupo; modelo low y contrato sin notas permanecen. Doce solo se valida como muestra de proveedor, sin declarar máximo universal. Compartir fuentes de aula dentro de la petición, mantener identidad y criterios individuales; un escritor guarda cada resultado y checkpoint. Fallos/conflictos aislados conservan el resto y no disparan reintentos automáticos. La siguiente petición puede continuar trabajos del formato existente sin resetearlos. No aumentar conexiones ni límites globales del proveedor.
+
+## 2026-10-20 — Extensión orientativa y recuperación individual
+
+La solicitud posterior sustituye el conteo rígido: 30–70 palabras y dos/tres oraciones son recomendaciones; aceptar 20–100 palabras, normalizando espacios sin reescribir ni truncar. Mantener identidad, referencias propias/de edad y ausencia de notas sugeridas. Prompt centrado en actuación observada, interpretación y apoyo registrado o foco pertinente. Para continuidad se revisa la decisión de no repetir automáticamente: solo una respuesta recibida y rechazada admite un reintento automático, máximo uno por intento explícito. Continuar primero los pares nuevos; timeout no se repite solo, saldo/acceso/rate-limit/fuentes se informan sin bucle. Conservar resultados, historial de intentos y decisiones docentes. Ver QA_EVALUAR_RECUPERACION_2026-10-20.md.

@@ -845,24 +845,25 @@ test('análisis breve no devuelve notas, conserva la elección vacía y reutiliz
  }finally{await f.db.close();}
 });
 
-test('preparación completa: tres llamadas en paralelo, resultados persistidos y cero notas confirmadas',async()=>{
+test('preparación completa: ocho llamadas en paralelo, resultados persistidos y cero notas confirmadas',async()=>{
  let active=0,peak=0,release;
  const gate=new Promise(resolve=>{release=resolve;});
- const f=await fixture({batchProvider:async input=>{active++;peak=Math.max(peak,active);if(peak===3)release();await gate;active--;return mockBrief(input);}});try{
- for(const [student,name] of [[studentB,null],['00000000-0000-4000-8000-000000000403','Ada'],['00000000-0000-4000-8000-000000000404','Leo']]){
+ const f=await fixture({batchProvider:async input=>{active++;peak=Math.max(peak,active);if(peak===8)release();await gate;active--;return mockBrief(input);}});try{
+ for(const [i,name] of [null,'Ada','Leo','Ana','Luz','Mar','Eva','Noa','Paz'].entries()){
+   const student=i===0?studentB:`00000000-0000-4000-8000-${String(402+i).padStart(12,'0')}`;
    if(name)await f.db.query("insert into students values($1,$2,'active',$3,'Flores',null)",[student,classId,name]);
    await f.db.query("insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values(gen_random_uuid(),$1,$2,$3,'2026-04-12T12:00:00Z','2026-04-12','Explicó una idea y respondió a su compañero.')",[student,activity,criterion]);
  }
  const scope={classroomId:classId,periodId:firstPeriod,kind:'analysis'};
- const started=await f.call('POST','/api/period-evaluations/batches',scope);assert.equal(started.status,202,JSON.stringify(started.body));assert.equal(started.body.total,4);assert.equal(f.calls.length,0);
+ const started=await f.call('POST','/api/period-evaluations/batches',scope);assert.equal(started.status,202,JSON.stringify(started.body));assert.equal(started.body.total,10);assert.equal(f.calls.length,0);
  const path=`/api/period-evaluations/batches/${started.body.id}/run`;
- let run=await f.call('POST',path,scope);assert.equal(run.status,200,JSON.stringify(run.body));assert.equal(run.body.completed,3);assert.equal(peak,3);assert.equal(run.body.status,'queued');
- run=await f.call('POST',path,scope);assert.equal(run.body.status,'ready');assert.equal(run.body.completed,4);assert.equal(f.calls.length,4);
+ let run=await f.call('POST',path,scope);assert.equal(run.status,200,JSON.stringify(run.body));assert.equal(run.body.completed,8);assert.equal(peak,8);assert.equal(run.body.status,'queued');
+ run=await f.call('POST',path,scope);assert.equal(run.body.status,'ready');assert.equal(run.body.completed,10);assert.equal(f.calls.length,10);
  const reentered=await f.call('GET','/api/period-evaluations/batches?'+new URLSearchParams(scope));assert.equal(reentered.body.job.status,'ready');
  const repeated=await f.call('POST','/api/period-evaluations/batches',scope);assert.equal(repeated.body.id,started.body.id);
- await f.call('POST',path,scope);assert.equal(f.calls.length,4,'No IA por volver a entrar o repetir un run terminado');
+ await f.call('POST',path,scope);assert.equal(f.calls.length,10,'No IA por volver a entrar o repetir un run terminado');
  const notes=(await f.db.query("select achievement_level,provisional_level,teacher_confirmed_at,generation_metadata from competency_assessments where status='draft'")).rows;
- assert.equal(notes.length,4);assert.ok(notes.every(row=>!row.achievement_level&&!row.provisional_level&&!row.teacher_confirmed_at&&!Object.hasOwn(row.generation_metadata.brief_assessment,'suggested_level')));
+ assert.equal(notes.length,10);assert.ok(notes.every(row=>!row.achievement_level&&!row.provisional_level&&!row.teacher_confirmed_at&&!Object.hasOwn(row.generation_metadata.brief_assessment,'suggested_level')));
  const forbidden=await f.call('POST',`/api/period-evaluations/batches/${started.body.id}/save`,scope);assert.equal(forbidden.status,422);
  }finally{release();await f.db.close();}
 });
@@ -872,6 +873,108 @@ test('preparación anticipada exige confirmación, antes de iniciar llamadas IA'
  const future=(await f.db.query('select id from evaluation_periods where ordinal=4')).rows[0].id;
  const response=await withPedagogicalClock({date:'2026-10-20',time:'08:00'},()=>f.call('POST','/api/period-evaluations/batches',{classroomId:classId,periodId:future,kind:'analysis'}));
  assert.equal(response.status,409,JSON.stringify(response.body));assert.match(response.body.message,/aún no termina/);assert.equal(f.calls.length,0);
+ }finally{await f.db.close();}
+});
+
+test('carga de 120 análisis: ocho proveedores, un escritor, contexto común por grupo y ninguna duplicación',async()=>{
+ let active=0,peak=0;
+ const f=await fixture({batchProvider:async input=>{active++;peak=Math.max(peak,active);await new Promise(resolve=>setTimeout(resolve,5));active--;return mockBrief(input);}});
+ try{
+  const children=[studentA,studentB];
+  for(let i=0;i<18;i++){const child=`00000000-0000-4000-8000-${String(1000+i).padStart(12,'0')}`;children.push(child);await f.db.query("insert into students values($1,$2,'active','Clara','Flores',null)",[child,classId]);}
+  const competencies=['COM_ORAL','COM_LECTURA','PS_CONVIVE','MAT_CANTIDAD','CYT_INDAGA','COM_ARTE'];
+  for(let i=0;i<competencies.length;i++){
+   const c=i===0?criterion:`00000000-0000-4000-8000-${String(2000+i).padStart(12,'0')}`;
+   if(i)await f.db.query("insert into activity_criteria(id,activity_id,competency_v4_id,criterion_text,details,status) values($1,$2,$3,'Explica lo que hizo durante el juego','{}','active')",[c,activity,competencies[i]]);
+   for(const child of children)await f.db.query("insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values(gen_random_uuid(),$1,$2,$3,'2026-04-12T12:00:00Z','2026-04-12','Explicó una idea durante el juego y escuchó a su compañero.')",[child,activity,c]);
+  }
+  const transaction=f.db.transaction.bind(f.db),query=f.db.query.bind(f.db);let writers=0,writerPeak=0,sourceReads=0;
+  f.db.transaction=async work=>{writers++;writerPeak=Math.max(writerPeak,writers);try{return await transaction(work);}finally{writers--;}};
+  f.db.query=async(sql,...args)=>{if(String(sql).includes('select id,revision,details from learning_experiences'))sourceReads++;return query(sql,...args);};
+  const scope={classroomId:classId,periodId:firstPeriod,kind:'analysis'},start=await f.call('POST','/api/period-evaluations/batches',scope);
+  assert.equal(start.body.total,120);const path=`/api/period-evaluations/batches/${start.body.id}/run`;
+  let run;
+  for(let i=0;i<15;i++){run=await f.call('POST',path,scope);assert.equal(run.status,200,JSON.stringify(run.body));assert.equal(run.body.completed,(i+1)*8);}
+  assert.equal(run.body.status,'ready');assert.equal(peak,8);assert.equal(writerPeak,1);assert.equal(sourceReads,15,'No releer el marco común por cada niño');
+  const saved=(await f.db.query("select student_id,competency_v4_id,achievement_level,teacher_confirmed_at from competency_assessments where status='draft'")).rows;
+  assert.equal(saved.length,120);assert.equal(new Set(saved.map(r=>`${r.student_id}:${r.competency_v4_id}`)).size,120);
+  assert.ok(saved.every(r=>r.achievement_level===null&&r.teacher_confirmed_at===null));
+  await f.call('POST',path,scope);assert.equal(f.calls.length,120);
+ }finally{await f.db.close();}
+});
+
+test('un conflicto al guardar conserva los otros siete análisis y retoma solo el afectado',async()=>{
+ let changed=false;let f;
+ f=await fixture({batchProvider:async input=>{
+  if(!changed){changed=true;await f.db.query("update evidences set observation_text='La docente corrigió la observación.' where id=$1",[firstEvidence]);}
+  return mockBrief(input);
+ }});
+ try{
+  for(let i=0;i<7;i++){
+   const child=i===0?studentB:`00000000-0000-4000-8000-${String(3000+i).padStart(12,'0')}`;
+   if(i)await f.db.query("insert into students values($1,$2,'active','Clara','Flores',null)",[child,classId]);
+   await f.db.query("insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values(gen_random_uuid(),$1,$2,$3,'2026-04-12T12:00:00Z','2026-04-12','Explicó una idea a su compañero durante el juego.')",[child,activity,criterion]);
+  }
+  const scope={classroomId:classId,periodId:firstPeriod,kind:'analysis'},start=await f.call('POST','/api/period-evaluations/batches',scope);
+  const run=await f.call('POST',`/api/period-evaluations/batches/${start.body.id}/run`,scope);
+  assert.equal(run.status,200);assert.equal(run.body.completed,7);assert.equal(run.body.status,'paused');
+  const next=await f.call('POST','/api/period-evaluations/batches',scope);assert.equal(next.body.completed,7);
+  const done=await f.call('POST',`/api/period-evaluations/batches/${next.body.id}/run`,scope);
+  assert.equal(done.body.status,'ready');assert.equal(done.body.completed,8);assert.equal(f.calls.length,9);
+ }finally{await f.db.close();}
+});
+
+test('fallo del contexto compartido no llama a IA ni deja el trabajo en ejecución',async()=>{
+ const f=await fixture({batchProvider:input=>mockBrief(input)});
+ try{
+  const scope={classroomId:classId,periodId:firstPeriod,kind:'analysis'},start=await f.call('POST','/api/period-evaluations/batches',scope);
+  const query=f.db.query.bind(f.db);let fail=true;
+  f.db.query=async(sql,...args)=>{if(fail&&String(sql).includes('select id,revision,details from learning_experiences')){fail=false;throw Error('Fallo temporal de lectura');}return query(sql,...args);};
+  const path=`/api/period-evaluations/batches/${start.body.id}/run`;
+  let run=await f.call('POST',path,scope);assert.equal(run.status,200);assert.equal(run.body.status,'paused');assert.equal(run.body.completed,0);assert.equal(f.calls.length,0);
+  run=await f.call('POST',path,{...scope,retryUncertain:true});assert.equal(run.body.status,'ready');assert.equal(run.body.completed,1);assert.equal(f.calls.length,1);
+ }finally{await f.db.close();}
+});
+
+test('respuesta inválida no detiene otros niños y solo se regenera una vez automáticamente',async()=>{
+ let rejectedCalls=0,rejectedName=null;
+ const f=await fixture({batchProvider:input=>{
+  const output=mockBrief(input);
+  rejectedName??=input.student_context.name;
+  if(input.student_context.name===rejectedName){rejectedCalls++;output.student_name='Otra persona';}
+  return output;
+ }});
+ try{
+  for(let i=0;i<9;i++){
+   const child=i===0?studentB:`00000000-0000-4000-8000-${String(5000+i).padStart(12,'0')}`;
+   if(i)await f.db.query("insert into students values($1,$2,'active',$3,'Flores',null)",[child,classId,['Clara','Marta','Sonia','Laura','Luisa','Raquel','Diana','Rosa'][i-1]]);
+   await f.db.query("insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values(gen_random_uuid(),$1,$2,$3,'2026-04-12T12:00:00Z','2026-04-12','Explicó su idea durante el juego.')",[child,activity,criterion]);
+  }
+  const scope={classroomId:classId,periodId:firstPeriod,kind:'analysis'},start=await f.call('POST','/api/period-evaluations/batches',scope),path=`/api/period-evaluations/batches/${start.body.id}/run`;
+  let run=await f.call('POST',path,scope);
+  assert.equal(run.body.status,'queued');assert.equal(run.body.completed,7);
+  run=await f.call('POST',path,scope);
+  assert.equal(run.body.status,'paused');assert.equal(run.body.completed,9);assert.equal(rejectedCalls,2);assert.equal(f.calls.length,11);
+  run=await f.call('POST',path,scope);
+  assert.equal(run.body.completed,9);assert.equal(f.calls.length,11,'Un tercer intento no se inicia sin decisión explícita');
+  assert.equal(Number((await f.db.query('select count(*) as n from competency_assessments where teacher_confirmed_at is not null')).rows[0].n),0);
+ }finally{await f.db.close();}
+});
+
+test('timeout conserva los demás análisis y no repite una llamada de resultado incierto',async()=>{
+ const f=await fixture({batchProvider:input=>{
+  if(input.student_context.name==='Luis Rojas')throw Object.assign(Error('Timeout'),{reason:'timeout'});
+  return mockBrief(input);
+ }});
+ try{
+  await f.db.query("insert into evidences(id,student_id,activity_id,criterion_id,observed_at,observed_on,observation_text) values(gen_random_uuid(),$1,$2,$3,'2026-04-12T12:00:00Z','2026-04-12','Explicó cómo organizar el juego.')",[studentB,activity,criterion]);
+  const scope={classroomId:classId,periodId:firstPeriod,kind:'analysis'},start=await f.call('POST','/api/period-evaluations/batches',scope),path=`/api/period-evaluations/batches/${start.body.id}/run`;
+  let run=await f.call('POST',path,scope);
+  assert.equal(run.body.status,'uncertain');assert.equal(run.body.completed,1);assert.equal(f.calls.length,2);
+  run=await f.call('POST',path,scope);
+  assert.equal(run.body.status,'uncertain');assert.equal(f.calls.length,2);
+  run=await f.call('POST',path,{...scope,retryUncertain:true});
+  assert.equal(run.body.status,'uncertain');assert.equal(run.body.completed,1);assert.equal(f.calls.length,3);
  }finally{await f.db.close();}
 });
 

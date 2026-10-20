@@ -7,8 +7,8 @@ import { stableCompetencyLabel, syncPeriodEvaluationMap } from "../src/lib/perio
 import { canonicalProjectRoute } from "../src/lib/planning-contract-v3.mjs";
 import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
 
-export async function loadComputedAssessmentContext(db, classroom, period, cards, evidenceRows = [], competencyId = null, names = []) {
-  const source = await loadAssessmentMasterSources(db, classroom, period);
+export async function loadComputedAssessmentContext(db, classroom, period, cards, evidenceRows = [], competencyId = null, names = [], preparedSource = null) {
+  const source = preparedSource ?? await loadAssessmentMasterSources(db, classroom, period);
   const evidenceCriteria = evidenceRows.map(row => ({ id: row.criterion_id, activity_id: row.activity_id,
     competency_id: competencyId ?? row.competency_v4_id, criterion_text: row.criterion_text || "Qué hizo o dijo el niño",
     expected_evidence: row.details?.expected_evidence, observation_focus: row.details?.observation_focus ?? [] }));

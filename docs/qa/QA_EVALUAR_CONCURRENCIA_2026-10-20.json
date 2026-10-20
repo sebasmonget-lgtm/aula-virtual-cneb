@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-20",
+  "model": "gpt-6-luna",
+  "reasoning": "low",
+  "timeoutMs": 30000,
+  "canonicalWrites": 0,
+  "recommendedConcurrency": 8,
+  "testedApplicationConcurrency": 8,
+  "applicationPairs": 120,
+  "applicationParallelWriters": 1,
+  "applicationGroups": 15,
+  "regressions": 57,
+  "lint": "PASS",
+  "typecheck": "PASS",
+  "builds": [
+    "Vinext PASS",
+    "Next webpack PASS"
+  ],
+  "published": false,
+  "estimatedAdditionalCostUSD": 0.012998339999999999,
+  "rounds": [
+    {
+      "concurrency": 3,
+      "peak": 3,
+      "requests": 12,
+      "valid": 12,
+      "providerErrors": 0,
+      "ms": 25020,
+      "estimatedCostUSD": 0.004103545,
+      "failures": []
+    },
+    {
+      "concurrency": 6,
+      "peak": 6,
+      "requests": 12,
+      "valid": 11,
+      "providerErrors": 0,
+      "ms": 12362,
+      "estimatedCostUSD": 0.0035522649999999998,
+      "failures": [
+        {
+          "index": 1,
+          "error": "El análisis debe ser un párrafo breve que incluya el nombre."
+        }
+      ]
+    },
+    {
+      "concurrency": 8,
+      "peak": 8,
+      "requests": 12,
+      "valid": 12,
+      "providerErrors": 0,
+      "ms": 15463,
+      "estimatedCostUSD": 0.0029268,
+      "failures": []
+    },
+    {
+      "concurrency": 12,
+      "peak": 12,
+      "requests": 12,
+      "valid": 12,
+      "providerErrors": 0,
+      "ms": 5609,
+      "estimatedCostUSD": 0.0024157299999999996,
+      "failures": []
+    }
+  ]
+}

@@ -45,10 +45,12 @@ test('validación conserva nombre y fuentes; rechaza notas, referencias ajenas y
  const legacy=briefAssessmentAsAnalysis(proposal());assert.equal(legacy.evidence_overview,proposal().analysis_paragraph);assert.equal(legacy.information_status,'insufficient');assert.equal(legacy.achievement_level,undefined);
 });
 
-test('el análisis respeta el rango de 30 a 70 palabras y dos o tres frases',()=>{
+test('30–70 palabras es orientación: acepta variaciones, normaliza espacios y conserva un límite amplio',()=>{
  const text=count=>Array.from({length:count},(_,i)=>i===0?'Emilia':i===15?'observa.':i===count-1?'comparte.':'observa').join(' ');
- for(const count of [30,70])assert.equal(validateBriefAssessment({...proposal(),analysis_paragraph:text(count)},input()).analysis_paragraph.split(/\s+/).length,count);
- for(const count of [29,71])assert.throws(()=>validateBriefAssessment({...proposal(),analysis_paragraph:text(count)},input()),/30 y 70/);
+ for(const count of [20,29,30,70,71,100])assert.equal(validateBriefAssessment({...proposal(),analysis_paragraph:text(count)},input()).analysis_paragraph.split(/\s+/).length,count);
+ for(const count of [19,101])assert.throws(()=>validateBriefAssessment({...proposal(),analysis_paragraph:text(count)},input()),/demasiado corto o extenso/);
+ const oneSentence=text(35).replaceAll('.','');
+ assert.equal(validateBriefAssessment({...proposal(),analysis_paragraph:'  '+oneSentence.replaceAll(' ','\n  ')+'  '},input()).analysis_paragraph,oneSentence);
 });
 
 test('la primera prueba conserva Luna low y el pipeline común sin fallback oculto',async()=>{

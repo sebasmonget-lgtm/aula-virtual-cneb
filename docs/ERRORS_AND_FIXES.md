@@ -2248,3 +2248,17 @@ Validación: 89 regresiones, lint, TypeScript y builds Vinext/Next webpack PASS.
 ## 2026-10-20 — Cero observaciones por consultar otro bimestre
 
 Síntoma: cero por confirmar y preparación deshabilitada, interpretados como borrado. Causa comprobada: Chrome abrió B1 con reloj QA de febrero; las 140 observaciones de B4 y los 430 registros de asistencia conservan sus hashes. La navegación principal dentro de Evaluar podía conservar un período manual anterior. Solución: nueva entrada por fecha del servidor, manteniendo cambio manual/enlaces; vacío identifica bimestre. Retirar contador ambiguo y copia de confirmar observaciones en captura/revisión. Prevención: recorrido UI B4→B1→Evaluar→B4, pruebas de fechas de inicio/cierre y servicio de atribuciones/persistencia; 92 regresiones distintas, lint/typecheck/builds y escritorio/390px PASS. Sin migraciones ni recreación de datos. Rollback y evidencia: QA_EVALUAR_CLARIDAD_PERIODO_2026-10-20.md.
+
+
+## 2026-10-20 — Contexto de evaluación repetido por cada llamada paralela
+
+Síntoma: avance lento pese a tres llamadas concurrentes. Causa comprobada en código: cada hijo recargaba contexto y fuentes completas del aula, sobre pool serverless de una conexión. Corrección: una preparación compartida por grupo de ocho y un escritor de resultados/checkpoints, manteniendo revalidación canónica al guardar. Prevención: carga local de120 pares con15 lecturas comunes, pico8/un escritor, duplicados0; conflicto conserva siete y fallo común no inicia IA ni deja lease en ejecución.57 regresiones PASS. Proveedor real3/6/8/12 sin fallos de red/rate-limit; una salida de6 rechazada por validador, sin ocultarla ni atribuirla a concurrencia. Ver QA_EVALUAR_CONCURRENCIA_2026-10-20.md. Sin migraciones ni cambio de reglas pedagógicas.
+
+
+Cierre de verificación de concurrencia:57 pruebas, lint/typecheck y ambos builds PASS. Código local preparado con techo8; sin commit/push/publicación de esta ronda. El lote cloud previo permanece pausado con41/120, causa individual no disponible en su payload; no se reinicia ni se atribuye ese fallo a concurrencia.
+
+## 2026-10-20 — Un fallo individual pausaba todos los análisis
+
+Síntoma:41/120 sin avance al recargar; reanudación UI llega61 y vuelve a pausar. Causa comprobada: cualquier rechazo de Promise.allSettled pausaba todo el lote sin categoría individual; además un error cliente reconciliado y una consulta fallida podían dejar de conducir el avance. La causa concreta de los fallos históricos no está guardada y no se atribuye al conteo de palabras. Solución: categorías por par sin datos privados, continuar pares no intentados, una regeneración automática máxima de respuesta recibida inválida, no repetir timeouts automáticamente; conservar checkpoints y reprogramar consultas de lectura fallidas. Un grupo sin tareas no inicia consultas compartidas huérfanas.
+
+Regla editorial anterior rechazaba29/71 palabras o puntuación distinta sin demostrar un fallo pedagógico. Indicación nueva:30–70 orientativas,20–100 aceptadas, sin recortar ni rellenar texto y sin conteo rígido de frases. Mantener controles de identidad, referencias y ausencia de notas. Prevención:80 pruebas y UI local con interrupción simulada de POST y de consulta; duplicados0 y notas confirmadas0. Evidencia/límites/rollback en QA_EVALUAR_RECUPERACION_2026-10-20.md; publicación efectiva y ejecución real se verifican aparte.

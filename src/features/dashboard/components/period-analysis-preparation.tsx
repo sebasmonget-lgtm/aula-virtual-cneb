@@ -35,14 +35,17 @@ export function PeriodAnalysisPreparation({classroomId,periodId,periodLabel,toda
     let active=true;
     void api<Job>(`/api/period-evaluations/batches/${job.id}/run`,{classroomId,periodId}).then(value=>{if(active)setJob(value);}).catch(async cause=>{
       if(!active)return;setError(cause.message);
-      try{const current=await api<Job>(`/api/period-evaluations/batches/${job.id}?${query}`);if(active)setJob(current);}catch{/* Keep the saved job visible; a write is never retried automatically. */}
+      try{const current=await api<Job>(`/api/period-evaluations/batches/${job.id}?${query}`);if(active){setJob(current);if(['queued','running','ready'].includes(current.status))setError('');}}catch{/* Keep the saved job visible until its server state can be checked. */}
     });
     return()=>{active=false;};
   },[job,busy,closed,error,classroomId,periodId,query]);
   useEffect(()=>{
     if(job?.status!=='running')return;
-    let active=true;const timer=window.setTimeout(()=>{void api<Job>(`/api/period-evaluations/batches/${job.id}?${query}`).then(value=>{if(active)setJob(value);}).catch(cause=>{if(active)setError(cause.message);});},2500);
-    return()=>{active=false;window.clearTimeout(timer);};
+    let active=true,checking=false;const timer=window.setInterval(()=>{
+      if(checking)return;checking=true;
+      void api<Job>(`/api/period-evaluations/batches/${job.id}?${query}`).then(value=>{if(active){setJob(value);setError('');}}).catch(cause=>{if(active)setError(cause.message);}).finally(()=>{checking=false;});
+    },2500);
+    return()=>{active=false;window.clearInterval(timer);};
   },[job,query]);
   async function prepare(){
     if(busy||closed)return;setConfirmEarly(false);setBusy(true);setError('');
@@ -57,7 +60,7 @@ export function PeriodAnalysisPreparation({classroomId,periodId,periodLabel,toda
   if(review)return <>{error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{children}</>;
   const running=job&&['queued','running'].includes(job.status),stale=job?.status==='stale';
   return <section aria-label="Preparar evaluación del bimestre" className="space-y-4 rounded-2xl border bg-white p-4 sm:p-6">
-    <div className="flex items-start gap-3"><Sparkles aria-hidden="true" className="mt-1 size-6 shrink-0 text-[#087d96]"/><div><h2 className="text-xl font-bold">Preparemos la evaluación</h2><p className="mt-2 max-w-prose text-sm leading-relaxed text-[#345372]">Ayni resume lo observado. Tú eliges la nota.</p></div></div>
+    <div className="flex items-start gap-3"><Sparkles aria-hidden="true" className="mt-1 size-6 shrink-0 text-[#087d96]"/><div><h2 className="text-xl font-bold">{job&&['paused','uncertain'].includes(job.status)?'Quedan análisis pendientes':'Preparemos la evaluación'}</h2><p className="mt-2 max-w-prose text-sm leading-relaxed text-[#345372]">Ayni resume lo observado. Tú eliges la nota.</p></div></div>
     {loading?<LoadingState label="Consultando los análisis guardados…"/>:<>
       {job&&!stale&&<div className="space-y-2" aria-live="polite"><p className="text-sm font-semibold tabular-nums">{job.completed} de {job.total} análisis guardados</p><Progress aria-label="Análisis guardados" value={job.total?100*job.completed/job.total:0}/>{running&&<LoadingState label="Preparando análisis. Puedes salir y volver."/>}</div>}
       {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
