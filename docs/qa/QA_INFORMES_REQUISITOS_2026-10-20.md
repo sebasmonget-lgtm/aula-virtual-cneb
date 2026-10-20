@@ -38,3 +38,9 @@ Benchmark real con PostgreSQL temporal, mismo endpoint,3 pares por variante:ante
 
 La población real de QA se concilia desde GET de cada par, con nivel/análisis esperados antes de conservar un acuse recuperado. Se registraron503 de sesión y400 de selectores al aumentar peticiones, sin causa SQL individual disponible; no se afirma que el llenado careciera de incidencias. Los recibos y conteo final deben demostrar120 pares activos únicos,10 notas originales con hash intacto, y conservación de observaciones/asistencias/análisis.
 
+
+
+## Verificación de región
+
+API del deployment97716be:regions=[iad1]. Host del pool QA:sa-east-1. Se prepara entrega con --regions gru1 (CLI63.1.2 lo soporta) para eliminar los viajes SQL entre Estados Unidos y Brasil. La selección se aplica únicamente a esta Preview, sin editar vercel.json ni configuración global de Producción. La prueba de smoke y la muestra de guardados deben confirmar región y comportamiento antes de mover el alias. No se atribuye toda la demora a este factor sin medición. Recibos de región y entrega en .local/evaluar-region-20261020. Rollback:alias al deployment previo, conservando los datos; desplegar de nuevo con iad1 si fuera necesario.
+

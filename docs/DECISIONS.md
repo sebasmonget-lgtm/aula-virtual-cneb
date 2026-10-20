@@ -1474,3 +1474,8 @@ La confirmación de la valoración solo espera las escrituras canónicas necesar
 ### Lectura y auditoría del guardado individual
 
 Para pares con evidencia, valoración o borrador propios, cargar solo ese niño y competencia; una pertenencia a alcance derivada de sus registros sigue las reglas existentes. Si no hay registros, consultar el alcance del aula para no habilitar competencias ajenas ni perder las trabajadas. Autorizar edad/aula/período/niño antes de la lectura y volver a validar fuentes/revisión/cierre en transacción. Append de eventos atómico sobre JSONB, sin reemplazar el historial con una copia leída previamente. No aumentar límites del pool como atajo ni prometer tiempos cloud a partir de tablas temporales.
+
+
+### Colocación regional de QA
+
+La Preview usa --regions gru1 para acercar las funciones a su base sa-east-1. Mantener esta selección específica de la entrega QA, registrar la región efectiva del deployment y verificar autorización/datos/latencia antes del alias. No modificar configuración global del proyecto ni despliegue de Producción. La optimización de consultas sigue siendo necesaria; la medida temporal no representa por sí sola el HTTP interregional.
