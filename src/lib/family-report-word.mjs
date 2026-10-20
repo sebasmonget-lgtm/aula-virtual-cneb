@@ -49,7 +49,7 @@ function attendanceBlock(attendance){
 async function portrait(photo){
   if(!photo?.data)return null;
   const {data,info}=await sharp(photo.data).rotate().resize({width:240,height:270,fit:'inside',withoutEnlargement:true}).png().toBuffer({resolveWithObject:true});
-  const scale=Math.min(78/info.width,88/info.height);
+  const scale=Math.min(112/info.width,126/info.height);
   // Word requires a nonempty drawing name and unique document-wide IDs, including header images.
   return new ImageRun({data,type:'png',transformation:{width:Math.round(info.width*scale),height:Math.round(info.height*scale)},altText:{id:'1',name:'Foto del estudiante',title:'Foto del estudiante',description:'Foto de identificación del estudiante'}});
 }
@@ -97,14 +97,14 @@ export async function renderFamilyReportWord(document,competencyCards=[],{logo=n
     ...(clean(document.teacher_name)?[paragraph(`Docente: ${document.teacher_name}`,{spacing:{after:0,line:245},children:[text(`Docente: ${document.teacher_name}`,{size:18,color:MUTED})]})]:[]),
     ...(document.status==='draft'?[paragraph('Borrador por revisar',{children:[text('Borrador por revisar',{bold:true,color:'88520B',size:18})]})]:[]),
   ];
-  const headerWidth=photo?WIDTH-1850:WIDTH;
-  const intro=table([new TableRow({cantSplit:true,children:[cell(identification,headerWidth,{margins:{top:100,bottom:100,left:0,right:180}}),...(photo?[cell([new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:0},children:[photo]})],1850,{verticalAlign:VerticalAlign.CENTER})]:[])]})],photo?[headerWidth,1850]:[WIDTH],{borders:noBorders});
+  const headerWidth=photo?WIDTH-2300:WIDTH;
+  const intro=table([new TableRow({cantSplit:true,children:[cell(identification,headerWidth,{margins:{top:100,bottom:100,left:0,right:180}}),...(photo?[cell([new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:0},children:[photo]})],2300,{verticalAlign:VerticalAlign.CENTER})]:[])]})],photo?[headerWidth,2300]:[WIDTH],{borders:noBorders});
   const blocks=[];
   if(clean(value.introduction))blocks.push(label('En pocas palabras',true),paragraph(value.introduction));
   blocks.push(...attendanceBlock(attendance));
   blocks.push(new Paragraph({spacing:{after:150,line:230},children:[text('Valoración confirmada por la docente  ',{size:16,bold:true,color:MUTED}),...Object.entries(levels).flatMap(([grade,theme],index)=>[text(`${index?'   ·   ':''}${grade} ${theme.label}`,{size:16,color:theme.ink})])]}));
   for(const [index,section] of (Array.isArray(value.sections)?value.sections:[]).entries()){
-    if(index>0)blocks.push(new Paragraph({pageBreakBefore:true,spacing:{before:0,after:0,line:20},children:[text('',{size:2})]}));
+    blocks.push(new Paragraph({pageBreakBefore:true,spacing:{before:0,after:0,line:20},children:[text('',{size:2})]}));
     blocks.push(await competencyBlock(section,names,document.achievement_levels??[],index),space());
   }
   if(clean(value.closing_note))blocks.push(label('Para seguir acompañando',true),paragraph(value.closing_note));
