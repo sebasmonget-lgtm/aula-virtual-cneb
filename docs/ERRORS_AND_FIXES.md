@@ -1,5 +1,13 @@
 # Errores y soluciones
 
+## 2026-10-20 — QA final: notas del Excel y avisos repetidos en informes
+
+Síntoma: el Excel coloreaba en verde cualquier letra confirmada aunque la interfaz distingue AD/A/B/C. Causa: estilo único de celda para cualquier valoración confirmada. Solución: estilos por letra con la misma paleta aprobada, sin colorear notas ausentes ni cambiar datos/filtros. Prueba del archivo OOXML vincula cada celda a su fill y cubre las cuatro letras y el pendiente.
+
+La lectura familiar repetía avisos sobre fecha/cantidad de registros suficientes y ausencia de datos sobre apoyos. Se revisan las versiones familiares y se ajusta el prompt: describir lo observado sin extrapolar a cambios temporales, conservar apoyos reales y advertencias concretas de insuficiencia, no presentar una ausencia del registro como dificultad del niño. No se filtran ni reescriben automáticamente las fuentes canónicas.
+
+Una conclusión real traía una etiqueta de formato en caution. La revisión corrigió ese campo auxiliar y conservó la respuesta cruda; se pide una frase comprensible sin imponer un nuevo reintento automático por vocabulario. Ver QA_CIERRE_FINAL_2026-10-20.md y recibos finales para pruebas, conciliación de datos y límites.
+
 ## 2026-10-20 — Lenguaje formal heredado en el informe familiar
 
 Durante el smoke real de diez lecturas familiares, cinco propuestas quedaron preparadas y cinco agotaron los 30 s del proveedor. La prueba individual había durado 31,4 s con presupuesto explícito de 90 s: el factory seguía usando el límite general de 30 s en cloud. Se asignan 90 s a informes completos, sin cambiar análisis/conclusiones ni concurrencia, reintentos automáticos o datos guardados. Recuperar solo pendientes tras desplegar; verificar diez propuestas completas antes del alias. Prueba del factory cubre presupuesto específico y override.

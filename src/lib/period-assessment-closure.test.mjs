@@ -212,3 +212,14 @@ test("21: exportación SIAGIE permanece visible y no implementada", () => {
   assert.match(SIAGIE_EXPORT_STATUS.label, /SIAGIE/);
   assert.match(SIAGIE_EXPORT_STATUS.message, /pendiente|Próximamente/i);
 });
+
+test('Excel distingue AD azul, A verde, B amarillo y C rojo sin colorear una nota pendiente',async()=>{
+ const rows=['AD','A','B','C',null].map((achievement_level,i)=>({student_id:String(i),student_name:'Niño '+i,competency_name:'Lee',achievement_level,conclusion:i<4?'Explicó su idea.':'',state:i<4?'confirmed':'observation_pending'}));
+ const zip=await JSZip.loadAsync(await buildGenericAssessmentWorkbook(rows)),sheet=await zip.file('xl/worksheets/sheet1.xml').async('string'),styles=await zip.file('xl/styles.xml').async('string');
+ const fills=styles.match(/<fills[^>]*>([\s\S]*?)<\/fills>/)[1].match(/<fill>[\s\S]*?<\/fill>/g),formats=styles.match(/<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/)[1].match(/<xf\b[\s\S]*?<\/xf>/g);
+ for(const [i,color]of ['FFE6F2FF','FFDEF5E9','FFFFF2D5','FFFFEDEF'].entries()){
+  const style=Number(sheet.match(new RegExp(`<c r="C${i+2}" s="(\\d+)"`))[1]);
+  const fill=Number(formats[style].match(/fillId="(\d+)"/)[1]);assert.ok(fills[fill].includes(color),rows[i].achievement_level);
+ }
+ const pending=Number(sheet.match(/<c r="C6" s="(\d+)"/)[1]);assert.equal(Number(formats[pending].match(/fillId="(\d+)"/)[1]),0);
+});
