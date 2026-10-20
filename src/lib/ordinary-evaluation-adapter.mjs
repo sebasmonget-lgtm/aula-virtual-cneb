@@ -1,5 +1,5 @@
 /** Read-only projection. Raw notes are facts, not grades or automatically judged evidence. */
-export async function loadConfirmedOrdinaryEvaluationRows(db, { classroomId, period }) {
+export async function loadConfirmedOrdinaryEvaluationRows(db, { classroomId, period, studentId=null, competencyId=null }) {
   return (await db.query(`select o.id,o.student_id,o.occurred_at as observed_at,
       (o.occurred_at at time zone 'America/Lima')::date as observed_on,
       null::text as observation_status,
@@ -38,7 +38,8 @@ export async function loadConfirmedOrdinaryEvaluationRows(db, { classroomId, per
         and o.source_revision=1 and (a.id is null or a.state not in ('confirmed','unclassified'))
     ) chosen on true
     where o.classroom_id=$1 and s.status='active' and o.status<>'voided'
+      and ($4::uuid is null or o.student_id=$4) and ($5::text is null or chosen.competency_v4_id=$5)
       and (o.occurred_at at time zone 'America/Lima')::date between $2::date and $3::date
     order by observed_on,o.occurred_at,o.id,chosen.competency_v4_id`,
-  [classroomId, period.starts_on, period.ends_on])).rows;
+  [classroomId, period.starts_on, period.ends_on,studentId,competencyId])).rows;
 }

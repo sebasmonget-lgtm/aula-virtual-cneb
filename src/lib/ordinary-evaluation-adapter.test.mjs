@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { PGlite } from "@electric-sql/pglite";
 import { loadConfirmedOrdinaryEvaluationRows } from "./ordinary-evaluation-adapter.mjs";
-import { loadPeriodEvaluationRows, periodClosureFingerprint } from "./period-evaluation-service.mjs";
+import { loadPeriodEvaluationRows, loadPeriodEvaluationEvidence, periodClosureFingerprint } from "./period-evaluation-service.mjs";
 
 const ids = Array.from({ length: 12 }, (_, i) => `00000000-0000-4000-8000-${String(i + 1).padStart(12, "0")}`);
 const period = { id: ids[0], starts_on: "2026-08-10", ends_on: "2026-10-09" };
@@ -93,6 +93,10 @@ test("F8 integra solo observaciones confirmadas al scope y a la huella sin asign
     assert.deepEqual(confirmed.scope.sort(), ["COM_ORAL","MAT_CANTIDAD"]);
     assert.ok(confirmed.rows.every(row => row.state === "pending" && row.assessment === null));
     assert.ok(confirmed.rows.every(row => row.sourceRows.length === 1));
+    const scoped=await loadPeriodEvaluationEvidence(db,{...args,studentId:ids[1],competencyId:'COM_ORAL'});
+    assert.deepEqual(scoped,confirmed.rows.find(row=>row.competency_v4_id==='COM_ORAL').sourceRows);
+    assert.deepEqual(await loadPeriodEvaluationEvidence(db,{...args,studentId:ids[3],competencyId:'COM_ORAL'}),[]);
+    assert.deepEqual(await loadPeriodEvaluationEvidence(db,{...args,studentId:ids[1],competencyId:'COM_LECTURA'}),[]);
     const fingerprint = periodClosureFingerprint(confirmed.rows);
     await db.query(`update ordinary_observations set source_revision=2,status='corrected' where id=$1`,[ids[7]]);
     const corrected = await loadPeriodEvaluationRows(db,args);

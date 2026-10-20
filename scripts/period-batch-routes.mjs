@@ -18,7 +18,7 @@ import {analysisFailure,analysisOutcome,nextAnalysisTasks,allowManualAnalysisRet
 import { limaToday } from '../src/lib/activity-schedule-integrity.mjs';
 
 const WORKFLOW = "period_evaluation_batch_v1";
-const ANALYSIS_CONCURRENCY = 8;
+const ANALYSIS_CONCURRENCY = 12;
 import { stableFingerprint } from "../src/lib/source-fingerprint-v4.mjs";
 const hash = stableFingerprint;
 const taskSource = task => ({key:key(task),snapshot:task.snapshot,...(task.family_context_fingerprint?{family_context_fingerprint:task.family_context_fingerprint}:{})});
@@ -50,7 +50,7 @@ export function batchTasks(model, kind) {
 
 export const canonicalFamilySections = preserveConfirmedFamilySections;
 
-export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson,send,generate,createProvider,metadataForAudit}) {
+export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvidence,readJson,send,generate,createProvider,metadataForAudit}) {
   const get = async (id,classroomId,periodId,tx=db) => {
     const row=(await tx.query(`select payload from ai_pending_generations where id=$1 and classroom_id=$2 and workflow=$3 and expires_at>now()`,[id,classroomId,WORKFLOW])).rows[0];
     if(!row||row.payload.teacher_id!==teacherId||row.payload.period_id!==periodId)throw new VersionConflictError("Esta preparación no está disponible.");
@@ -217,7 +217,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson
           phase='save';await persist(async()=>{const saved=await savePeriodEvaluationDraft(db,{studentId:task.student_id,competencyId:task.competency_id,period:fresh.period,sourceRows:row.sourceRows,analysis:generated.output,metadata,
             teacherAnalysis:generated.output.evidence_overview,provisionalLevel:row.draft?.provisional_level??row.assessment?.achievement_level??null,teacherJustification:row.draft?.draft_teacher_justification??row.assessment?.teacher_justification??'',
             assessmentMasterId:computed.id,assessmentMasterSnapshot:computed.source_snapshot,expectedDraftRevision:row.draft?Number(row.draft.revision):null,expectedEvidenceFingerprint:createHash('sha256').update(JSON.stringify(task.snapshot)).digest('hex'),
-            loadCurrent:async tx=>{await assertPeriodOpen(tx,fresh.classroom.id,fresh.period.id);const latest=await loadRows(tx,{classroomId:fresh.classroom.id,period:fresh.period,applicableIds:new Set(fresh.cards.map(card=>card.id))});return latest.rows.find(item=>item.student_id===task.student_id&&item.competency_v4_id===task.competency_id)?.sourceRows??[];}});
+            loadCurrent:async tx=>{await assertPeriodOpen(tx,fresh.classroom.id,fresh.period.id);return loadEvidence(tx,{classroomId:fresh.classroom.id,period:fresh.period,studentId:task.student_id,competencyId:task.competency_id});}});
           return {...task,proposal:generated.output,saved_id:saved.id,metadata};});
         }
         }catch(error){job.failures[key(task)]=analysisFailure(error,phase,job.failures[key(task)]);throw error;}

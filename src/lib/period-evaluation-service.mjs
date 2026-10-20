@@ -53,6 +53,14 @@ export function periodClosureFingerprint(rows) {
   return createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
 }
 
+/** The same source projection, scoped to the pair being saved; no roster or grades are read. */
+export async function loadPeriodEvaluationEvidence(db,{classroomId,period,includeOrdinary=false,studentId=null,competencyId=null}){
+  const legacy=(await db.query(`select e.id,e.student_id,e.observed_at,coalesce(e.observed_on,e.observed_at::date) as observed_on,e.observation_status,e.observation_text,(e.media_path is not null) as media_available,e.activity_id,e.criterion_id,a.title as activity_title,ac.competency_v4_id,ac.criterion_text,ac.details,ac.performance_id from evidences e join students s on s.id=e.student_id join activities a on a.id=e.activity_id join activity_criteria ac on ac.id=e.criterion_id where s.classroom_id=$1 and coalesce(e.observed_on,e.observed_at::date) between $2::date and $3::date and ac.competency_v4_id is not null
+    and ($4::uuid is null or (e.student_id=$4 and s.status='active')) and ($5::text is null or ac.competency_v4_id=$5)
+    order by coalesce(e.observed_on,e.observed_at::date),e.observed_at,e.id`,[classroomId,period.starts_on,period.ends_on,studentId,competencyId])).rows;
+  return includeOrdinary?[...legacy,...await loadConfirmedOrdinaryEvaluationRows(db,{classroomId,period,studentId,competencyId})]:legacy;
+}
+
 export async function loadPeriodEvaluationRows(db, { classroomId, period, applicableIds, workEntries = null, includeOrdinary = false }) {
   const students = (await db.query(`select id,first_name,last_name,preferred_name from students where classroom_id=$1 and status='active' order by last_name,first_name,id`, [classroomId])).rows;
   const mapReady = (await db.query(`select to_regclass('period_evaluation_map_entries') is not null as ready`)).rows[0].ready;
@@ -60,8 +68,7 @@ export async function loadPeriodEvaluationRows(db, { classroomId, period, applic
     where classroom_id=$1 and evaluation_period_id=$2 and activity_state='completed'`, [classroomId, period.id])).rows : [];
   const overrides = (await db.query(`select competency_v4_id,included from period_competency_scope where classroom_id=$1 and evaluation_period_id=$2`, [classroomId, period.id])).rows;
   const scope = new Set(worked.map((row) => row.competency_v4_id).filter((id) => applicableIds.has(id)));
-  const legacyEvidence = (await db.query(`select e.id,e.student_id,e.observed_at,coalesce(e.observed_on,e.observed_at::date) as observed_on,e.observation_status,e.observation_text,(e.media_path is not null) as media_available,e.activity_id,e.criterion_id,a.title as activity_title,ac.competency_v4_id,ac.criterion_text,ac.details,ac.performance_id from evidences e join students s on s.id=e.student_id join activities a on a.id=e.activity_id join activity_criteria ac on ac.id=e.criterion_id where s.classroom_id=$1 and coalesce(e.observed_on,e.observed_at::date) between $2::date and $3::date and ac.competency_v4_id is not null order by coalesce(e.observed_on,e.observed_at::date),e.observed_at,e.id`, [classroomId, period.starts_on, period.ends_on])).rows;
-  const evidence = includeOrdinary ? [...legacyEvidence, ...await loadConfirmedOrdinaryEvaluationRows(db, { classroomId, period })] : legacyEvidence;
+  const evidence = await loadPeriodEvaluationEvidence(db,{classroomId,period,includeOrdinary});
   for (const row of overrides) if (applicableIds.has(row.competency_v4_id)) {
     if (row.included) scope.add(row.competency_v4_id);
     else scope.delete(row.competency_v4_id);

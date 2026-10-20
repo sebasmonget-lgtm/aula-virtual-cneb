@@ -8,7 +8,7 @@ import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { assessmentSourceSnapshot, assessmentStudentNames, buildAssessmentInput, neutralizeAssessmentText, sanitizeEvidenceForAssessment, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
 import { buildDescriptiveConclusionInput, sameAssessmentSnapshot, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
-import { evidenceIsCurrent, conclusionRequiredForLevel, dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, periodClosureFingerprint, periodRowResolved } from "../src/lib/period-evaluation-service.mjs";
+import { evidenceIsCurrent, conclusionRequiredForLevel, dateOnly, defaultEvaluationPeriods, loadPeriodEvaluationRows, loadPeriodEvaluationEvidence, periodClosureFingerprint, periodRowResolved } from "../src/lib/period-evaluation-service.mjs";
 import { assertSavedEvaluationDraft, savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
 import { closePeriodWithManifest } from "../src/lib/period-closure-history.mjs";
 import { assertPeriodOpen, periodEditState, reopenPeriod, appendPeriodEvent, invalidateStudentFamilyReport } from "../src/lib/period-edit-guard.mjs";
@@ -39,6 +39,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
   includeOrdinary = newAyniFeatureEnabled(process.env.AYNI_F8_EVALUATION),
   loadClassroomContext = async (classroom) => publicClassroomContext(await getCurrentClassroomContext(db, teacherId, classroom.id)) }) {
   const loadRows = (database, args) => loadPeriodEvaluationRows(database, { ...args, includeOrdinary });
+  const loadEvidence = (database,args)=>loadPeriodEvaluationEvidence(database,{...args,includeOrdinary});
   const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status),
     isVersionConflict(error)?conflictPayload(error):{ error: publicErrorMessage(error) }, origin);
 
@@ -86,17 +87,19 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
     }
     return rows.map((row) => ({ ...row, starts_on: dateOnly(row.starts_on), ends_on: dateOnly(row.ends_on) }));
   }
-  async function context(classroomId, periodId) {
-    const classroom = await ownedClassroom(classroomId), year = await ownedYear(classroom.school_year_id);
-    await ensurePeriods(year);
+  async function context(classroomId, periodId, {sync=true}={}) {
+    const classroom = await ownedClassroom(classroomId);
+    if(sync)await ensurePeriods(await ownedYear(classroom.school_year_id));
     const period = await periodForClass(classroom, periodId);
-    const evaluationMap = await syncPeriodEvaluationMap(db, { classroomId: classroom.id, schoolYearId: classroom.school_year_id, period });
+    const evaluationMap = sync?await syncPeriodEvaluationMap(db, { classroomId: classroom.id, schoolYearId: classroom.school_year_id, period }):{entries:null};
     const { cards, knowledge } = await cardsForClass(classroom);
     const model = await loadRows(db, { classroomId: classroom.id, period, applicableIds: new Set(cards.map((card) => card.id)), workEntries: evaluationMap.entries });
     const labels = cards.map(stableCompetencyLabel);
-    const labelsReady=(await db.query(`select to_regclass('competency_display_labels') is not null as ready`)).rows[0].ready;
-    if(labelsReady) for (const label of labels) await db.query(`insert into competency_display_labels(competency_v4_id,short_label,area) values($1,$2,$3)
-      on conflict(competency_v4_id) do update set short_label=excluded.short_label,area=excluded.area,updated_at=now()`, [label.competency_id,label.short_label,label.area]);
+    const labelsReady=sync&&(await db.query(`select to_regclass('competency_display_labels') is not null as ready`)).rows[0].ready;
+    if(labelsReady)await db.query(`insert into competency_display_labels(competency_v4_id,short_label,area)
+      select competency_id,short_label,area from jsonb_to_recordset($1::jsonb) as x(competency_id text,short_label text,area text)
+      on conflict(competency_v4_id) do update set short_label=excluded.short_label,area=excluded.area,updated_at=now()
+      where (competency_display_labels.short_label,competency_display_labels.area) is distinct from (excluded.short_label,excluded.area)`,[JSON.stringify(labels)]);
     return { classroom, period, cards, knowledge, model, evaluationMap, labels };
   }
   async function diagnosticAntecedents(classroom, period, studentId, competencyId) {
@@ -144,15 +147,15 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
     return students.flatMap((student) => cards.filter((card) => !valued.has(`${student.id}:${card.id}`))
       .map((card) => ({ student_id: student.id, competency_id: card.id })));
   }
-  async function selectedRow(body) {
-    const data = await context(body.classroomId, body.periodId);
+  async function selectedRow(body, {quick=false}={}) {
+    const data = await context(body.classroomId, body.periodId,{sync:!quick});
     await studentForClass(data.classroom, body.studentId);
     const row = data.model.rows.find((item) => item.student_id === body.studentId && item.competency_v4_id === body.competencyId);
     if (!row) throw new Error("Esta competencia no está prevista para el período. Agrégala al alcance del aula si se trabajó.");
     return { ...data, row, card: data.cards.find((item) => item.id === body.competencyId) };
   }
 
-  const handleBatch=createPeriodBatchHandler({db,teacherId,context,loadRows,readJson,send,generate,createProvider,metadataForAudit});
+  const handleBatch=createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvidence,readJson,send,generate,createProvider,metadataForAudit});
   async function handle({ request, url, response, origin }) {
     if (!url.pathname.startsWith("/api/period-evaluations")) return false;
     try {
@@ -351,7 +354,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         send(response, 200, { saved: true }, origin); return true;
       }
       if (request.method === "GET" && url.pathname === "/api/period-evaluations/detail") {
-        const data = await selectedRow({ classroomId: url.searchParams.get("classroomId"), periodId: url.searchParams.get("periodId"), studentId: url.searchParams.get("studentId"), competencyId: url.searchParams.get("competencyId") });
+        const data = await selectedRow({ classroomId: url.searchParams.get("classroomId"), periodId: url.searchParams.get("periodId"), studentId: url.searchParams.get("studentId"), competencyId: url.searchParams.get("competencyId") },{quick:true});
         const official = await db.query(`select distinct p.id,p.official_text,p.source_ref from activity_criteria ac join performances p on p.id=ac.performance_id join activities a on a.id=ac.activity_id join learning_experiences le on le.id=a.experience_id where le.classroom_id=$1 and ac.competency_v4_id=$2 and p.age_grade_id=$3 and a.occurs_on between $4::date and $5::date`, [data.classroom.id, data.card.id, data.classroom.age_grade_id, data.period.starts_on, data.period.ends_on]);
         const curriculum = data.knowledge.curriculumReference.competencies.find((item) => item.id === data.card.id);
         const currentFingerprint=hash(assessmentSourceSnapshot(data.row.sourceRows));
@@ -420,7 +423,7 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         send(response, 200, { generation_id: generationId, draft_id: draft.id, draft_revision:draft.revision,evidence_fingerprint: evidenceFingerprint, analysis: analysis.output, conclusion }, origin); return true;
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/save-draft") {
-        const body=await readJson(request),data=await selectedRow(body);
+        const body=await readJson(request),data=await selectedRow(body,{quick:true});
         await assertPeriodOpen(db,data.classroom.id,data.period.id);
         const fingerprint=hash(assessmentSourceSnapshot(data.row.sourceRows));
         if(body.evidenceFingerprint!==fingerprint) {fail(response,origin,new Error("Las observaciones cambiaron. Revísalas antes de guardar."),409);return true;}
@@ -429,11 +432,12 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           sourceRows:data.row.sourceRows,teacherAnalysis:body.teacherAnalysis,conclusionText:body.conclusionText,
           provisionalLevel:body.provisionalLevel||null,teacherJustification:body.teacherJustification,
           expectedDraftRevision:body.expectedDraftRevision,expectedEvidenceFingerprint:body.evidenceFingerprint,
-          loadCurrent:async(tx)=>{await assertPeriodOpen(tx,data.classroom.id,data.period.id);const model=await loadRows(tx,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map((card)=>card.id))});return model.rows.find((row)=>row.student_id===body.studentId&&row.competency_v4_id===body.competencyId)?.sourceRows??[];}});
+          loadCurrent:async(tx)=>{await assertPeriodOpen(tx,data.classroom.id,data.period.id);return loadEvidence(tx,{classroomId:data.classroom.id,period:data.period,studentId:body.studentId,competencyId:body.competencyId});}});
         send(response,200,{draft_id:saved.id,draft_revision:saved.revision,evidence_fingerprint:saved.evidence_fingerprint,saved:true},origin);return true;
       }
-      if (request.method === "POST" && url.pathname === "/api/period-evaluations/confirm") {
-        const body = await readJson(request), data = await selectedRow(body);
+      if (request.method === "POST" && ["/api/period-evaluations/confirm","/api/period-evaluations/save-and-confirm"].includes(url.pathname)) {
+        const saveAndConfirm=url.pathname.endsWith('/save-and-confirm');
+        const body = await readJson(request), data = await selectedRow(body,{quick:true});
         if(!Number.isSafeInteger(body.expectedDraftRevision)||body.expectedDraftRevision<1)
           throw new VersionConflictError("Recarga el borrador antes de confirmar.");
         const sourceRows = data.row.sourceRows, fingerprint = hash(assessmentSourceSnapshot(sourceRows));
@@ -445,7 +449,8 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         if (data.row.assessment && !data.row.draft) throw new VersionConflictError("Esta evaluación ya fue confirmada desde otra pestaña.");
         if (data.row.draft && Number(data.row.draft.revision)!==body.expectedDraftRevision)
           throw new VersionConflictError("El borrador cambió en otra pestaña.",data.row.draft.revision);
-        const savedDraft=assertSavedEvaluationDraft(data.row.draft,{fingerprint,teacherAnalysis,conclusionText,
+        const applyTeacherChanges=draft=>saveAndConfirm&&draft?{...draft,draft_teacher_analysis:teacherAnalysis,working_conclusion_text:conclusionText,provisional_level:body.achievementLevel,draft_teacher_justification:teacherJustification}:draft;
+        const savedDraft=assertSavedEvaluationDraft(applyTeacherChanges(data.row.draft),{fingerprint,teacherAnalysis,conclusionText,
           achievementLevel:body.achievementLevel,teacherJustification});
         const suggestion={analysis:savedDraft.details,analysis_metadata:savedDraft.generation_metadata?.analysis??savedDraft.generation_metadata??{},
           conclusion_metadata:savedDraft.generation_metadata?.conclusion??{}};
@@ -454,12 +459,11 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         validateAssessmentProposal(analysis, data.card.id, sourceRows.length);
         const assessment=await versionTransaction(db,`period:${data.period.id}`,async(tx)=>{
           await assertPeriodOpen(tx,data.classroom.id,data.period.id);
-          const latestRows = await loadRows(tx, { classroomId: data.classroom.id, period: data.period, applicableIds: new Set(data.cards.map((card) => card.id)) });
-          const latest = latestRows.rows.find((row) => row.student_id === body.studentId && row.competency_v4_id === body.competencyId);
+          const latest = {...data.row,sourceRows:await loadEvidence(tx,{classroomId:data.classroom.id,period:data.period,studentId:body.studentId,competencyId:body.competencyId})};
           if (!latest || hash(assessmentSourceSnapshot(latest.sourceRows)) !== fingerprint) throw new VersionConflictError("Las observaciones cambiaron durante la confirmación. Vuelve a revisarlas.");
           const lockedDraft=(await tx.query(`select * from competency_assessments where id=$1 and status='draft' for update`,[savedDraft.id])).rows[0];
           if(!lockedDraft||Number(lockedDraft.revision)!==body.expectedDraftRevision) throw new VersionConflictError("El borrador cambió en otra pestaña.",lockedDraft?.revision??null);
-          assertSavedEvaluationDraft(lockedDraft,{fingerprint,teacherAnalysis,conclusionText,achievementLevel:body.achievementLevel,teacherJustification});
+          assertSavedEvaluationDraft(applyTeacherChanges(lockedDraft),{fingerprint,teacherAnalysis,conclusionText,achievementLevel:body.achievementLevel,teacherJustification});
           if (!lockedDraft.assessment_master_id && lockedDraft.assessment_master_snapshot?.construction === "deterministic-v1") {
             const currentSources = await loadAssessmentMasterSources({ query: (...args) => tx.query(...args), transaction: action => action(tx) }, data.classroom, data.period);
             if (currentSources.snapshot.fingerprint !== lockedDraft.assessment_master_snapshot.fingerprint)

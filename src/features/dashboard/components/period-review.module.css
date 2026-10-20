@@ -7,6 +7,28 @@
 @media(max-width:640px){.navigation{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;overflow:visible}.navigation button{padding-inline:5px;white-space:normal;font-size:13px}.studentHeader{top:84px;padding-top:8px}}
 
 /* Competency identity is shared across review, reports and the compact matrix. */
+.studentCompetency{display:flex;align-items:center;padding:5px 12px 5px 5px;border:1px solid var(--competency-ink);border-radius:12px;background:var(--competency-surface);color:var(--competency-ink)}
+.studentCompetency .competencyCompact strong{font-size:14px}
+.valuationReferences{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.previousValuation,.ageGuidance{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #c6dfef;border-radius:14px;background:#f2f8ff;color:#345372;font-size:13px;line-height:1.5}
+.ageGuidance{background:#eef9f5;border-color:#c9e6db;color:#245a4c}
+.previousValuation>svg,.ageGuidance>svg{box-sizing:content-box;width:21px;height:21px;padding:10px;flex-shrink:0;border-radius:50%;background:#deefff;color:#08749e}
+.ageGuidance>svg{background:#d8f0e6;color:#12634e}
+.previousValuation>div,.ageGuidance>div{min-width:0;flex:1}
+.previousValuation p+p,.ageGuidance p+p{margin-top:3px}
+.previousValuation>strong{align-self:center;font-size:22px;color:#07576c}
+.gradeOptions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.gradeOption{--grade-ink:#614295;--grade-surface:#f3edfc;display:flex;position:relative;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:5px;min-height:88px;padding:12px 6px;border:1px solid #b8ccde;border-radius:14px;background:var(--grade-surface);color:var(--grade-ink);text-align:center}
+.gradeOption[data-level=A]{--grade-ink:#076ca3;--grade-surface:#eaf6ff}
+.gradeOption[data-level=B]{--grade-ink:#855108;--grade-surface:#fff4dd}
+.gradeOption[data-level=C]{--grade-ink:#12634e;--grade-surface:#e8f7f0}
+.gradeOption>b{font-size:22px;line-height:1.2}
+.gradeOption>span{font-size:13px;font-weight:650;line-height:1.4}
+.gradeOption:hover,.gradeOption[data-selected=true]{background:var(--grade-surface);border-color:var(--grade-ink)}
+.gradeOption[data-selected=true]{box-shadow:inset 0 0 0 1px var(--grade-ink)}
+.gradeOption:focus-within{outline:2px solid var(--grade-ink);outline-offset:3px}
+fieldset:disabled .gradeOption{cursor:default;opacity:.6}
+@media(max-width:640px){.valuationReferences{grid-template-columns:minmax(0,1fr)}.gradeOptions{gap:7px}.gradeOption{min-height:82px;padding-inline:3px}.gradeOption>span{font-size:12px}.previousValuation,.ageGuidance{padding:12px}}
 .header h1{font-size:clamp(1.5rem,2.5vw,2rem);font-weight:800;line-height:1.2;text-wrap:balance}
 .header[data-view=family]{background:#f5f0fc;border-color:#ddd0ee}
 .header[data-view=consolidated]{background:#edf5ff;border-color:#ccdef3}

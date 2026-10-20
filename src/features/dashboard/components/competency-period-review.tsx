@@ -1,11 +1,10 @@
 "use client";
-import { assessmentDisplayText, assessmentReanalysisWarning, EVALUATION_LEVELS } from "@/src/lib/assessment-display.mjs";
-import { useEffect, useState } from "react";
-import { CheckCircle2, Clock3, ImageIcon, Search, Sparkles, ChartColumn, ArrowLeft, ArrowRight } from "lucide-react";
+import { assessmentDisplayText, EVALUATION_LEVELS } from "@/src/lib/assessment-display.mjs";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, Clock3, ImageIcon, Search, Sparkles, ChartColumn, ArrowLeft, ArrowRight, BookOpen, ClipboardList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import styles from "./period-review.module.css";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { writeWorkspaceLocation } from "@/src/lib/workspace-location";
@@ -20,30 +19,29 @@ import {CompetencyIdentity,competencyTheme} from './competency-identity';
 type Person={id:string;first_name:string;last_name:string;preferred_name:string|null};
 type Row={student_id:string;competency_id:string;evidence_count:number;level:string|null;valuation_confirmed:boolean};
 type Detail={previous_valuation?:{period_id:string;period_label:string;level:string|null;teacher_confirmed_at:string|null}|null;evaluation_guidance?:{age:number;focus:string|null;kind:string;note:string;source:{title:string;url:string};performances:{id:string;text:string;page:number}[]};evidence_fingerprint:string;draft:{revision:number;teacher_analysis:string;provisional_level:string|null;teacher_justification:string;details?:{information_status?:string;insufficiency_reason?:string|null}}|null;assessment:{achievement_level:string|null;details:{evidence_overview?:string;information_status?:string};teacher_justification:string|null}|null;timeline:{id:string;observed_on:string;activity_title:string;criterion_text:string;observation_text:string|null;media_url?:string|null}[]};
-type AnalysisResult={draft_revision:number;cached?:boolean;analysis:{evidence_overview:string;information_status:string;insufficiency_reason:string|null}};
 const snapshot = (analysis:string,level:string,reason:string) => JSON.stringify([analysis.trim(),level,reason.trim()]);
 async function api<T>(path:string,body?:unknown):Promise<T>{const response=await apiFetch(localDatabaseApiUrl+path,{method:body===undefined?"GET":"POST",cache:"no-store",...(body===undefined?{}:{headers:{"content-type":"application/json"},body:JSON.stringify(body)})});const data=await response.json() as T & {message?:string;error?:string};if(!response.ok)throw new Error(data.message??data.error??"No pudimos guardar la evaluación.");return data;}
-export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows,closed,onChanged,onContinue,initialStudentId="",initialCompetencyId=""}:{classroomId:string;periodId:string;students:Person[];scope:{id:string;name:string}[];rows:Row[];closed:boolean;onChanged:()=>Promise<void>;onContinue:()=>void;initialStudentId?:string;initialCompetencyId?:string}){
+export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows,closed,onChanged,onConfirmed,onContinue,initialStudentId="",initialCompetencyId=""}:{classroomId:string;periodId:string;students:Person[];scope:{id:string;name:string}[];rows:Row[];closed:boolean;onChanged:()=>Promise<void>;onConfirmed?:(studentId:string,competencyId:string,level:string)=>void;onContinue:()=>void;initialStudentId?:string;initialCompetencyId?:string}){
   const [competencyId,setCompetencyId]=useState(initialCompetencyId),[studentId,setStudentId]=useState(initialStudentId),[detail,setDetail]=useState<Detail|null>(null);
   const [analysis,setAnalysis]=useState(""),[level,setLevel]=useState(""),[reason,setReason]=useState(""),[editing,setEditing]=useState(false);
   const [busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
-  const [busyAction,setBusyAction]=useState<"analysis"|"confirmation"|"draft"|null>(null);
+  const [busyAction,setBusyAction]=useState<"confirmation"|"draft"|null>(null);
   const [batchRevision,setBatchRevision]=useState(0);
   const [savedSnapshot,setSavedSnapshot]=useState("");
-  const [reloadRevision,setReloadRevision]=useState(0);
-  const [confirmAnalysis,setConfirmAnalysis]=useState(false);
-  const [analysisError,setAnalysisError]=useState(""),[analysisNotice,setAnalysisNotice]=useState("");
   const [search,setSearch]=useState(""),[rosterFilter,setRosterFilter]=useState("all");
   const [rosterOpen,setRosterOpen]=useState(false);
   useEffect(()=>{writeWorkspaceLocation("Evaluar",{student:studentId,competency:competencyId},true);},[studentId,competencyId]);
   const dirty = Boolean(detail && snapshot(analysis,level,reason)!==savedSnapshot);
   const allowLeave = useUnsavedWork(dirty,busy,"Hay cambios en esta valoración sin guardar. ¿Quieres descartarlos?");
+  const prefetched=useRef(new Map<string,Promise<Detail>>());
+  useEffect(()=>{prefetched.current.clear();},[classroomId,periodId]);
   const selectedPerson=students.find(row=>row.id===studentId);
   const selectedStudentName=selectedPerson?.preferred_name||selectedPerson?.first_name||"el niño observado";
   useEffect(()=>{
     if(!studentId||!competencyId)return;let active=true;
-    api<Detail>(`/api/period-evaluations/detail?${new URLSearchParams({classroomId,periodId,studentId,competencyId})}`).then(value=>{if(!active)return;const text=assessmentDisplayText(value.draft?.teacher_analysis??value.assessment?.details.evidence_overview??"",selectedStudentName),grade=value.draft?.provisional_level??value.assessment?.achievement_level??"",justification=value.draft?.teacher_justification??value.assessment?.teacher_justification??"";setDetail(value);setAnalysis(text);setLevel(grade);setReason(justification);setSavedSnapshot(snapshot(text,grade,justification));setEditing(false);setError("");}).catch(cause=>{if(active)setError(cause.message);});return()=>{active=false;};
-  },[classroomId,periodId,studentId,competencyId,reloadRevision,selectedStudentName]);
+    const key=classroomId+':'+periodId+':'+competencyId+':'+studentId,cached=prefetched.current.get(key);prefetched.current.delete(key);
+    (cached??api<Detail>(`/api/period-evaluations/detail?${new URLSearchParams({classroomId,periodId,studentId,competencyId})}`)).then(value=>{if(!active)return;const text=assessmentDisplayText(value.draft?.teacher_analysis??value.assessment?.details.evidence_overview??"",selectedStudentName),grade=value.draft?.provisional_level??value.assessment?.achievement_level??"",justification=value.draft?.teacher_justification??value.assessment?.teacher_justification??"";setDetail(value);setAnalysis(text);setLevel(grade);setReason(justification);setSavedSnapshot(snapshot(text,grade,justification));setEditing(false);setError("");}).catch(cause=>{if(active)setError(cause.message);});return()=>{active=false;};
+  },[classroomId,periodId,studentId,competencyId,selectedStudentName]);
   const name=(id:string)=>{const student=students.find(row=>row.id===id);return student?`${student.preferred_name||student.first_name} ${student.last_name}`:"Niño del aula";};
   const pairs=rows.filter(row=>row.competency_id===competencyId),pending=rows.filter(row=>row.evidence_count>0&&!row.valuation_confirmed),current=pairs.find(row=>row.student_id===studentId);
   const relevant=rows.filter(row=>row.evidence_count>0||row.level);
@@ -51,22 +49,18 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
   const reviewed=pairs.filter(row=>row.valuation_confirmed).length;
   const visiblePairs=pairs.filter(row=>(rosterFilter==="all"||(rosterFilter==="confirmed"?row.valuation_confirmed:!row.valuation_confirmed))&&name(row.student_id).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es").includes(search.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es")));
   const selectedIndex=visiblePairs.findIndex(row=>row.student_id===studentId);
-  function selectStudent(id:string){if(id===studentId||!allowLeave())return;setStudentId(id);setDetail(null);setError("");setNotice("");setAnalysisError("");setAnalysisNotice("");setRosterOpen(false);}
-  function choose(id:string){if(!allowLeave())return;setSearch("");setRosterFilter("all");setCompetencyId(id);const next=rows.find(row=>row.competency_id===id&&!row.valuation_confirmed&&row.evidence_count>0)??rows.find(row=>row.competency_id===id);setStudentId(next?.student_id??"");setDetail(null);setError("");setNotice("");setAnalysisError("");setAnalysisNotice("");}
-  async function analyze(acknowledged=false){if(!detail||!detail.timeline.length||busy||closed)return;
-    const warning=assessmentReanalysisWarning({level,reason,analysis});
-    if(warning&&!acknowledged){setConfirmAnalysis(true);return;}
-    setConfirmAnalysis(false);
-    setBusy(true);setBusyAction("analysis");setError("");setNotice("");setAnalysisError("");setAnalysisNotice("");try{
-    let acknowledgedRevision=detail.draft?.revision;
-    if(dirty||!detail.draft)acknowledgedRevision=(await writeDraft()).draft_revision;
-    const result=await api<AnalysisResult>("/api/period-evaluations/suggest",{classroomId,periodId,studentId,competencyId,acknowledgedRevision,force:acknowledged,brief:true});
-    const text=assessmentDisplayText(result.analysis.evidence_overview,selectedStudentName);
-    setAnalysis(text);setSavedSnapshot(snapshot(text,level,reason));
-    setDetail(current=>current?{...current,draft:{...current.draft,revision:result.draft_revision,teacher_analysis:text,provisional_level:level||null,teacher_justification:reason,details:result.analysis}}:current);
-    setAnalysisNotice(result.cached?"Este análisis ya estaba guardado. No se hizo otra llamada de IA.":"Análisis guardado. Revísalo y elige tú la valoración.");
-    setReloadRevision(value=>value+1);await onChanged();
-  }catch(cause){setAnalysisError((cause as Error).message);}finally{setBusy(false);setBusyAction(null);}}
+  useEffect(()=>{
+    if(!detail||closed||!competencyId)return;
+    const next=rows.find(row=>row.competency_id===competencyId&&row.student_id!==studentId&&!row.valuation_confirmed&&row.evidence_count>0);
+    if(!next)return;const key=classroomId+':'+periodId+':'+competencyId+':'+next.student_id;
+    if(prefetched.current.has(key))return;
+    const promise=api<Detail>(`/api/period-evaluations/detail?${new URLSearchParams({classroomId,periodId,studentId:next.student_id,competencyId})}`);
+    prefetched.current.clear();prefetched.current.set(key,promise);
+    window.setTimeout(()=>{if(prefetched.current.get(key)===promise)prefetched.current.delete(key);},60000);
+    void promise.catch(()=>prefetched.current.delete(key));
+  },[detail,closed,classroomId,periodId,competencyId,studentId,rows]);
+  function selectStudent(id:string){if(id===studentId||!allowLeave())return;setStudentId(id);setDetail(null);setError("");setNotice("");setRosterOpen(false);}
+  function choose(id:string){if(!allowLeave())return;setSearch("");setRosterFilter("all");setCompetencyId(id);const next=rows.find(row=>row.competency_id===id&&!row.valuation_confirmed&&row.evidence_count>0)??rows.find(row=>row.competency_id===id);setStudentId(next?.student_id??"");setDetail(null);setError("");setNotice("");}
   async function saveObservationPending(){if(!detail?.draft||detail.timeline.length||busy||closed)return;setBusy(true);setBusyAction("confirmation");setError("");setNotice("");try{
     await api("/api/period-evaluations/save-draft",{classroomId,periodId,studentId,competencyId,evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:detail.draft.revision,provisionalLevel:null,teacherAnalysis:"No hay observaciones atribuidas a esta competencia. Se necesitan nuevas oportunidades de observación.",teacherJustification:"Mantengo pendiente la observación, sin asignar una valoración.",conclusionText:""});
     await onChanged();setNotice("Pendiente de observación guardado, sin valoración.");
@@ -81,21 +75,20 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
     await writeDraft();setNotice("Borrador guardado. La valoración todavía no está confirmada.");
   }catch(cause){setError((cause as Error).message);}finally{setBusy(false);setBusyAction(null);}}
   async function confirm(){if(!detail||busy||closed)return;setBusy(true);setBusyAction("confirmation");setError("");setNotice("");try{
-    const saved=await writeDraft();
-    await api("/api/period-evaluations/confirm",{classroomId,periodId,studentId,competencyId,evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:saved.draft_revision,achievementLevel:level,teacherAnalysis:analysis,teacherJustification:reason,conclusionText:""});
+    const saved=detail.draft?{draft_revision:detail.draft.revision}:await writeDraft();
+    await api("/api/period-evaluations/save-and-confirm",{classroomId,periodId,studentId,competencyId,evidenceFingerprint:detail.evidence_fingerprint,expectedDraftRevision:saved.draft_revision,achievementLevel:level,teacherAnalysis:analysis,teacherJustification:reason,conclusionText:""});
     const next=pairs.find(row=>row.student_id!==studentId&&!row.valuation_confirmed&&row.evidence_count>0);
-    await onChanged();setBatchRevision(value=>value+1);setNotice("Valoración confirmada por ti.");setDetail(null);setStudentId(next?.student_id??"");if(!next)setCompetencyId("");
+    if(onConfirmed)onConfirmed(studentId,competencyId,level);else await onChanged();
+    prefetched.current.delete(classroomId+':'+periodId+':'+competencyId+':'+studentId);
+    setBatchRevision(value=>value+1);setSavedSnapshot(snapshot(analysis,level,reason));setNotice("Valoración guardada.");setDetail(null);setStudentId(next?.student_id??"");if(!next)setCompetencyId("");
   }catch(cause){setError((cause as Error).message);}finally{setBusy(false);setBusyAction(null);}}
-  const previousValuation=detail&&<aside aria-label="Valoración del bimestre anterior" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-[#f4fafc] px-3 py-3 text-sm text-[#345372]"><div><p className="font-semibold">{detail.previous_valuation?.period_label??'Bimestre anterior'}</p><p className="mt-1">{detail.previous_valuation?.level?'Nota confirmada por la profesora':detail.previous_valuation?'Sin valoración confirmada en esta competencia':'Es el primer período del año'}</p></div>{detail.previous_valuation?.level&&<strong className="rounded-lg border border-[#acd7e5] bg-white px-4 py-2 text-lg text-[#07576c]">{detail.previous_valuation.level}</strong>}</aside>;
+  const previousValuation=detail&&<aside aria-label="Valoración del bimestre anterior" className={styles.previousValuation}><ClipboardList aria-hidden="true"/><div><p className="font-semibold">{detail.previous_valuation?.period_label??'Bimestre anterior'}</p><p>{detail.previous_valuation?.level?'Valoración anterior':detail.previous_valuation?'Sin valoración registrada':'Primer período del año'}</p></div>{detail.previous_valuation?.level&&<strong>{detail.previous_valuation.level}</strong>}</aside>;
+  const ageGuidance=detail?.evaluation_guidance&&<aside className={styles.ageGuidance}><BookOpen aria-hidden="true"/><div><p className="font-semibold">Guía breve · {detail.evaluation_guidance.age} años</p><p>{detail.evaluation_guidance.focus??'Revisa el referente del ciclo y los criterios trabajados.'}</p></div></aside>;
   const previousRank=EVALUATION_LEVELS.findIndex(item=>item.value===detail?.previous_valuation?.level);
   const chosenRank=EVALUATION_LEVELS.findIndex(item=>item.value===level);
   return <div className="space-y-6">
-    <AlertDialog open={confirmAnalysis} onOpenChange={setConfirmAnalysis}><AlertDialogContent>
-      <AlertDialogHeader><AlertDialogTitle>Antes de volver a analizar</AlertDialogTitle><AlertDialogDescription>{assessmentReanalysisWarning({level,reason,analysis})}</AlertDialogDescription></AlertDialogHeader>
-      <AlertDialogFooter><AlertDialogCancel>Conservar mi borrador</AlertDialogCancel><AlertDialogAction onClick={()=>void analyze(true)}>Continuar con el análisis</AlertDialogAction></AlertDialogFooter>
-    </AlertDialogContent></AlertDialog>
-    {notice&&<WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
+    {notice&&<WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {!competencyId?<section aria-label="Competencias del bimestre" className={styles.competencyOverview}>
       <div className={styles.reviewIntro}><div><h2>¿Qué competencia revisamos?</h2><p>Las observaciones ya están guardadas. Ahora tú eliges y confirmas la valoración de cada niño.</p></div><p className={styles.reviewCount}><ChartColumn aria-hidden="true" size={20}/><span><strong>{pending.length}</strong> valoraciones por revisar</span></p></div>
       <div className={styles.competencyList}>{scope.map(card=>{const own=rows.filter(row=>row.competency_id===card.id),confirmed=own.filter(row=>row.valuation_confirmed).length,unobserved=own.filter(row=>!row.evidence_count&&!row.level).length;return <article key={card.id} className={styles.competencyRow} style={competencyTheme(card.id)}>
@@ -126,23 +119,22 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
         <div className="min-w-0 space-y-4 rounded-2xl border bg-white p-4 sm:p-5">
       {!detail&&studentId&&!error&&<LoadingState label="Reuniendo sus evidencias…"/>}
       {!studentId&&<p className="p-4 text-[#526b87]">Selecciona un niño para revisar sus evidencias.</p>}
-      {detail&&<><header className={styles.studentHeader}><h3 className="text-xl font-bold">{name(studentId)}</h3><span className={`rounded-xl px-3 py-2 text-xs font-semibold ${current?.valuation_confirmed?"bg-[#e5f6ee] text-[#12634e]":"bg-[#fff4df] text-[#88520b]"}`}>{current?.valuation_confirmed?"Valoración confirmada":"Pendiente de revisión docente"}</span><div className="flex gap-1"><Button variant="outline" className="min-h-11" aria-label="Alumno anterior" disabled={busy||selectedIndex<=0} onClick={()=>selectStudent(visiblePairs[selectedIndex-1].student_id)}><ArrowLeft aria-hidden="true"/></Button><Button variant="outline" className="min-h-11" aria-label="Siguiente alumno" disabled={busy||selectedIndex<0||selectedIndex>=visiblePairs.length-1} onClick={()=>selectStudent(visiblePairs[selectedIndex+1].student_id)}><ArrowRight aria-hidden="true"/></Button></div></header>
+      {detail&&<><header className={styles.studentHeader}><h3 className="text-xl font-bold">{name(studentId)}</h3><span className={styles.studentCompetency} style={competencyTheme(competencyId)} title={scope.find(card=>card.id===competencyId)?.name}><CompetencyIdentity id={competencyId} name={scope.find(card=>card.id===competencyId)?.name??competencyId} compact/></span><div className="flex gap-1"><Button variant="outline" className="min-h-11" aria-label="Alumno anterior" disabled={busy||selectedIndex<=0} onClick={()=>selectStudent(visiblePairs[selectedIndex-1].student_id)}><ArrowLeft aria-hidden="true"/></Button><Button variant="outline" className="min-h-11" aria-label="Siguiente alumno" disabled={busy||selectedIndex<0||selectedIndex>=visiblePairs.length-1} onClick={()=>selectStudent(visiblePairs[selectedIndex+1].student_id)}><ArrowRight aria-hidden="true"/></Button></div></header>
         <section aria-label="Evidencias de aprendizaje" className="space-y-3"><h4 className="flex items-center gap-2 font-bold"><ImageIcon aria-hidden="true" className="size-5 text-[#087d96]"/>Evidencias de aprendizaje</h4>{detail.timeline.map(item=><article key={item.id} className={`rounded-xl border border-[var(--ayni-panel-border)] p-3 text-sm ${item.media_url?"grid items-start gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]":""}`}>{item.media_url&&<PrivateEvidenceAttachment key={item.id} path={item.media_url} compactPreview/>}<div className="min-w-0"><p className="text-xs font-medium text-[#526b87]">{new Date(`${item.observed_on}T12:00:00`).toLocaleDateString("es-PE")}</p><h5 className="mt-1 font-bold">{item.activity_title}</h5><p className="mt-3 whitespace-pre-wrap leading-relaxed">{item.observation_text||"Sin nota escrita."}</p>{item.criterion_text&&<p className="mt-3 rounded-lg bg-[#f3f7fb] p-3 text-[#526b87]"><b>Criterio:</b> {item.criterion_text}</p>}</div></article>)}</section>
         {!detail.timeline.length?<>{previousValuation}<WorkflowFeedback tone="info">Sin evidencia en este período. No es una valoración C. Sigue observando; no se exige una nota.</WorkflowFeedback>{detail.draft&&!detail.assessment&&<AsyncButton busy={busy&&busyAction==="confirmation"} busyLabel="Guardando…" disabled={closed||busy} onClick={()=>void saveObservationPending()}>Guardar pendiente de observación</AsyncButton>}</>:<>
-          <section className="space-y-3 rounded-2xl bg-[#edf9fb] p-4"><h4 className="flex items-center gap-2 font-bold"><Sparkles aria-hidden="true" className="size-5 text-[#087d96]"/>Lo que observa Ayni</h4>{current?.valuation_confirmed&&!editing&&analysis?<p className="whitespace-pre-wrap text-sm leading-relaxed text-[#345372]">{analysis}</p>:!analysis?<p className="text-sm text-[#345372]">Puedes solicitar un análisis de las evidencias. Tú decides la valoración.</p>:null}{(!current?.valuation_confirmed||editing)&&<><p className="text-sm leading-relaxed text-[#345372]">Usa IA para resumir las notas escritas de este niño y competencia. No envía fotos ni elige la nota.</p><AsyncButton variant="outline" busy={busy&&busyAction==="analysis"} busyLabel="Analizando las observaciones…" disabled={closed||busy} onClick={()=>void analyze()}>Analizar evidencias con Ayni</AsyncButton>{busy&&busyAction==="analysis"&&<LoadingState label="Ayni está revisando las observaciones. El resultado aparecerá aquí."/>}{analysisError&&<WorkflowFeedback tone="error">{analysisError}</WorkflowFeedback>}{analysisNotice&&<WorkflowFeedback tone="success">{analysisNotice}</WorkflowFeedback>}<label className="block text-sm font-semibold">¿Qué muestran estas evidencias?<Textarea className="mt-2 bg-white" disabled={closed||busy} value={analysis} onChange={event=>setAnalysis(event.target.value)}/></label></>}{detail.timeline.length<3&&<p className="rounded-xl bg-[#e3eff8] p-3 text-sm text-[#345372]">Hay pocas evidencias. Esto no significa automáticamente una dificultad.</p>}</section>
+          <section className="space-y-3 rounded-2xl bg-[#edf9fb] p-4"><h4 className="flex items-center gap-2 font-bold"><Sparkles aria-hidden="true" className="size-5 text-[#087d96]"/>Análisis de Ayni</h4>{current?.valuation_confirmed&&!editing?<p className="whitespace-pre-wrap text-sm leading-relaxed text-[#345372]">{analysis}</p>:<Textarea aria-label="Análisis de Ayni" className="min-h-32 bg-white text-sm leading-relaxed" disabled={closed||busy} placeholder="Escribe qué muestran las observaciones." value={analysis} onChange={event=>setAnalysis(event.target.value)}/>}</section>
           <h4 className="flex items-center gap-2 pt-2 font-bold"><ChartColumn aria-hidden="true" className="size-5 text-[#087d96]"/>Valoración docente</h4>
-          {previousValuation}
+          <div className={styles.valuationReferences}>{previousValuation}{ageGuidance}</div>
           {current?.valuation_confirmed&&!editing?<><p className="rounded-xl bg-[#e5f6ee] p-3 font-semibold text-[#12634e]">Valoración confirmada: {detail.assessment?.achievement_level}</p>{reason&&<p className="whitespace-pre-wrap text-sm leading-relaxed text-[#526b87]">{reason}</p>}<Button variant="outline" disabled={closed} onClick={()=>setEditing(true)}>Corregir valoración</Button></>:<>
             {editing&&<WorkflowFeedback tone="info">Al cambiar esta valoración, su conclusión y el informe de este niño tendrán que prepararse de nuevo. Las versiones anteriores se conservan.</WorkflowFeedback>}
             {detail.draft?.details?.information_status==="insufficient"&&<WorkflowFeedback tone="info">Información insuficiente: {assessmentDisplayText(detail.draft.details.insufficiency_reason,name(studentId))}</WorkflowFeedback>}
-            {detail.evaluation_guidance&&<div className="space-y-1 text-sm leading-relaxed text-[#345372]"><p className="font-semibold">Guía breve · {detail.evaluation_guidance.age} años</p>{detail.evaluation_guidance.focus?<p>{detail.evaluation_guidance.focus}</p>:<p>El programa curricular no incluye un desempeño específico para esta edad en esta competencia. Revisa el referente del ciclo y los criterios trabajados.</p>}</div>}
-            <fieldset disabled={closed||busy}><legend className="mb-2 text-sm font-semibold">Valoración que confirmas</legend><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{EVALUATION_LEVELS.map(({value,label,hint})=><label key={value} className={"flex cursor-pointer items-start gap-2 rounded-xl border p-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#087d96] "+(level===value?"border-[#087d96] bg-[#eaf7fb]":"bg-white hover:bg-[#f4fafc]")}><input className="mt-1 size-4 shrink-0 accent-[#087d96]" type="radio" name="achievement" checked={level===value} onChange={()=>setLevel(value)}/><span><b>{value}</b><small className="block font-semibold">{label}</small><small className="mt-2 block leading-relaxed text-[#345372]">{hint}</small></span></label>)}</div></fieldset>
+            <fieldset disabled={closed||busy}><legend className="mb-3 text-sm font-semibold">Selecciona la valoración</legend><div className={styles.gradeOptions}>{EVALUATION_LEVELS.map(({value})=><label key={value} className={styles.gradeOption} data-level={value} data-selected={level===value}><input className="sr-only" type="radio" name="achievement" checked={level===value} onChange={()=>setLevel(value)}/><b>{value}</b><span>{{AD:'Destacado',A:'Esperado',B:'En proceso',C:'En inicio'}[value]}</span></label>)}</div></fieldset>
             {previousRank>=0&&chosenRank>previousRank&&<WorkflowFeedback tone="info">La nota anterior fue {detail.previous_valuation?.level}. Revisa las evidencias y el contexto antes de confirmar una valoración menor. La decisión sigue siendo tuya.</WorkflowFeedback>}
-            {detail.evaluation_guidance&&<><p className="text-xs leading-relaxed text-[#526b87]">{detail.evaluation_guidance.note} Sin evidencia no equivale a C.</p>{detail.evaluation_guidance.performances.length>0&&<details className="rounded-xl border px-3 text-sm"><summary className="min-h-11 cursor-pointer py-3 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2">Ver desempeños oficiales de {detail.evaluation_guidance.age} años</summary><ul className="list-disc space-y-3 pl-5 pb-3 leading-relaxed text-[#345372]">{detail.evaluation_guidance.performances.map(item=><li key={item.id}>{item.text} <span className="text-xs">(p. {item.page})</span></li>)}</ul><a href={detail.evaluation_guidance.source.url} target="_blank" rel="noreferrer" className="mb-3 inline-flex min-h-11 items-center rounded-lg border px-3 font-medium underline underline-offset-4">Programa Curricular de Educación Inicial · MINEDU</a></details>}</>}
+            {detail.evaluation_guidance&&detail.evaluation_guidance.performances.length>0&&<details className="rounded-xl border px-3 text-sm"><summary className="min-h-11 cursor-pointer py-3 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2">Ver desempeños oficiales de {detail.evaluation_guidance.age} años</summary><ul className="list-disc space-y-3 pl-5 pb-3 leading-relaxed text-[#345372]">{detail.evaluation_guidance.performances.map(item=><li key={item.id}>{item.text} <span className="text-xs">(p. {item.page})</span></li>)}</ul><a href={detail.evaluation_guidance.source.url} target="_blank" rel="noreferrer" className="mb-3 inline-flex min-h-11 items-center rounded-lg border px-3 font-medium underline underline-offset-4">Programa Curricular de Educación Inicial · MINEDU</a></details>}
             {needsReason&&<label className="block text-sm font-semibold">Sustento de tu decisión con evidencia limitada<Textarea className="mt-1" disabled={closed||busy} value={reason} onChange={event=>setReason(event.target.value)}/></label>}
             {dirty&&<p role="status" className="text-sm text-[#526b87]">Cambios pendientes de guardar.</p>}
             <div className={styles.actionBar}><AsyncButton variant="outline" busyLabel="Guardando borrador…" busy={busy&&busyAction==="draft"} disabled={closed||busy||!dirty} onClick={()=>void saveDraft()}>Guardar borrador</AsyncButton>
-            <AsyncButton busyLabel="Guardando…" busy={busy&&busyAction==="confirmation"} disabled={closed||busy||!level||!analysis.trim()||needsReason&&!reason.trim()} onClick={()=>void confirm()}>Confirmar y siguiente</AsyncButton></div>
+            <AsyncButton busyLabel="Guardando…" busy={busy&&busyAction==="confirmation"} disabled={closed||busy||!level||!analysis.trim()||needsReason&&!reason.trim()} onClick={()=>void confirm()}>Guardar y siguiente</AsyncButton></div>
           </>}
         </>}
       </>}
