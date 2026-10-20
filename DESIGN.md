@@ -55,3 +55,6 @@ El feedback posterior sustituye el fondo gris azulado del campo editable por bla
 ### Lenguaje sencillo en informes · 2026-10-20
 
 Se conserva el diseño actual. La versión familiar dice «Lo que observamos», «Apoyos en el aula» y «Qué seguiremos trabajando». El resumen es editable al revisar una nueva propuesta y la conclusión original se consulta en un detalle desplegable. Las versiones anteriores se actualizan solo con una acción explícita. Palabras cotidianas y recomendaciones breves, sin atribuir apoyos futuros al pasado ni añadir trámites.
+## Asistencia en informes familiares · 2026-10-20
+
+Refinamiento del modo Operate. Gráfica horizontal pequeña, con etiquetas y cantidades legibles sin depender del color: verde Presente, ámbar Llegó tarde, rojo Faltó; justificada y sin registro solo cuando existen. Resumen breve y fecha de corte. Ubicación junto al resumen del alumno, antes de las competencias; Word la incluye una vez en la primera hoja mediante tablas nativas, manteniendo una competencia por página. Sin acciones ni explicaciones largas dentro del gráfico; carga y error recuperable en pantalla.

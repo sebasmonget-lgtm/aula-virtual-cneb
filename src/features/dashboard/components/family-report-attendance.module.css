@@ -1,0 +1,11 @@
+.attendance { padding-block: 1rem; border-block: 1px solid #d1e2ea; color: #173352; }
+.attendance h3 { display: flex; align-items: center; gap: .5rem; font-weight: 700; }
+.attendance h3 svg { color: #14745c; flex-shrink: 0; }
+.summary { margin-top: .4rem; font-size: .875rem; }
+.rows { display: grid; gap: .45rem; max-width: 36rem; margin-top: .8rem; }
+.row { display: grid; grid-template-columns: 8.5rem minmax(0,1fr) 2rem; align-items: center; gap: .75rem; font-size: .875rem; }
+.row strong { text-align: right; font-variant-numeric: tabular-nums; }
+.track { height: .7rem; overflow: hidden; background: #e7edf3; border-radius: .2rem; }
+.track div { height: 100%; border-radius: inherit; }
+.note { margin-top: .7rem; color: #456078; font-size: .75rem; line-height: 1.5; }
+@media(max-width: 480px) { .row { grid-template-columns: 7.7rem minmax(0,1fr) 1.5rem; gap: .5rem; } }

@@ -216,7 +216,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       content: { ...selectContent(row.details, ["meaningful_situation", "teacher_preparation", "child_actions", "mediation", "evidence_opportunities", "closure_or_continuity", "competency_status", "competency_id", "route_item_id", "evaluation_criterion", "expected_evidence", "resources", "workshop_type", "workshop_catalog", "document_template_version", "teacher_overrides", "additional_criteria", "observation_moments", "observation_focus", "official_performance_refs"]), purpose: row.details?.purpose || row.purpose, ...(()=>{const resolved=activityMaterials(row.preparation?.materials,row.details,row.experience_details);return {materials:resolved.materials,materials_source:resolved.source};})() } };
   }
   const row = (await db.query(`select r.id,r.status,r.version,r.details,r.period_start,r.period_end,r.evaluation_period_id,r.teacher_confirmed_at,
-    p.label as period_label,s.id as student_id,s.first_name,s.last_name,s.preferred_name,ag.age_years,to_jsonb(s)->>'profile_photo_path' as photo_path,to_jsonb(r)->'source_conclusion_ids' as conclusion_ids,sy.year,c.section,c.institution_name,profile.display_name as teacher_name from family_reports r
+    p.label as period_label,s.id as student_id,s.first_name,s.last_name,s.preferred_name,ag.age_years,to_jsonb(s)->>'profile_photo_path' as photo_path,to_jsonb(r)->'source_conclusion_ids' as conclusion_ids,sy.year,c.id as classroom_id,to_jsonb(c)->>'status' as classroom_status,c.section,c.institution_name,profile.display_name as teacher_name from family_reports r
     join students s on s.id=r.student_id join classrooms c on c.id=s.classroom_id
     join school_years sy on sy.id=c.school_year_id join profiles profile on profile.user_id=c.teacher_id
     join age_grades ag on ag.id=c.age_grade_id
@@ -226,7 +226,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
   return row ? { id: row.id, kind, title: `Informe a la familia de ${[row.first_name,row.last_name].filter(Boolean).join(" ")}`,
     status: row.status, version: Number(row.version), school_year: Number(row.year),
     classroom: row.section, institution_name: row.institution_name,teacher_name:row.teacher_name,age:Number(row.age_years),student_id:row.student_id,photo_revision:createHash("sha256").update(row.photo_path??"none").digest("hex"),achievement_levels:levels,
-    evaluation_period_id:row.evaluation_period_id??null,period_label:row.period_label??null,
+    classroom_id:row.classroom_id,classroom_status:row.classroom_status,evaluation_period_id:row.evaluation_period_id??null,period_label:row.period_label??null,
     period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end),
     confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
     content: selectContent(row.details, ["introduction", "sections", "closing_note", "family_agreements"]) } : null;

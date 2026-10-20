@@ -31,6 +31,15 @@ async function xmlForWithCards(document, competencyCards = cards) {
 }
 const xmlFor = xmlForWithCards;
 
+test('Word familiar muestra barras y cantidades de asistencia sin cambiar el informe ni mezclar tardanzas',async()=>{
+ const document=base('family_report',{introduction:'Compartimos sus aprendizajes.',sections:[]}),before=structuredClone(document);
+ const attendance={total:10,present:6,late:1,absent:1,excused:1,pending:1,as_of:'2026-12-18'};
+ const bytes=await renderSavedDocumentWord(document,cards,{attendance}),zip=await JSZip.loadAsync(bytes),xml=await zip.file('word/document.xml').async('string');
+ for(const text of ['Asistencia del bimestre','Asistió 7 de 10 días de clase.','Presente','Llegó tarde','Faltó','Falta justificada','Sin registro','1 día sin registrar','18/12/2026'])assert.ok(xml.includes(text),text);
+ for(const fill of ['14745c','a36009','b43746','326e9e','62758a'])assert.match(xml,new RegExp(`w:fill="${fill}"`));
+ assert.equal((xml.match(/Asistencia del bimestre/g)??[]).length,1);assert.deepEqual(document,before);assert.deepEqual(attendance,{total:10,present:6,late:1,absent:1,excused:1,pending:1,as_of:'2026-12-18'});
+});
+
 test('Word imprime la versión sencilla sin modificar la conclusión ni la nota docente',async()=>{
  const proposal={introduction:'Compartimos lo aprendido.',sections:[{competency_id:'COM_ORAL',progress_summary:'Ana contó lo que vio.',examples:['Explicó por qué eligió una figura.'],support_or_conditions:['Con una pregunta de la profesora.'],next_steps:['Conversaremos sobre otras figuras.'],family_suggestions:['Pregúntale por su dibujo.'],insufficiency_note:null}],closing_note:'Sigamos acompañándola.'};
  const content=preserveConfirmedFamilySections(proposal,[{competency_v4_id:'COM_ORAL',details:{information_status:'sufficient',conclusion_text:'Expresa interpretaciones sustentadas en información contextual.',progress_examples:['Ejemplo canónico conservado.'],support_or_conditions:[],next_steps:[]}}],{captureFamilyWording:true});

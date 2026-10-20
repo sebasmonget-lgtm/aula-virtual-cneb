@@ -1,5 +1,11 @@
 # Errores y soluciones
 
+## 2026-10-20 — Faltaba la gráfica de asistencia en el informe familiar
+
+Síntoma: los informes y sus Word mostraban conclusiones y notas sin el resumen gráfico de asistencia acordado. Causa: los lectores familiares no consumían el resumen existente del calendario/asistencia. Solución: mismo cálculo autorizado por aula y bimestre en pantalla y descarga, filtrado al alumno; barras nativas en Word y barras con texto en la interfaz. Fecha de corte visible, tardanza separada, sin registro explícito. No nuevas llamadas a IA ni escrituras pedagógicas.
+
+Prevención: pruebas de conteo excluyente, días sin datos, barras Word, preservación del texto y notas; comparación funcional de los diez alumnos contra el resumen real. La verificación visual y publicación deben constar en los recibos de QA_ASISTENCIA_FAMILIAS_2026-10-20.md antes de declarar terminada la entrega.
+
 ## 2026-10-20 — QA final: notas del Excel y avisos repetidos en informes
 
 Síntoma: el Excel coloreaba en verde cualquier letra confirmada aunque la interfaz distingue AD/A/B/C. Causa: estilo único de celda para cualquier valoración confirmada. Solución: estilos por letra con la misma paleta aprobada, sin colorear notas ausentes ni cambiar datos/filtros. Prueba del archivo OOXML vincula cada celda a su fill y cubre las cuatro letras y el pendiente.

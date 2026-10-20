@@ -12,6 +12,7 @@ import { renderAnnualPlanUnifiedWord } from "./annual-plan-unified-word.mjs";
 import { renderLearningExperienceUnifiedWord } from "./learning-experience-unified-word.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
 import { renderFamilyReportWord } from "./family-report-word.mjs";
+import { loadAttendanceSummary } from './attendance-summary.mjs';
 
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const lines = (value) => Array.isArray(value) ? value.map(clean).filter(Boolean) : [];
@@ -192,11 +193,11 @@ function contentForPeriodClosure(document,names){
 }
 
 /** Render only the authorized, presentable projection returned by loadSavedDocument. */
-export async function renderSavedDocumentWord(document, competencyCards = [], { logo = null, studentPhoto = null } = {}) {
+export async function renderSavedDocumentWord(document, competencyCards = [], { logo = null, studentPhoto = null, attendance = null } = {}) {
   if (!document || !["annual_plan", "diagnostic_summary", "experience", "activity", "family_report", "period_closure"].includes(document.kind)) {
     throw new Error("Documento no disponible para Word.");
   }
-  if (document.kind === 'family_report') return renderFamilyReportWord(document,competencyCards,{logo,studentPhoto});
+  if (document.kind === 'family_report') return renderFamilyReportWord(document,competencyCards,{logo,studentPhoto,attendance});
   if (document.kind === "annual_plan" && document.content?.journey_version === 2) return renderAnnualJourneyWord(document, competencyCards, {logo});
   if (document.kind === "annual_plan" && document.source_plan_format === "annual_preplan_v1" && !document.formal_ready)
     throw new Error("El Word de esta versión se está preparando. Inténtalo nuevamente cuando esté listo.");
@@ -256,6 +257,11 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
 export async function prepareWordDownload(db, teacherId, kind, id, competencyCards = [], options = {}) {
   const document = await loadSavedDocument(db, teacherId, kind, id);
   if (!document) return null;
+  if(kind==='family_report'&&document.evaluation_period_id&&document.classroom_status==='active'){
+    const summary=await loadAttendanceSummary(db,{teacherId,classroomId:document.classroom_id,periodId:document.evaluation_period_id,...(options.today?{today:options.today}:{})});
+    const child=summary.children.find(row=>row.id===document.student_id);
+    options={...options,attendance:child?{...child,as_of:summary.as_of}:null};
+  }
   if (kind === "diagnostic_summary") {
     const context = await loadDiagnosticWordContext(db, teacherId, id);
     if (!context) return null;
