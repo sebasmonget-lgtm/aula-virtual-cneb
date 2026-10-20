@@ -1,0 +1,13 @@
+{
+  "family_caregivers": {
+    "path": "/evaluation/family-caregivers.webp",
+    "width": 640,
+    "height": 640,
+    "has_alpha": true,
+    "bytes": 67132,
+    "sha256": "dab2d9e684158707596bd1ddf1e817e7335073c876d212efc6bee03807ba354e",
+    "tool": "built-in image_gen",
+    "intent": "Higher-resolution sibling of project-illustrations/parents.webp; the original timeline asset remains unchanged",
+    "prompt": "Recreate the existing Ayni caregiver couple at higher resolution, preserving pose, outfits, warm brown outlines, purple hair accessory, rounded preschool illustration style and composition. Transparent alpha, no text, no new characters or props. Intended display 160–176px on retina screens; clean lines and simple colors."
+  }
+}

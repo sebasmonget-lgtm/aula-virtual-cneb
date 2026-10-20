@@ -1,0 +1,104 @@
+{
+  "date": "2026-10-20",
+  "baseSHA": "777435d5a98968548940fc376314d22565c4eb30",
+  "branch": "codex/qa-corrections-20261019",
+  "publication": "local only; no commit, push or deployment in this round",
+  "scope": [
+    "period evaluation presentation",
+    "family report presentation",
+    "consolidated presentation",
+    "downloaded sheets in workshop library"
+  ],
+  "catalogue": {
+    "workshops": 103,
+    "ageVariants": 252,
+    "downloadedSourcesInInventory": 389,
+    "downloadedMineduInInventory": 117,
+    "integratedMineduSheets": 40,
+    "linkedWorkshops": 12,
+    "newWorkshops": 3,
+    "printedChildPages": 60,
+    "byAge": {
+      "4": 21,
+      "5": 19
+    },
+    "otherSourcesNotIntegrated": 349
+  },
+  "verification": {
+    "regressions": 59,
+    "imageLibraryTests": 7,
+    "httpCases": [
+      {
+        "sheet": "minedu_juega_5_033",
+        "status": 200,
+        "pass": true
+      },
+      {
+        "sheet": "minedu_crea_5_030",
+        "status": 200,
+        "pass": true
+      },
+      {
+        "sheet": "minedu_crea_4_022",
+        "status": 422,
+        "pass": true
+      },
+      {
+        "sheet": "minedu_crea_5_003",
+        "status": 422,
+        "pass": true
+      },
+      {
+        "sheet": "../../secret",
+        "status": 422,
+        "pass": true
+      }
+    ],
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "vinextBuild": "PASS",
+    "nextWebpackBuild": "PASS",
+    "pdfVisual": "60 child pages rendered and inspected in contact sheets",
+    "uiVisual": "CUA local fixture with 25 students, normal width and 390px iframe; no cloud UI mutation",
+    "uiCases": [
+      "competency colours and pictures",
+      "first unconfirmed student selected; next student",
+      "no default achievement level",
+      "three-space navigation",
+      "family empty and saved states",
+      "fixed student column while scrolling horizontally",
+      "library filter 87 to 10 at age 5",
+      "three eligible individual folding-sheet links"
+    ]
+  },
+  "integrity": {
+    "sourceHashesPreserved": true,
+    "existing100WorkshopIdsPreserved": true,
+    "historicalSnapshotsEdited": false,
+    "teacherGradesOrClosuresChanged": false,
+    "productionTouched": false,
+    "cloudDataWrites": 0,
+    "applicationAICalls": 0,
+    "builtInImageEdits": 1
+  },
+  "packaging": {
+    "rawWindowsTraceMB": 270.5,
+    "projectedLinuxTraceMB": 150.2,
+    "mastersExcludedFromVercelUpload": 61,
+    "originalsKept": 40,
+    "runtimeImagesKept": 61,
+    "actualDeploymentTested": false,
+    "note": "Windows Next trace exclusions fail on backslash paths; Linux exclusions and .vercelignore prevent upload of the unreferenced editing masters."
+  },
+  "artifacts": {
+    "images": "outputs/evaluar-identidad-20261020/",
+    "imageProvenance": "assets/evaluation/illustrations.json",
+    "sheetManifest": "assets/workshop-resources/minedu/manifest.json"
+  },
+  "limits": [
+    "Remaining 349 inventory entries are not integrated by this change",
+    "No production readiness or annual QA certification",
+    "No new AI generation of family reports or Word download in the visual fixture",
+    "Vercel package size and smoke must be checked when publishing"
+  ]
+}

@@ -17,13 +17,13 @@ import {startActivityToday} from './activity-today-execution.mjs';
 import {loadLibraryResources} from '../../scripts/library-resources.mjs';
 import {workshopAges,workshopForAge,workshopAgeLabel} from './workshop-ages.mjs';
 
-test('100 talleres, 246 adaptaciones: edades curriculares, guía docente, criterio y recursos concretos',async()=>{
-  const kb=await loadKnowledgeBaseV4();assert.equal(workshopCatalog.length,100);
+test('103 talleres, 252 adaptaciones: edades curriculares, guía docente, criterio y recursos concretos',async()=>{
+  const kb=await loadKnowledgeBaseV4();assert.equal(workshopCatalog.length,103);
   const files=await loadLibraryResources();
-  assert.equal(new Set(workshopCatalog.map(w=>w.id)).size,100);
-  assert.equal(new Set(workshopCatalog.map(w=>w.title)).size,100,'100 propuestas distintas, no variantes contadas como talleres');
+  assert.equal(new Set(workshopCatalog.map(w=>w.id)).size,103);
+  assert.equal(new Set(workshopCatalog.map(w=>w.title)).size,103,'103 propuestas distintas, no variantes contadas como talleres');
   const variants=workshopCatalog.flatMap(w=>workshopAges(w).map(age=>workshopForAge(w,age)));
-  assert.equal(variants.length,246);
+  assert.equal(variants.length,252);
   for(const w of variants){
     const card=kb.competencyCards.find(c=>c.id===w.competency_id);
     assert.ok(card?.ages[String(w.age)]);
@@ -42,7 +42,7 @@ test('100 talleres, 246 adaptaciones: edades curriculares, guía docente, criter
   }
 });
 
-test('las 246 variantes se publican con adaptación y criterio propios en las tres edades',async()=>{
+test('las 252 variantes se publican con adaptación y criterio propios en las tres edades',async()=>{
   const db=new PGlite(),exported=new Set(),kb=await loadKnowledgeBaseV4();try{
     for(const file of (await readdir(new URL('../../local-db/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())
       await db.exec(await readFile(new URL('../../local-db/migrations/'+file,import.meta.url),'utf8'));
@@ -51,7 +51,7 @@ test('las 246 variantes se publican con adaptación y criterio propios en las tr
       const library=await loadWorkshopLibrary(db,{teacherId,classroomId:c.classroomId,today:'2026-03-16'});
       const dates=library.available_dates;
       const variants=workshopCatalog.map(w=>workshopForAge(w,age)).filter(Boolean);
-      assert.equal(variants.length,age===3?78:84);
+      assert.equal(variants.length,age===3?78:87);
       assert.equal(library.workshops.length,variants.length);
       assert.ok(library.workshops.every(w=>workshopAges(w).includes(age)));
       assert.ok(library.workshops.some(w=>workshopAges(w).length>1),'Las propuestas multiedad compatibles también se pueden elegir.');
@@ -75,14 +75,14 @@ test('las 246 variantes se publican con adaptación y criterio propios en las tr
         const snapshot=(await db.query('select details from activities where id=$1',[saved.id])).rows[0].details;
         assert.equal(snapshot.workshop_catalog.age,age);
         assert.equal(snapshot.workshop_catalog.id,w.id);
-        assert.equal(snapshot.workshop_catalog.version,'1.5.0');
+        assert.equal(snapshot.workshop_catalog.version,'1.6.0');
         assert.equal((await scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,workshopId:w.id,occursOn:dates[index],clientRequestId:
           (await db.query('select generation_metadata from activities where id=$1',[saved.id])).rows[0].generation_metadata.client_request_id,today:'2026-03-16'})).id,saved.id);
       }
       if(age===3)await assert.rejects(scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,
         workshopId:'taller-compartido-mensajes-que-llegan',occursOn:dates[20],clientRequestId:randomUUID(),today:'2026-03-16'}),/edad/);
     }
-    assert.equal((await db.query("select count(*)::int as n from activities where details ? 'workshop_catalog'")).rows[0].n,246);
+    assert.equal((await db.query("select count(*)::int as n from activities where details ? 'workshop_catalog'")).rows[0].n,252);
     assert.equal(exported.size,10,'Un Word completo de las nuevas propuestas por cada competencia cubierta.');
   }finally{await db.close();}
 });

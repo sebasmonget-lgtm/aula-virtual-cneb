@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {PDFDocument,StandardFonts,PageSizes,PDFArray,PDFRawStream,PDFName,decodePDFRawStream} from "pdf-lib";
+import {PDFDocument,StandardFonts,PageSizes,PDFArray,PDFRawStream,PDFDict,PDFName,decodePDFRawStream} from "pdf-lib";
 import {nativeWorkshopSource} from "./workshop-print-source.mjs";
 import {workshopCatalog} from "./workshop-catalog.mjs";
 import {workshopAges} from "./workshop-ages.mjs";
@@ -8,6 +8,9 @@ import {workshopForAge} from "./workshop-ages.mjs";
 import {hasWorkshopPrintMaterial} from "./workshop-print-material.mjs";
 import {workshopActivityDetails} from "./workshop-catalog.mjs";
 import {activityPedagogicalBlocks} from "./pedagogical-blocks.mjs";
+import curatedSheets from '../../assets/workshop-resources/minedu/manifest.json' with {type:'json'};
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import {loadWorkshopPrintContext,renderWorkshopPrint,workshopPrintHeaderLayout} from "./workshop-print.mjs";
 
 const normalize=value=>value.replace(/\s+/g,' ').trim();
@@ -31,7 +34,7 @@ test("encabezados largos reservan espacio para colegio, aula y nombre sin superp
   }
 });
 
-test("la descarga imprime solo recursos infantiles y la guía de 246 variantes sigue disponible en Hoy",async()=>{
+test("la descarga imprime solo recursos infantiles y la guía de 252 variantes sigue disponible en Hoy",async()=>{
   let printable=0,withoutSheet=0;
   for(const entry of workshopCatalog)for(const age of workshopAges(entry)){
     const workshop=workshopForAge(entry,age),context={institution_name:'IE Semillas',section:'Los Girasoles',age,student_name:'Lucía Ramírez'};
@@ -55,7 +58,7 @@ test("la descarga imprime solo recursos infantiles y la guía de 246 variantes s
     assert.doesNotMatch(printed,/La guía, paso a paso|Qué hace la profesora|Qué pueden hacer los niños/);
     printable++;
   }
-  assert.equal(printable+withoutSheet,246);
+  assert.equal(printable+withoutSheet,252);
   assert.ok(printable>0&&withoutSheet>0);
 });
 
@@ -80,6 +83,41 @@ test('disponibilidad coincide con los recursos y la edad de las fichas oficiales
   assert.equal(hasWorkshopPrintMaterial({resources:[{url:'/api/library/resources/recurso-conocido/download'}]}),true);
 });
 
+test('las fichas descargadas imprimen solo la hoja infantil y conservan el original con su guía',async()=>{
+  for(const sheet of curatedSheets){
+    const original=await readFile(new URL('../../assets/workshop-resources/minedu/'+sheet.filename,import.meta.url));
+    assert.equal(createHash('sha256').update(original).digest('hex'),sheet.sha256);
+    const source=await PDFDocument.load(original);
+    assert.equal(source.getPageCount(),sheet.original_page_count);
+    assert.ok(sheet.print_pages.length>0);
+    assert.ok(sheet.print_pages.every(n=>!sheet.teacher_guide_pages.includes(n)&&!sheet.blank_reverse_pages.includes(n)&&!sheet.excluded_unrelated_pages.includes(n)));
+    const workshop=workshopForAge(workshopCatalog.find(w=>w.id===sheet.workshop_id),sheet.age);
+    assert.ok(workshop);assert.equal(workshop.competency_id,sheet.competency_id);assert.ok(sheet.fit.length>25&&sheet.classroom_use.length>25);
+    const pdf=await PDFDocument.load(await renderWorkshopPrint({context:{institution_name:'IE Semillas',section:'Girasoles',age:sheet.age},workshopId:sheet.workshop_id,sheetId:sheet.id}));
+    assert.equal(pdf.getPageCount(),sheet.print_pages.length,sheet.id);
+    for(const [index,pageNumber]of sheet.print_pages.entries()){
+      const box=source.getPage(pageNumber-1).getCropBox(),resources=pdf.getPage(index).node.Resources().lookup(PDFName.of('XObject'),PDFDict);
+      const form=pdf.context.lookup(resources.values()[0]);
+      assert.deepEqual(form.dict.lookup(PDFName.of('BBox'),PDFArray).asArray().map(n=>n.asNumber()),[box.x,box.y,box.x+box.width,box.y+box.height]);
+      assert.deepEqual(form.dict.lookup(PDFName.of('Matrix'),PDFArray).asArray().map(n=>n.asNumber()),[1,0,0,1,-box.x||0,-box.y||0],'conserva los bordes cuando el PDF original no empieza en cero');
+    }
+    assert.equal(createHash('sha256').update(await readFile(new URL('../../assets/workshop-resources/minedu/'+sheet.filename,import.meta.url))).digest('hex'),sheet.sha256,'imprimir no modifica el original');
+  }
+});
+
+test('la curaduría amplía el uso y excluye páginas de otros desafíos sin perder recortables',()=>{
+  assert.equal(curatedSheets.length,40);
+  assert.equal(new Set(curatedSheets.map(s=>s.id)).size,40);
+  assert.equal(new Set(curatedSheets.map(s=>s.workshop_id)).size,12);
+  for(const s of curatedSheets){
+    assert.deepEqual([...s.print_pages,...s.teacher_guide_pages,...s.blank_reverse_pages,...s.excluded_unrelated_pages].sort((a,b)=>a-b),Array.from({length:s.original_page_count},(_,i)=>i+1),s.id);
+    assert.ok([0,90,180,270].includes(s.clockwise_rotation));
+  }
+  assert.deepEqual(curatedSheets.find(s=>s.id==='minedu_crea_4_014').print_pages,[1,3],'el rompecabezas conserva también sus piezas');
+  assert.deepEqual(curatedSheets.find(s=>s.id==='minedu_juega_5_030').excluded_unrelated_pages,[3,4],'no incluye La Caperucita Roja en las adivinanzas');
+  assert.deepEqual(curatedSheets.find(s=>s.id==='minedu_crea_5_025').excluded_unrelated_pages,[5,6],'no incluye El nabo gigante en el recorrido del río');
+});
+
 test('la revisión editorial conserva IDs y adapta las acciones a cada experiencia',()=>{
   assert.equal(workshopCatalog.find(w=>w.id==='taller-5-creamos-un-paisaje-sonoro').title,'Inventamos los sonidos de un lugar');
   for(const item of workshopCatalog)for(const age of workshopAges(item)){
@@ -92,6 +130,9 @@ test('la revisión editorial conserva IDs y adapta las acciones a cada experienc
 test("material PDF no permite rutas arbitrarias, una edad ajena o identificar niños de otro aula",async()=>{
   await assert.rejects(()=>renderWorkshopPrint({context:{age:3},workshopId:'taller-5-leemos-y-buscamos-pistas'}),/edad/);
   await assert.rejects(()=>renderWorkshopPrint({context:{age:5},resourceId:'../../secret'}),/disponible/);
+  await assert.rejects(()=>renderWorkshopPrint({context:{age:5},workshopId:'taller-fichas-leemos-y-doblamos',sheetId:'minedu_crea_4_022'}),/no pertenece/);
+  await assert.rejects(()=>renderWorkshopPrint({context:{age:5},workshopId:'taller-fichas-leemos-y-doblamos',sheetId:'minedu_crea_5_003'}),/no pertenece/);
+  await assert.rejects(()=>renderWorkshopPrint({context:{age:5},workshopId:'taller-fichas-leemos-y-doblamos',sheetId:'../../secret'}),/no pertenece/);
   let calls=0;
   const db={query:async()=>({rows:++calls===1?[{id:'classroom',age:5}]:[]})};
   await assert.rejects(()=>loadWorkshopPrintContext(db,{teacherId:'teacher',studentId:'another-child'}),/no pertenece/);

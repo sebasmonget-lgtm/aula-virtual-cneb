@@ -1,5 +1,9 @@
 # Diseño de Ayni
 
+## Evaluar: identidad de competencias · 2026-10-20
+
+Modo Operate. Se conserva la identidad cálida de Ayni: las competencias reutilizan los colores y pictogramas existentes, con alias cortos en las filas y encabezados de matriz; el nombre oficial permanece accesible. La revisión muestra observaciones ya guardadas y valoraciones por revisar como conceptos diferentes. Los tres destinos tienen iconos, contenedor blanco, borde visible y selección teal con aria-current; cada encabezado separa título, bimestre y fechas. Fila de competencia con superficie suave, progreso real y una acción Revisar. Consolidado mantiene columnas compactas y nombres fijos. El estado vacío de informes usa una ilustración de cuidadores de 640px, mostrada a 176px; no se amplía el pictograma de 160px de Mi año.
+
 ## Experiencia cotidiana · modo Operate
 
 La profesora necesita reconocer lo que aportó, observar una actuación y revisar decisiones con poco tiempo. Se conservan tipografía sans, azul oscuro #172b52, teal #087d96, superficies #edf5fa y texto secundario #526b87. Usar los componentes existentes y acciones de al menos 44 px, etiquetas explícitas, foco visible y mensajes de estado.

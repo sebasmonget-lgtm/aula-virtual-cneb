@@ -1,7 +1,7 @@
 import {readFile} from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import {PDFDocument,StandardFonts,rgb,PageSizes} from "pdf-lib";
+import {PDFDocument,StandardFonts,rgb,PageSizes,degrees} from "pdf-lib";
 import {workshopCatalog} from "./workshop-catalog.mjs";
 import {workshopForAge} from "./workshop-ages.mjs";
 import {loadNativeWorkshopSource} from "./workshop-print-source.mjs";
@@ -51,16 +51,18 @@ export async function loadWorkshopPrintContext(db,{teacherId,studentId=null}){
 
 /** One A4 print pipeline for original resources, verified sheets and old PNG links.
  * Never fetch a client URL or accept a filesystem path from the request. */
-export async function renderWorkshopPrint({context,workshopId=null,resourceId=null,legacyResource=null,logo=null}){
+export async function renderWorkshopPrint({context,workshopId=null,resourceId=null,sheetId=null,legacyResource=null,logo=null}){
   const entry=workshopId?workshopCatalog.find(item=>item.id===workshopId):null;
   const workshop=entry&&workshopForAge(entry,context.age);
   if(workshopId&&!workshop)throw new TypeError("Este taller no corresponde a la edad del aula.");
+  const sheets=workshop?curatedWorkshopSheets(workshop.id,context.age):[];
+  if(sheetId&&!sheets.some(sheet=>sheet.id===sheetId))throw new TypeError('La ficha no pertenece a este taller o a la edad del aula.');
   const resource=resourceId?workshopCatalog.flatMap(item=>item.resources).find(item=>item.id===resourceId):null;
   if(resourceId&&!resource)throw new TypeError("El recurso no está disponible.");
   const pdf=await PDFDocument.create(),font=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
   pdf.setTitle(workshop?.title??resource?.title??legacyResource?.title??"Material Ayni");pdf.setAuthor("Ayni Aula");
   const logoImage=logo?await pdf.embedPng(await sharp(logo).png().toBuffer()):null;
-  const header=page=>{
+  const header=(page,sourceLabel=null)=>{
     const {width:w,height:h}=page.getSize();
     const layout=workshopPrintHeaderLayout(context,{width:w,height:h,font,bold,hasLogo:Boolean(logoImage)});
     page.drawRectangle({x:28,y:layout.boxBottom,width:w-56,height:h-28-layout.boxBottom,color:rgb(.92,.97,.98)});
@@ -69,16 +71,26 @@ export async function renderWorkshopPrint({context,workshopId=null,resourceId=nu
     if(logoImage)page.drawImage(logoImage,{x:37,y:h-64,width:34,height:34});
     text(page,context.student_name?`Nombre: ${context.student_name}`:"Nombre: ________________________________________",36,layout.nameY,{font,size:10,width:w-72,lineHeight:14});
     page.drawLine({start:{x:36,y:30},end:{x:w-36,y:30},color:rgb(.7,.86,.85),thickness:1});
-    text(page,`Ayni Aula · Material para acompañar el juego · ${pdf.getPageCount()}`,36,17,{font,size:8,width:w-72});
+    text(page,`${sourceLabel??'Ayni Aula · Material para acompañar el juego'} · ${pdf.getPageCount()}`,36,17,{font,size:8,width:w-72});
     return layout.contentTop;
   };
-  const appendSource=async bytes=>{
+  const appendSource=async(bytes,printPages=null,sourceLabel=null,clockwiseRotation=0)=>{
     if(bytes.subarray(0,4).toString()==='%PDF'){
       const source=await PDFDocument.load(bytes);
-      for(const index of source.getPageIndices()){
-        const embedded=await pdf.embedPage(source.getPage(index)),page=pdf.addPage(embedded.width>embedded.height?[PageSizes.A4[1],PageSizes.A4[0]]:PageSizes.A4);
-        const contentTop=header(page),{width}=page.getSize(),scale=Math.min((width-72)/embedded.width,(contentTop-38)/embedded.height);
-        page.drawPage(embedded,{x:(width-embedded.width*scale)/2,y:contentTop-embedded.height*scale,width:embedded.width*scale,height:embedded.height*scale});
+      if(printPages!==null&&(!Array.isArray(printPages)||!printPages.length||new Set(printPages).size!==printPages.length||printPages.some(page=>!Number.isInteger(page)||page<1||page>source.getPageCount())))
+        throw new TypeError('Las páginas infantiles de la ficha no están disponibles.');
+      // Curated child pages are selected explicitly; the original source bytes,
+      // including its separate teacher guidance, remain untouched.
+      const indices=printPages===null?source.getPageIndices():printPages.map(page=>page-1);
+      for(const index of indices){
+        const original=source.getPage(index),box=original.getCropBox(),rotation=((original.getRotation().angle+clockwiseRotation)%360+360)%360;
+        if(![0,90,180,270].includes(rotation))throw new TypeError('Revisa la orientación de la ficha.');
+        const embedded=await pdf.embedPage(original,{left:box.x,bottom:box.y,right:box.x+box.width,top:box.y+box.height});
+        const rotated=rotation===90||rotation===270,w=rotated?embedded.height:embedded.width,h=rotated?embedded.width:embedded.height;
+        const page=pdf.addPage(w>h?[PageSizes.A4[1],PageSizes.A4[0]]:PageSizes.A4),contentTop=header(page,sourceLabel),{width}=page.getSize(),scale=Math.min((width-72)/w,(contentTop-38)/h);
+        const x=(width-w*scale)/2+(rotation===180?embedded.width*scale:rotation===270?embedded.height*scale:0);
+        const y=contentTop-h*scale+(rotation===90?embedded.width*scale:rotation===180?embedded.height*scale:0);
+        page.drawPage(embedded,{x,y,width:embedded.width*scale,height:embedded.height*scale,rotate:degrees(-rotation)});
       }
     }else{
       const image=await pdf.embedPng(await sharp(bytes).png().toBuffer()),page=pdf.addPage(PageSizes.A4),contentTop=header(page);
@@ -108,18 +120,20 @@ export async function renderWorkshopPrint({context,workshopId=null,resourceId=nu
   // child-facing sheets, stories, cards and other resources for the experience.
   if(!hasWorkshopPrintMaterial({resources:workshop.resources,workshopId:workshop.id,age:context.age}))
     throw new TypeError("Este taller no necesita material para imprimir. Consulta la guía en Hoy.");
-  const standalone=workshop.resources.filter(item=>/^\/workshops\/[a-z0-9-]+\.png$/.test(item.url));
+  const selectedResources=sheetId?[]:workshop.resources;
+  const standalone=selectedResources.filter(item=>/^\/workshops\/[a-z0-9-]+\.png$/.test(item.url));
   for(const item of standalone)await appendOriginal(item);
-  for(const item of workshop.resources.filter(item=>item.url.startsWith('/api/library/resources/'))){
+  for(const item of selectedResources.filter(item=>item.url.startsWith('/api/library/resources/'))){
     const {loadLibraryResources}=await import('../../scripts/library-resources.mjs');
     const original=(await loadLibraryResources()).find(row=>item.url===`/api/library/resources/${row.id}/download`&&row.age===context.age);
     if(!original)throw new TypeError("El material original del taller no está disponible.");
     await appendSource(await readFile(original.download.path));
   }
-  for(const sheet of curatedWorkshopSheets(workshop.id,context.age)){
+  for(const sheet of sheets.filter(sheet=>!sheetId||sheet.id===sheetId)){
     const bytes=await readFile(path.join(process.cwd(),'assets/workshop-resources/minedu',sheet.filename));
     const {createHash}=await import('node:crypto');if(createHash('sha256').update(bytes).digest('hex')!==sheet.sha256)throw new Error("La ficha no coincide con el original verificado.");
-    await appendSource(bytes);
+    if(!Array.isArray(sheet.print_pages))throw new TypeError('Revisa las páginas infantiles de esta ficha antes de imprimirla.');
+    await appendSource(bytes,sheet.print_pages,sheet.source,sheet.clockwise_rotation??0);
   }
   return Buffer.from(await pdf.save());
 }

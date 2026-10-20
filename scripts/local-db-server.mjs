@@ -917,8 +917,8 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         const id = url.pathname.split('/')[3];
         const context = await loadWorkshopPrintContext(db, {teacherId, studentId:url.searchParams.get('studentId')});
         const logo = await loadInstitutionLogoForDocuments(db, teacherId, logoStorage ?? assetsDir);
-        const bytes = await renderWorkshopPrint({context,logo,...(workshopCatalog.some(item=>item.id===id)?{workshopId:id}:{resourceId:id})});
-        const headers = {'content-type':'application/pdf','content-disposition':`attachment; filename="material-${id}.pdf"`,'content-length':String(bytes.length),'cache-control':'private, no-store','x-content-type-options':'nosniff'};
+        const bytes = await renderWorkshopPrint({context,logo,sheetId:url.searchParams.get('sheetId'),...(workshopCatalog.some(item=>item.id===id)?{workshopId:id}:{resourceId:id})});
+        const headers = {'content-type':'application/pdf','content-disposition':`attachment; filename="material-${url.searchParams.get('sheetId')??id}.pdf"`,'content-length':String(bytes.length),'cache-control':'private, no-store','x-content-type-options':'nosniff'};
         if(origin&&allowedOrigins.has(origin)){headers['access-control-allow-origin']=origin;headers['access-control-allow-credentials']='true';headers['access-control-expose-headers']='content-disposition';headers.vary='Origin';}
         response.writeHead(200,headers);response.end(bytes);
       } catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}

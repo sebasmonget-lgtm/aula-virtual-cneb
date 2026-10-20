@@ -15,6 +15,7 @@ import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
 import { PeriodBatchPanel } from "./period-batch-panel";
 import {PrivateEvidenceAttachment} from './private-evidence-attachment';
+import {CompetencyIdentity,competencyTheme} from './competency-identity';
 
 type Person={id:string;first_name:string;last_name:string;preferred_name:string|null};
 type Row={student_id:string;competency_id:string;evidence_count:number;level:string|null;valuation_confirmed:boolean};
@@ -86,9 +87,16 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
     </AlertDialogContent></AlertDialog>
     {notice&&<WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
     {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
-    {!competencyId?<section><p className="text-[#526b87]">{pending.length} valoraciones por confirmar · {rows.filter(row=>!row.evidence_count&&!row.level).length} pendientes de observación.</p><div className="mt-4 divide-y divide-[#d6e5ef]">{scope.map(card=>{const own=rows.filter(row=>row.competency_id===card.id),count=own.filter(row=>row.evidence_count>0&&!row.valuation_confirmed).length;return <div key={card.id} className="flex items-center justify-between gap-3 py-4"><div><h3 className="font-semibold">{card.name}</h3><p className="text-sm text-[#526b87]">{count} por confirmar · {own.filter(row=>!row.evidence_count&&!row.level).length} pendientes de observación</p></div><Button variant="outline" onClick={()=>choose(card.id)}>Revisar</Button></div>;})}</div>{!scope.length&&<p className="mt-4">Todavía no hay competencias trabajadas en este período.</p>}</section>:<section className="space-y-4">
+    {!competencyId?<section aria-label="Competencias del bimestre" className={styles.competencyOverview}>
+      <div className={styles.reviewIntro}><div><h2>¿Qué competencia revisamos?</h2><p>Las observaciones ya están guardadas. Ahora tú eliges y confirmas la valoración de cada niño.</p></div><p className={styles.reviewCount}><ChartColumn aria-hidden="true" size={20}/><span><strong>{pending.length}</strong> valoraciones por revisar</span></p></div>
+      <div className={styles.competencyList}>{scope.map(card=>{const own=rows.filter(row=>row.competency_id===card.id),confirmed=own.filter(row=>row.valuation_confirmed).length,unobserved=own.filter(row=>!row.evidence_count&&!row.level).length;return <article key={card.id} className={styles.competencyRow} style={competencyTheme(card.id)}>
+        <h3><CompetencyIdentity id={card.id} name={card.name}/></h3>
+        <div className={styles.competencyProgress}><p><CheckCircle2 aria-hidden="true" size={15}/>{confirmed} de {own.length} valoraciones confirmadas</p><Progress aria-label={`Valoraciones confirmadas: ${card.name}`} value={own.length?confirmed/own.length*100:0} className="h-2"/>{unobserved>0&&<small>{unobserved} {unobserved===1?"niño sin observaciones":"niños sin observaciones"}</small>}</div>
+        <Button variant="outline" aria-label={`Revisar ${card.name}`} onClick={()=>choose(card.id)}>Revisar<ArrowRight aria-hidden="true" className="size-4"/></Button>
+      </article>;})}</div>{!scope.length&&<p className="mt-4">Todavía no hay competencias trabajadas en este período.</p>}
+    </section>:<section className="space-y-4">
       <Button variant="ghost" disabled={busy} onClick={()=>{if(!allowLeave())return;setCompetencyId("");setStudentId("");setDetail(null);setNotice("");}}>← Competencias</Button>
-      <h2 className="text-xl font-bold leading-snug sm:text-2xl">{scope.find(card=>card.id===competencyId)?.name}</h2>
+      <h2 className={styles.selectedCompetency} style={competencyTheme(competencyId)}><CompetencyIdentity id={competencyId} name={scope.find(card=>card.id===competencyId)?.name??competencyId}/></h2>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border bg-white p-4">
         <p className="font-semibold tabular-nums">{reviewed} de {pairs.length} niños revisados</p>
         <Progress aria-label="Niños con valoración confirmada" value={pairs.length?reviewed/pairs.length*100:0} className="h-3 min-w-24 flex-1"/>
@@ -103,7 +111,7 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
           <div className="my-3 flex flex-wrap gap-1" aria-label="Filtrar estudiantes">{[["all","Todos",pairs.length],["pending","Pendientes",pairs.length-reviewed],["confirmed","Confirmados",reviewed]].map(([value,label,count])=><button key={value} type="button" aria-pressed={rosterFilter===value} onClick={()=>setRosterFilter(String(value))} className={`min-h-11 rounded-xl px-2 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${rosterFilter===value?"bg-[#087d96] text-white":"bg-[#f1f6fa] text-[#345372] hover:bg-[#e3eef5]"}`}>{label} ({count})</button>)}</div>
           <div className="max-h-64 space-y-1 overflow-y-auto overscroll-contain lg:max-h-[58vh]">{visiblePairs.map((row,index)=>{const confirmed=row.valuation_confirmed;return <button key={row.student_id} type="button" disabled={busy} aria-pressed={studentId===row.student_id} onClick={()=>selectStudent(row.student_id)} className={`flex min-h-16 w-full items-center gap-3 rounded-xl p-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#087d96] disabled:opacity-60 ${studentId===row.student_id?"bg-[#e4f3f9] ring-1 ring-inset ring-[#acd7e5]":"hover:bg-[#f3f8fb]"}`}>
             <span aria-hidden="true" className={`flex size-10 shrink-0 items-center justify-center rounded-full font-bold ${index%3===0?"bg-[#ece5fb] text-[#6442a0]":index%3===1?"bg-[#fff0d3] text-[#88520b]":"bg-[#dff3eb] text-[#12634e]"}`}>{name(row.student_id).split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("")}</span>
-            <span className="min-w-0"><span className="block break-words text-sm font-semibold">{name(row.student_id)}</span><span className={`mt-1 flex items-center gap-1 text-xs ${confirmed?"text-[#12634e]":"text-[#88520b]"}`}>{confirmed?<CheckCircle2 aria-hidden="true" className="size-3.5"/>:<Clock3 aria-hidden="true" className="size-3.5"/>}{confirmed?"Confirmado":row.evidence_count?"Por confirmar":"Sin evidencia"}</span></span>
+            <span className="min-w-0"><span className="block break-words text-sm font-semibold">{name(row.student_id)}</span><span className={`mt-1 flex items-center gap-1 text-xs ${confirmed?"text-[#12634e]":"text-[#88520b]"}`}>{confirmed?<CheckCircle2 aria-hidden="true" className="size-3.5"/>:<Clock3 aria-hidden="true" className="size-3.5"/>}{confirmed?"Valoración confirmada":row.evidence_count?"Elegir valoración":"Sin observaciones"}</span></span>
           </button>;})}{!visiblePairs.length&&<p className="p-3 text-sm text-[#526b87]">No hay niños que coincidan con estos filtros.</p>}</div>
         </aside>
         <div className="min-w-0 space-y-4 rounded-2xl border bg-white p-4 sm:p-5">

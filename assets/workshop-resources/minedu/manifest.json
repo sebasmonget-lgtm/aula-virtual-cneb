@@ -1,14 +1,102 @@
 [
   {
     "workshop_id": "taller-biblioteca-adivinanzas-con-pistas",
+    "age": 4,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_crea_4_019",
+    "title": "¡Adivina, adivinador!",
+    "filename": "minedu_crea_4_019.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "e4be25516fa34c3d27d74226741f74cb015632d0e2e273ec008118c5390d4ab1",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Relacionar una posible respuesta con las pistas que se escuchan leer.",
+    "classroom_use": "Tras jugar con las adivinanzas del taller, puedes elegir una de estas fichas para leer otras pistas. No se compite por responder rápido.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-adivinanzas-con-pistas",
+    "age": 4,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_juega_4_020",
+    "title": "¡Adivina, adivinador!",
+    "filename": "minedu_juega_4_020.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 90,
+    "original_page_count": 2,
+    "sha256": "c7aee7145c66c498d1a081e22d9460c3196a5961be0224aa4b6663b77f00c04c",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Relacionar una posible respuesta con las pistas que se escuchan leer.",
+    "classroom_use": "Tras jugar con las adivinanzas del taller, puedes elegir una de estas fichas para leer otras pistas. No se compite por responder rápido.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-adivinanzas-con-pistas",
     "age": 5,
     "competency_id": "COM_LECTURA",
     "id": "minedu_crea_5_027",
     "title": "¡Adivina, adivinador!",
     "filename": "minedu_crea_5_027.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
     "sha256": "127055c98bb5cd3be27a01c87f4565f53b0e865686e1d20225bf82a21df86bfb",
-    "source": "MINEDU · cuadernos de Educación Inicial",
-    "usage": "Recurso complementario del taller; conservar páginas y autoría originales"
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Relacionar una posible respuesta con las pistas que se escuchan leer.",
+    "classroom_use": "Tras jugar con las adivinanzas del taller, puedes elegir una de estas fichas para leer otras pistas. No se compite por responder rápido.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-adivinanzas-con-pistas",
+    "age": 5,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_juega_5_030",
+    "title": "¡Adivina adivinador!",
+    "filename": "minedu_juega_5_030.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [
+      3,
+      4
+    ],
+    "clockwise_rotation": 90,
+    "original_page_count": 4,
+    "sha256": "49d46483846adb6e24757e73f066a917b67ba044646993fba80e7acbe8558d89",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Relacionar una posible respuesta con las pistas que se escuchan leer.",
+    "classroom_use": "Tras jugar con las adivinanzas del taller, puedes elegir una de estas fichas para leer otras pistas. No se compite por responder rápido.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
   },
   {
     "workshop_id": "taller-biblioteca-mesa-para-munecos",
@@ -17,8 +105,924 @@
     "id": "minedu_crea_4_023",
     "title": "Ayudamos a repartir platos y cubiertos",
     "filename": "minedu_crea_4_023.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
     "sha256": "4127b3166f72980c1f3c82457d52baebafe1e0eb4dd94c98ec4a8c5556ccf508",
-    "source": "MINEDU · cuadernos de Educación Inicial",
-    "usage": "Recurso complementario del taller; conservar páginas y autoría originales"
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Repartir un objeto a cada comensal y comprobar si alcanza.",
+    "classroom_use": "Después de repartir objetos reales en la mesa de juego, pueden explorar el reparto de platos y cubiertos de esta escena.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-colecciones-con-criterio",
+    "age": 4,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_crea_4_003",
+    "title": "Organizamos los materiales del taller de carpintería",
+    "filename": "minedu_crea_4_003.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "cb22bfc473fa1d1a5fdd5dcc103bf1034dafb4e6bbdf703854a5cb40756f92a7",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Comparar y agrupar elementos según una característica elegida.",
+    "classroom_use": "Primero agrupen objetos del aula. Si quieren continuar con una escena impresa, elige solo una ficha y deja que expliquen su forma de agrupar. Las herramientas de la imagen no se sustituyen por clavos reales.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-colecciones-con-criterio",
+    "age": 4,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_crea_4_007",
+    "title": "Organizamos las papas en los sacos",
+    "filename": "minedu_crea_4_007.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "ba6a699802c63b860e4de8ea6c2ecd50d551d99b9191539dcccaa3a1e9793323",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Comparar y agrupar elementos según una característica elegida.",
+    "classroom_use": "Primero agrupen objetos del aula. Si quieren continuar con una escena impresa, elige solo una ficha y deja que expliquen su forma de agrupar. Las herramientas de la imagen no se sustituyen por clavos reales.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-colecciones-con-criterio",
+    "age": 5,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_crea_5_008",
+    "title": "¿Cómo organizarías los pescados en los contenedores?",
+    "filename": "minedu_crea_5_008.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "624bc04692ae8da360351b74d602a529702eed4beb8e35d13fa0db227eb9bd51",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Comparar y agrupar elementos según una característica elegida.",
+    "classroom_use": "Primero agrupen objetos del aula. Si quieren continuar con una escena impresa, elige solo una ficha y deja que expliquen su forma de agrupar. Las herramientas de la imagen no se sustituyen por clavos reales.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-colecciones-con-criterio",
+    "age": 5,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_juega_5_008",
+    "title": "¿Cómo agruparías a las vacas de la granja Porcón?",
+    "filename": "minedu_juega_5_008.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "6c0bb9129d24038124c9de056963122725a064f80b2d1c64d86e72c1589c5b4d",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Comparar y agrupar elementos según una característica elegida.",
+    "classroom_use": "Primero agrupen objetos del aula. Si quieren continuar con una escena impresa, elige solo una ficha y deja que expliquen su forma de agrupar. Las herramientas de la imagen no se sustituyen por clavos reales.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-canastas-para-comparar",
+    "age": 4,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_crea_4_002",
+    "title": "¿Cuántos mangos ha colocado cada trabajador en su jaba?",
+    "filename": "minedu_crea_4_002.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "10c511305b888b06f7c583f83ca510b4022256bee3c3fe8caf8caaf8b0677b4f",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Comparar cantidades en grupos usando conteo o correspondencia.",
+    "classroom_use": "Después de comparar las canastas del juego, elige una escena para comparar sus grupos. Se permite señalar, emparejar o contar; no se exige escribir números.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-canastas-para-comparar",
+    "age": 4,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_crea_4_013",
+    "title": "¿Cuántos huevos recogerá hoy el señor Cristóbal?",
+    "filename": "minedu_crea_4_013.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "45e5fa52ee8179fb38b78d6db5d92bcbf862b956e6b3f188a2fe4631605616e9",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Comparar cantidades en grupos usando conteo o correspondencia.",
+    "classroom_use": "Después de comparar las canastas del juego, elige una escena para comparar sus grupos. Se permite señalar, emparejar o contar; no se exige escribir números.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-canastas-para-comparar",
+    "age": 5,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_crea_5_003",
+    "title": "¿Cuántos anillos de cada tipo ha hecho el joyero?",
+    "filename": "minedu_crea_5_003.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "5993a229b7d3e95b032779a8e3b7642755651232e7264f1c5861cf73ce79ec42",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Comparar cantidades en grupos usando conteo o correspondencia.",
+    "classroom_use": "Después de comparar las canastas del juego, elige una escena para comparar sus grupos. Se permite señalar, emparejar o contar; no se exige escribir números.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-canastas-para-comparar",
+    "age": 5,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_juega_5_003",
+    "title": "¿Cuántos frutos ha recolectado Martín?",
+    "filename": "minedu_juega_5_003.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "449fe2645d0bc103e10c61287fee66e98ee944208d371faeefb9d8ab04573ebc",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Comparar cantidades en grupos usando conteo o correspondencia.",
+    "classroom_use": "Después de comparar las canastas del juego, elige una escena para comparar sus grupos. Se permite señalar, emparejar o contar; no se exige escribir números.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-ordenamos-tamanos",
+    "age": 4,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_crea_4_005",
+    "title": "Ayuda al señor Luis a ordenar las llaves de tuerca de su taller",
+    "filename": "minedu_crea_4_005.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "07c54bd642e6cc718dfdc5b9be44a1f58340c0360a47fbad10f238d59780d7d7",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Comparar tamaños y ordenar una colección.",
+    "classroom_use": "Primero comparen y ordenen objetos reales. La ficha permite continuar con imágenes; escucha cómo decide el niño cuál va antes y cuál después.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-ordenamos-tamanos",
+    "age": 5,
+    "competency_id": "MAT_CANTIDAD",
+    "id": "minedu_crea_5_016",
+    "title": "Ordenamos las plantitas",
+    "filename": "minedu_crea_5_016.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "6ec1c778bda3009b2299fe17077de546092e2e581be2fe4c3ea75ce54124da94",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Comparar tamaños y ordenar una colección.",
+    "classroom_use": "Primero comparen y ordenen objetos reales. La ficha permite continuar con imágenes; escucha cómo decide el niño cuál va antes y cuál después.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-piezas-para-una-imagen",
+    "age": 4,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_crea_4_014",
+    "title": "Coloca las piezas en su lugar y arma el rompecabezas",
+    "filename": "minedu_crea_4_014.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "7b6b13fb630e8045e58e48708db38bdd18d948c29612363919f37e6e2dce8953",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Probar posiciones y formas para reconstruir una imagen.",
+    "classroom_use": "Elige un solo rompecabezas. Imprime sus páginas de escena y piezas; permite girarlas y probar antes de pegar. Ofrece ayuda para recortar.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-piezas-para-una-imagen",
+    "age": 4,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_juega_4_015",
+    "title": "Coloca las piezas en su lugar y arma el rompecabezas",
+    "filename": "minedu_juega_4_015.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 90,
+    "original_page_count": 4,
+    "sha256": "cc54c96cf2b17d942a921d20cc5305f58769fed7309596d14ea41e5afd4b0d8e",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Probar posiciones y formas para reconstruir una imagen.",
+    "classroom_use": "Elige un solo rompecabezas. Imprime sus páginas de escena y piezas; permite girarlas y probar antes de pegar. Ofrece ayuda para recortar.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-piezas-para-una-imagen",
+    "age": 5,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_crea_5_012",
+    "title": "Coloca las piezas en su lugar y arma el rompecabezas",
+    "filename": "minedu_crea_5_012.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "e74766a716d8caf177b2925d90676e878b656d848f78939c3e6f30d9664d940d",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Probar posiciones y formas para reconstruir una imagen.",
+    "classroom_use": "Elige un solo rompecabezas. Imprime sus páginas de escena y piezas; permite girarlas y probar antes de pegar. Ofrece ayuda para recortar.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-piezas-para-una-imagen",
+    "age": 5,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_juega_5_013",
+    "title": "Coloca las piezas en su lugar y arma el rompecabezas",
+    "filename": "minedu_juega_5_013.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 90,
+    "original_page_count": 4,
+    "sha256": "dcf42df57e230f028e617944d353611c537e46c03f7594c1d3a28f886cb162bb",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Probar posiciones y formas para reconstruir una imagen.",
+    "classroom_use": "Elige un solo rompecabezas. Imprime sus páginas de escena y piezas; permite girarlas y probar antes de pegar. Ofrece ayuda para recortar.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-dentro-fuera-entre",
+    "age": 4,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_juega_4_004",
+    "title": "¡Descubre dónde se han escondido!",
+    "filename": "minedu_juega_4_004.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "fa39101111cbb08bd9d9aa263bc8d0e6790c6759e801104b300b45360c3eb665",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Ubicar elementos y explicar dónde están.",
+    "classroom_use": "Después de ubicar objetos en el aula, elige una escena para conversar sobre posiciones. Pide que señalen qué objeto usan como referencia.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-dentro-fuera-entre",
+    "age": 5,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_crea_5_019",
+    "title": "¿Dónde está ubicada/o…?",
+    "filename": "minedu_crea_5_019.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "584e16d316bfa09779ebd99c59ff97f743092cf00d650e5e40bbbe204d881174",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Ubicar elementos y explicar dónde están.",
+    "classroom_use": "Después de ubicar objetos en el aula, elige una escena para conversar sobre posiciones. Pide que señalen qué objeto usan como referencia.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-dentro-fuera-entre",
+    "age": 5,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_juega_5_021",
+    "title": "¿Dónde se encuentran…?",
+    "filename": "minedu_juega_5_021.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "fccfe93ebfd3257b889b055a09caa984c95191a15a4a80851e7a7f93f545d4ff",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Ubicar elementos y explicar dónde están.",
+    "classroom_use": "Después de ubicar objetos en el aula, elige una escena para conversar sobre posiciones. Pide que señalen qué objeto usan como referencia.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-mapa-de-un-tesoro",
+    "age": 4,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_juega_4_012",
+    "title": "¿Qué camino debe seguir la hormiga?",
+    "filename": "minedu_juega_4_012.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 90,
+    "original_page_count": 2,
+    "sha256": "069810a47fabb7386a5da6b9fb98d2725a2b8159673644cf2c28ac55e4c6274d",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Trazar y comprobar un camino para llegar a un destino.",
+    "classroom_use": "Tras construir el camino del juego, la ficha ofrece otro recorrido. Deja que prueben rutas con el dedo y expliquen por dónde llegar; el río de la imagen no requiere salir ni acercarse a un río real.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-mapa-de-un-tesoro",
+    "age": 5,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_crea_5_025",
+    "title": "¿Qué solución propones para que los niños, su mamá y su papá crucen el río?",
+    "filename": "minedu_crea_5_025.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [
+      5,
+      6
+    ],
+    "clockwise_rotation": 0,
+    "original_page_count": 6,
+    "sha256": "b933d5e896ffe881caeb9e93c84fafe2ed2fc7f9ac3dc72e7f821678d8bd0ac6",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Trazar y comprobar un camino para llegar a un destino.",
+    "classroom_use": "Tras construir el camino del juego, la ficha ofrece otro recorrido. Deja que prueben rutas con el dedo y expliquen por dónde llegar; el río de la imagen no requiere salir ni acercarse a un río real.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-biblioteca-sellos-que-inventamos",
+    "age": 4,
+    "competency_id": "COM_ARTE",
+    "id": "minedu_juega_4_028",
+    "title": "Crea con huellas",
+    "filename": "minedu_juega_4_028.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "0c887280773d10c6c8cf4774ac36fdcf5147e89a6b7672f313c7f8024d40d670",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Explorar huellas de objetos y crear una composición propia.",
+    "classroom_use": "La hoja es un apoyo opcional para explorar huellas después de probar los sellos. No es un modelo que todos deban copiar.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-poemas-para-imaginar",
+    "age": 4,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_crea_4_021",
+    "title": "Disfrutamos de los poemas",
+    "filename": "minedu_crea_4_021.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "e21c015d2505c230c6610c9d15eab3e4f36496fa34292519b7269a3ac745c060",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Interpretar un poema leído por la profesora apoyándose en palabras e imágenes.",
+    "classroom_use": "Elige un poema para leer y volver a una parte que interese a los niños. Las interpretaciones pueden ser diferentes.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-poemas-para-imaginar",
+    "age": 4,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_juega_4_022",
+    "title": "Disfrutamos de los poemas",
+    "filename": "minedu_juega_4_022.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "ec6afd01633d421e54aad9d7b15122768cf71737812624d6c4fa71df12fd37e4",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Interpretar un poema leído por la profesora apoyándose en palabras e imágenes.",
+    "classroom_use": "Elige un poema para leer y volver a una parte que interese a los niños. Las interpretaciones pueden ser diferentes.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-poemas-para-imaginar",
+    "age": 5,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_crea_5_028",
+    "title": "Disfrutamos de los poemas",
+    "filename": "minedu_crea_5_028.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "8f807abddd750248b5f26b14ce644789cf546445fdc6dad2e22c4ce6d359396a",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Interpretar un poema leído por la profesora apoyándose en palabras e imágenes.",
+    "classroom_use": "Elige un poema para leer y volver a una parte que interese a los niños. Las interpretaciones pueden ser diferentes.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-poemas-para-imaginar",
+    "age": 5,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_juega_5_032",
+    "title": "Disfrutamos de los poemas",
+    "filename": "minedu_juega_5_032.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "8be13070b1bd083c12939db5cec03e1ede7989d58bd09ff6efdf393ab5869f9c",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Interpretar un poema leído por la profesora apoyándose en palabras e imágenes.",
+    "classroom_use": "Elige un poema para leer y volver a una parte que interese a los niños. Las interpretaciones pueden ser diferentes.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-leemos-y-doblamos",
+    "age": 4,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_crea_4_022",
+    "title": "¡Hacemos un zorro de papel!",
+    "filename": "minedu_crea_4_022.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "f8f35eac133cd9f2cb0a5c73b0998b3f8dfc7b5b28d90e709752b686d2a6f30e",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Relacionar imágenes y texto de un instructivo con los pasos de plegado.",
+    "classroom_use": "Elige un solo instructivo y prepara todas sus páginas infantiles. Lee con el grupo y acompaña los dobleces; no se valora que las figuras queden idénticas.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-leemos-y-doblamos",
+    "age": 4,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_juega_4_023",
+    "title": "Elabora peces de papel",
+    "filename": "minedu_juega_4_023.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 90,
+    "original_page_count": 4,
+    "sha256": "a8cd53390793b0ff38918d9591ffdb8f8fe3671fa3c9f3d14c391f6257430982",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Relacionar imágenes y texto de un instructivo con los pasos de plegado.",
+    "classroom_use": "Elige un solo instructivo y prepara todas sus páginas infantiles. Lee con el grupo y acompaña los dobleces; no se valora que las figuras queden idénticas.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-leemos-y-doblamos",
+    "age": 4,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_juega_4_024",
+    "title": "Elabora perritos de papel",
+    "filename": "minedu_juega_4_024.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 90,
+    "original_page_count": 4,
+    "sha256": "9820002ae7fdaa0a4368cc7cca84a495f64b88a18fb4271789737959b7ff44a0",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Relacionar imágenes y texto de un instructivo con los pasos de plegado.",
+    "classroom_use": "Elige un solo instructivo y prepara todas sus páginas infantiles. Lee con el grupo y acompaña los dobleces; no se valora que las figuras queden idénticas.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-leemos-y-doblamos",
+    "age": 4,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_juega_4_025",
+    "title": "Hacemos ponchos de papel",
+    "filename": "minedu_juega_4_025.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "29585048b090042eb41375e7ce02e18e7e44b2c65ffd94526825220b81a32a86",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Relacionar imágenes y texto de un instructivo con los pasos de plegado.",
+    "classroom_use": "Elige un solo instructivo y prepara todas sus páginas infantiles. Lee con el grupo y acompaña los dobleces; no se valora que las figuras queden idénticas.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-leemos-y-doblamos",
+    "age": 5,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_crea_5_029",
+    "title": "Hacemos un zorro de papel",
+    "filename": "minedu_crea_5_029.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "454dc60db1eac595af15e83554818b5058c84c2154788b2187fa5440f409163c",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Relacionar imágenes y texto de un instructivo con los pasos de plegado.",
+    "classroom_use": "Elige un solo instructivo y prepara todas sus páginas infantiles. Lee con el grupo y acompaña los dobleces; no se valora que las figuras queden idénticas.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-leemos-y-doblamos",
+    "age": 5,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_crea_5_030",
+    "title": "Hacemos un cerdo de papel",
+    "filename": "minedu_crea_5_030.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "a8093ad85a27cb4a8e74489be9df7bebad601aa391de7b09cf77eaeb1d92e3d9",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Relacionar imágenes y texto de un instructivo con los pasos de plegado.",
+    "classroom_use": "Elige un solo instructivo y prepara todas sus páginas infantiles. Lee con el grupo y acompaña los dobleces; no se valora que las figuras queden idénticas.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-leemos-y-doblamos",
+    "age": 5,
+    "competency_id": "COM_LECTURA",
+    "id": "minedu_juega_5_033",
+    "title": "Hacemos ballenas de papel",
+    "filename": "minedu_juega_5_033.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "9ed6945d5431542937822962e0ec7b96b03c26a8cd60ea7263b24a4f719a281a",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Relacionar imágenes y texto de un instructivo con los pasos de plegado.",
+    "classroom_use": "Elige un solo instructivo y prepara todas sus páginas infantiles. Lee con el grupo y acompaña los dobleces; no se valora que las figuras queden idénticas.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-completamos-una-escena",
+    "age": 4,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_crea_4_015",
+    "title": "Completa la imagen",
+    "filename": "minedu_crea_4_015.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "a262926febaa71fd5a1aa84a4ffb6881ec5ef837b7b93feaedf9007383cfc940",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Reconocer formas, posiciones y continuidad de una imagen para completar una escena.",
+    "classroom_use": "Elige una escena e imprime también sus recortables. Deja probar sin pegar y escucha qué detalle ayuda a ubicar cada pieza.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-completamos-una-escena",
+    "age": 4,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_juega_4_016",
+    "title": "Completa la imagen",
+    "filename": "minedu_juega_4_016.pdf",
+    "print_pages": [
+      1,
+      3
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [
+      4
+    ],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 4,
+    "sha256": "821d4a053a4bdd3537cdfe25a470dbd49d5b7b6157431f707c921838441abc55",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Reconocer formas, posiciones y continuidad de una imagen para completar una escena.",
+    "classroom_use": "Elige una escena e imprime también sus recortables. Deja probar sin pegar y escucha qué detalle ayuda a ubicar cada pieza.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-completamos-una-escena",
+    "age": 5,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_crea_5_013",
+    "title": "Completa las imágenes que faltan en la escena de la comunidad Shipiba",
+    "filename": "minedu_crea_5_013.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 0,
+    "original_page_count": 2,
+    "sha256": "431ee02814877ea0b953e6774dd4395433b887fe47e9b09c3eaabf53eed20f91",
+    "source": "MINEDU · Crea, resuelve y aprende",
+    "source_year": 2024,
+    "fit": "Reconocer formas, posiciones y continuidad de una imagen para completar una escena.",
+    "classroom_use": "Elige una escena e imprime también sus recortables. Deja probar sin pegar y escucha qué detalle ayuda a ubicar cada pieza.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+  },
+  {
+    "workshop_id": "taller-fichas-completamos-una-escena",
+    "age": 5,
+    "competency_id": "MAT_FORMA",
+    "id": "minedu_juega_5_014",
+    "title": "Completa la imagen de la piscina del parque Sinchi Roca",
+    "filename": "minedu_juega_5_014.pdf",
+    "print_pages": [
+      1
+    ],
+    "teacher_guide_pages": [
+      2
+    ],
+    "blank_reverse_pages": [],
+    "excluded_unrelated_pages": [],
+    "clockwise_rotation": 90,
+    "original_page_count": 2,
+    "sha256": "19c073f15bec14d86a57dd61a98c4c46f8f9a1fa050f33ca7cec72ae3d084c08",
+    "source": "MINEDU · Juega, crea, resuelve y aprende",
+    "source_year": 2023,
+    "fit": "Reconocer formas, posiciones y continuidad de una imagen para completar una escena.",
+    "classroom_use": "Elige una escena e imprime también sus recortables. Deja probar sin pegar y escucha qué detalle ayuda a ubicar cada pieza.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría"
   }
 ]

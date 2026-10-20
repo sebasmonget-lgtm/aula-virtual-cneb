@@ -1,8 +1,9 @@
 import { pilotWorkshops } from './workshop-pilot-content.mjs';
 import { multiageWorkshops } from './workshop-multiage-content.mjs';
 import { expandedWorkshops } from './workshop-expanded-content.mjs';
+import { sheetExperiences } from './workshop-sheet-experiences.mjs';
 
-export const WORKSHOP_CATALOG_VERSION = '1.5.0';
+export const WORKSHOP_CATALOG_VERSION = '1.6.0';
 const sources = ['CNEB', 'PCI_INICIAL_CANONICAL', 'PLANIFICACION_INICIAL_2019', 'INTERACCIONES_2019'];
 const resources = {
   cuento: { id: 'cuento-la-semilla', title: 'La semilla de Lila · cuento Ayni', url: '/workshops/cuento-la-semilla.png' },
@@ -110,7 +111,7 @@ export const workshopCatalog = Object.freeze([...pilots,...families.flatMap(f =>
     development:{teacher,children},closure:{teacher:f.closure,children:familyActions[f.type][1]},
     resources:f.resource?[resources[f.resource]]:[],version:WORKSHOP_CATALOG_VERSION,source_refs:sources,
     authorship:'Ayni · propuesta pedagógica basada en CNEB'};
-})),...[...multiageWorkshops,...expandedWorkshops].map(w=>({...w,resources:w.resource_key?[resources[w.resource_key]]:[],
+})),...[...multiageWorkshops,...expandedWorkshops,...sheetExperiences].map(w=>({...w,resources:w.resource_key?[resources[w.resource_key]]:[],
   version:WORKSHOP_CATALOG_VERSION,source_refs:sources,authorship:'Ayni · propuesta pedagógica basada en CNEB'}))]);
 
 export function workshopActivityDetails(w) {
