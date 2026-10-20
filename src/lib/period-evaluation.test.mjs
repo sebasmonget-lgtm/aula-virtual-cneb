@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createPeriodEvaluationRouteHandler } from "../../scripts/period-evaluation-routes.mjs";
+import { createFamilyReportRouteHandler } from "../../scripts/family-report-routes.mjs";
 import { defaultEvaluationPeriods } from "./period-evaluation-service.mjs";
 import { loadPlanningFeedback,planningFeedbackText } from "./planning-feedback.mjs";
 import { projectPeriodClosureDocument } from "./period-closure-history.mjs";
@@ -141,6 +142,7 @@ async function fixture({ analysis = mockAnalysis(), jsonbPending = false, batchP
     create view effective_diagnostic_spontaneous_observations as select * from diagnostic_spontaneous_observations;`);
   await db.exec(`create table class_schedule_entries(id uuid primary key,classroom_id uuid,activity_id uuid);
     create table student_family_interviews(id uuid primary key,classroom_id uuid,student_id uuid,status text,version integer,details jsonb);
+    create table student_context_snapshots(student_id uuid primary key,structured_payload jsonb);
     create table daily_execution_logs(id uuid primary key,schedule_entry_id uuid,execution_date date,status text);`);
   await db.query(`insert into profiles values($1,'Docente de prueba'),($2,'Otra docente')`,[teacher,otherTeacher]);
   await db.query(`insert into school_years values($1,$2,2026,'2026-03-01','2026-12-31')`, [year, teacher]);
@@ -984,8 +986,10 @@ test('guardar y siguiente confirma análisis editado y nivel en una operación s
   await f.call('POST','/api/period-evaluations/suggest',{...scope,brief:true});
   const detail=(await f.call('GET','/api/period-evaluations/detail?'+new URLSearchParams(scope))).body;
   const body={...scope,expectedDraftRevision:detail.draft.revision,evidenceFingerprint:detail.evidence_fingerprint,achievementLevel:'B',teacherAnalysis:'Ana explica sus ideas durante el juego y responde a otra propuesta del grupo.',teacherJustification:'Relaciona sus ideas con el juego cuando la profesora le pregunta.'};
+  await f.db.query("insert into student_context_snapshots values($1,'{\"old\":true}')",[studentA]);
   let result=await f.call('POST','/api/period-evaluations/save-and-confirm',body);
   assert.equal(result.status,200,JSON.stringify(result.body));assert.equal(result.body.confirmed,true);
+  assert.equal((await f.db.query('select * from student_context_snapshots where student_id=$1',[studentA])).rows.length,0,'La caché derivada se invalida junto con la nota, sin refresco completo al guardar');
   const saved=(await f.db.query("select * from competency_assessments where status='active'")).rows;
   assert.equal(saved.length,1);assert.equal(saved[0].achievement_level,'B');assert.equal(saved[0].details.evidence_overview,body.teacherAnalysis);assert.equal(f.calls.length,1);
   result=await f.call('POST','/api/period-evaluations/save-and-confirm',body);assert.equal(result.status,409);
@@ -999,9 +1003,11 @@ test('confirmación atómica falla sin guardar media operación y conserva revis
   await f.call('POST','/api/period-evaluations/suggest',{...scope,brief:true});
   const detail=(await f.call('GET','/api/period-evaluations/detail?'+new URLSearchParams(scope))).body;
   const body={...scope,expectedDraftRevision:detail.draft.revision,evidenceFingerprint:detail.evidence_fingerprint,achievementLevel:'A',teacherAnalysis:'Texto revisado por la profesora.',teacherJustification:'Dos registros contextualizados de explicación y escucha.'};
+  await f.db.query("insert into student_context_snapshots values($1,'{\"old\":true}')",[studentA]);
   const transaction=f.db.transaction.bind(f.db);let fail=true;
   f.db.transaction=work=>transaction(tx=>work({...tx,query:async(sql,...args)=>{if(fail&&String(sql).includes("'active',now(),$12")){fail=false;throw Error('Interrupción al guardar');}return tx.query(sql,...args);}}));
   let result=await f.call('POST','/api/period-evaluations/save-and-confirm',body);assert.notEqual(result.status,200);
+  assert.equal((await f.db.query('select * from student_context_snapshots where student_id=$1',[studentA])).rows.length,1,'El fallo conserva también la caché anterior');
   let current=(await f.call('GET','/api/period-evaluations/detail?'+new URLSearchParams(scope))).body;
   assert.equal(current.draft.revision,detail.draft.revision);assert.equal(current.draft.teacher_analysis,detail.draft.teacher_analysis);assert.equal(current.assessment,null);
   result=await f.call('POST','/api/period-evaluations/save-and-confirm',{...body,expectedDraftRevision:body.expectedDraftRevision+1});assert.equal(result.status,409);
@@ -1042,5 +1048,29 @@ test('preparación recupera solo lo pendiente y detecta nuevas observaciones sin
  const stale=await f.call('GET','/api/period-evaluations/batches?'+new URLSearchParams(scope));assert.equal(stale.body.job.status,'stale');
  const again=await f.call('POST','/api/period-evaluations/batches',scope);assert.notEqual(again.body.id,start.body.id);assert.equal(again.body.completed,1);
  run=await f.call('POST',`/api/period-evaluations/batches/${again.body.id}/run`,scope);assert.equal(run.body.status,'ready');assert.equal(f.calls.length,4,'Solo el niño con fuentes nuevas se vuelve a generar');
+ }finally{await f.db.close();}
+});
+
+
+test('informe bloqueado hasta guardar todas las notas y conclusiones actuales, también en enlace directo',async()=>{
+ const f=await fixture();try{
+ const overview=()=>f.call('GET','/api/period-evaluations/overview?'+new URLSearchParams(batchScope));
+ let current=(await overview()).body;assert.equal(current.family_readiness.ready,false);
+ const period=current.period;
+ const family=createFamilyReportRouteHandler({includeOrdinary:false,db:f.db,teacherId:teacher,annualPlanningContext:async()=>({id:classId,school_year_id:year,age:5,calendar:{starts_on:period.starts_on,ends_on:period.ends_on}}),readJson:async r=>r.body,send:(r,status,body)=>{r.result={status,body};},pending:new Map(),metadataForAudit:x=>x,generate:async()=>{throw Error('No debe llamar IA antes de completar la evaluación');}});
+ for(const periodId of [undefined,firstPeriod]){
+  const response={};await family({request:{method:'POST',body:{studentId:studentA,periodId,periodStart:period.starts_on,periodEnd:period.ends_on,competencyIds:['COM_ORAL']}},url:new URL('http://localhost/api/ai/family-reports/generate'),response,origin:null});
+  assert.equal(response.result.status,422);assert.match(response.result.body.error,/Termina la evaluación/);
+ }
+ const blocked=()=>f.call('POST','/api/period-evaluations/batches',{...batchScope,kind:'family',studentId:studentA});
+ let result=await blocked();assert.equal(result.status,422);assert.match(result.body.error,/Termina la evaluación/);assert.equal(f.calls.length,0);
+ await confirmBatchGrades(f);current=(await overview()).body;assert.equal(current.family_readiness.pending_grades,0);assert.equal(current.family_readiness.ready,false);
+ const calls=f.calls.length;result=await blocked();assert.equal(result.status,422);assert.equal(f.calls.length,calls);
+ await saveBatch(f,await runBatch(f,await prepareBatch(f,'conclusions')));
+ current=(await overview()).body;assert.equal(current.family_readiness.ready,true);assert.equal(current.closure.closed,false);
+ const job=await prepareBatch(f,'family');assert.equal(job.total,2);
+ await f.db.query("update evidences set observation_text='Se corrigió la observación.' where id=$1",[firstEvidence]);
+ current=(await overview()).body;assert.equal(current.family_readiness.ready,false);
+ result=await blocked();assert.equal(result.status,422);
  }finally{await f.db.close();}
 });

@@ -6,7 +6,7 @@ import { savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-se
 import { randomUUID, createHash } from "node:crypto";
 import { versionTransaction, VersionConflictError } from "../src/lib/version-integrity.mjs";
 import { assertPeriodOpen, invalidateStudentFamilyReport, appendPeriodEvent } from "../src/lib/period-edit-guard.mjs";
-import { evidenceIsCurrent, conclusionIsCurrent } from "../src/lib/period-evaluation-service.mjs";
+import { evidenceIsCurrent, conclusionIsCurrent, familyEvaluationReadiness } from "../src/lib/period-evaluation-service.mjs";
 import { assessmentStudentNames } from "../src/lib/assessment-v4-service.mjs";
 import { buildDescriptiveConclusionInput, sourceAssessmentSnapshot, validateDescriptiveConclusion } from "../src/lib/descriptive-conclusion-v4-service.mjs";
 import { preserveConfirmedFamilySections, buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, validateFamilyReport } from "../src/lib/family-report-v4-service.mjs";
@@ -26,6 +26,8 @@ const key = task => `${task.student_id}:${task.competency_id ?? "family"}`;
 const eligible = row => row.assessment?.achievement_level && row.assessment.teacher_confirmed_at && !row.draft && evidenceIsCurrent(row.assessment,row.sourceRows);
 
 export function batchTasks(model, kind) {
+  if (kind === "family" && !familyEvaluationReadiness(model).ready)
+    throw new Error("Termina la evaluación del bimestre: guarda las notas y las conclusiones antes de preparar los informes.");
   if(kind==='analysis')return model.rows.filter(row=>row.sourceRows.length>0).map(row=>{
     const current=row.draft??row.assessment;
     const teacherText=row.draft?.draft_teacher_analysis??row.assessment?.details?.evidence_overview;

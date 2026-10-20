@@ -29,7 +29,7 @@ import { currentPedagogicalClock, pedagogicalNow, simulatedObservationInstant, w
 import { readPreviewQAClock, previewQAClockCookie, previewQAClockForJob, validateQAClock } from "../src/lib/preview-qa-clock.mjs";
 import {activityMaterials} from "../src/lib/activity-materials.mjs";
 import { activityMomentCount,assertActivityMomentAction,normalizeStepIndex } from "../src/lib/activity-runner.mjs";
-import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
+import { refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
 import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/classroom-context-service.mjs";
 import { buildClassroomStatistics } from "../src/lib/statistics-service.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
@@ -554,7 +554,7 @@ async function studentProfile(studentId) {
      where s.id = $1 and c.teacher_id = $2
   `, [studentId, teacherId]);
   if (!allowed.rows.length) return null;
-  const context = await buildStudentPedagogicalContext(db, studentId);
+  const context = await refreshStudentContextSnapshot(db, studentId);
   const birthDate = (await db.query(`select birth_date::text as birth_date from students where id=$1`, [studentId])).rows[0]?.birth_date ?? null;
   const snapshot = (await db.query(`select generated_at, source_updated_at from student_context_snapshots
     where student_id = $1 and version = 1`, [studentId])).rows[0] ?? null;

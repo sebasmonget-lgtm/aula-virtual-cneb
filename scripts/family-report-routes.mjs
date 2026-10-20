@@ -9,15 +9,17 @@ import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { createAIProviderForPlan } from "../src/lib/ai-provider-factory.mjs";
 import { generateAIWorkflowV4 } from "../src/lib/ai-generation-v4.mjs";
 import { preserveConfirmedFamilySections, buildFamilyReportFallback, buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "../src/lib/family-report-v4-service.mjs";
-import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
+import { httpStatusForError, publicErrorMessage, VersionConflictError } from "../src/lib/version-integrity.mjs";
 import { assessmentStudentNames } from "../src/lib/assessment-v4-service.mjs";
+import { familyEvaluationReadiness, loadPeriodEvaluationRows } from "../src/lib/period-evaluation-service.mjs";
+import { newAyniFeatureEnabled } from "../src/lib/new-ayni-feature-flag.mjs";
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
 const sameIds = (left, right) => Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((id, index) => id === right[index]);
 const safeReport = (row) => ({ id: row.id, evaluation_period_id: row.evaluation_period_id ?? null, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), version: row.version, selected_competency_ids: row.selected_competency_ids, details: row.details, status: row.status, teacher_confirmed_at: row.teacher_confirmed_at });
 const staleMessage = "Las conclusiones confirmadas cambiaron desde que se preparó el informe. Regenera el informe antes de confirmarlo.";
 
-export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext, readJson, send, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan, pending, metadataForAudit }) {
+export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningContext, readJson, send, loadKnowledgeBase = loadKnowledgeBaseV4, generate = generateAIWorkflowV4, createProvider = createAIProviderForPlan, pending, metadataForAudit, includeOrdinary = newAyniFeatureEnabled(process.env.AYNI_F8_EVALUATION) }) {
   const fail = (response, origin, error, status = 422) => send(response, httpStatusForError(error, status), { error: publicErrorMessage(error) }, origin);
   async function reportContext(classroomId) {
     if (!classroomId) return annualPlanningContext();
@@ -34,10 +36,10 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
   }
   async function formalPeriod(context,periodId,start,end) {
     if (!periodId) return null;
-    const row=(await db.query(`select id,starts_on,ends_on,label from evaluation_periods where id=$1 and school_year_id=$2`,
+    const row=(await db.query(`select * from evaluation_periods where id=$1 and school_year_id=$2`,
       [periodId,context.school_year_id])).rows[0];
     if (!row) throw new Error("El período no corresponde al aula.");
-    const resolved={id:row.id,starts_on:dateOnly(row.starts_on),ends_on:dateOnly(row.ends_on),label:row.label};
+    const resolved={id:row.id,kind:row.kind,starts_on:dateOnly(row.starts_on),ends_on:dateOnly(row.ends_on),label:row.label};
     if ((start && start!==resolved.starts_on)||(end && end!==resolved.ends_on)) throw new Error("Las fechas no coinciden con el período formal.");
     return resolved;
   }
@@ -45,11 +47,21 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
     return (await db.query(`select id,student_id,competency_v4_id,period_start,period_end,version,details,status,teacher_confirmed_at,updated_at from competency_descriptive_conclusions where student_id=$1 and status='active' and teacher_confirmed_at is not null and period_start >= $2::date and period_end <= $3::date and ($4=false or (period_start=$2::date and period_end=$3::date)) order by competency_v4_id,period_start,id`, [studentId, periodStart, periodEnd,formal])).rows;
   }
   async function validatedSources(context, studentId, periodStart, periodEnd, requestedIds, periodId=null) {
-    await formalPeriod(context,periodId,periodStart,periodEnd);
+    const period = await formalPeriod(context,periodId,periodStart,periodEnd);
     validateFamilyReportPeriod(periodStart, periodEnd, context.calendar);
     if (!Array.isArray(requestedIds)) throw new Error("Selecciona las competencias confirmadas que deseas comunicar.");
     const ids = [...requestedIds].sort();
     const cards = new Map((await loadKnowledgeBase()).competencyCards.map((card) => [card.id, card]));
+    // The compatibility endpoint must not bypass the modern classroom-wide prerequisite.
+    // Resolve exact dates as well: omitting periodId does not evade this check.
+    const formal = period ?? (await db.query(`select * from evaluation_periods
+      where school_year_id=$1 and starts_on=$2::date and ends_on=$3::date`, [context.school_year_id,periodStart,periodEnd])).rows[0];
+    if (["bimester","trimester"].includes(formal?.kind) && newAyniFeatureEnabled(process.env.AYNI_F8_EVALUATION)) {
+      const applicableIds = new Set([...cards.values()].filter(card => card.runtime_selectable_by_age?.[String(context.age)] &&
+        cardIsApplicable(card,{castellanoL2Applicable:context.castellano_l2_applicable===true,religionApplicable:context.religion_applicable===true})).map(card=>card.id));
+      const model = await loadPeriodEvaluationRows(db,{classroomId:context.id,period:{...formal,starts_on:dateOnly(formal.starts_on),ends_on:dateOnly(formal.ends_on)},applicableIds,includeOrdinary});
+      if (!familyEvaluationReadiness(model).ready) throw new Error("Termina la evaluación del bimestre: guarda las notas y las conclusiones antes de preparar los informes.");
+    }
     for (const id of ids) {
       const card = cards.get(id);
       if (!card?.runtime_selectable_by_age?.[String(context.age)] || !cardIsApplicable(card, { castellanoL2Applicable: context.castellano_l2_applicable === true, religionApplicable: context.religion_applicable === true })) throw new Error("Competencia v4 no aplicable al aula.");
@@ -167,12 +179,12 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         const row = await draft(context, match[1]);
         await assertPeriodDatesOpen(db,context.id,row.period_start,row.period_end);
         validateFamilyReport(row.details, row.selected_competency_ids, row.source_conclusion_snapshot);
-        const { rows } = await validatedSources(context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end), row.selected_competency_ids,row.evaluation_period_id);
-        if (!sameConclusionSourceSnapshot(row.source_conclusion_snapshot, conclusionSourceSnapshot(rows))) { fail(response, origin, new Error(staleMessage), 409); return true; }
         await db.exec("begin");
         let saved;
         try {
           await assertPeriodDatesOpen(db,context.id,row.period_start,row.period_end,{lock:true});
+          const { rows } = await validatedSources(context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end), row.selected_competency_ids,row.evaluation_period_id);
+          if (!sameConclusionSourceSnapshot(row.source_conclusion_snapshot, conclusionSourceSnapshot(rows))) throw new VersionConflictError(staleMessage);
           if (row.generation_metadata?.family_context_fingerprint && row.generation_metadata.family_context_fingerprint !== await currentFamilyRecommendationFingerprint(db, context.id, row.student_id)) throw new Error("La entrevista familiar cambió. Prepara de nuevo las recomendaciones.");
           await db.query(`update family_reports set status='archived',updated_at=now() where student_id=$1 and period_start=$2::date and period_end=$3::date and status='active'`, [row.student_id, row.period_start, row.period_end]);
           saved = (await db.query(`update family_reports set status='active',teacher_confirmed_at=now(),updated_at=now() where id=$1 and status='draft' returning id,status,teacher_confirmed_at`, [row.id])).rows[0];

@@ -99,7 +99,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
   const [calendarActivity, setCalendarActivity] = useState<{ id: string; experience_id: string } | null>(null);
   const [selectedResource, setSelectedResource] = useState<LibraryResource | null>(null);
   const [libraryFilter, setLibraryFilter] = useState<"for-you" | "workshops">("for-you");
-  const [evaluationEntry, setEvaluationEntry] = useState<"home" | "replan">("home");
+  const [evaluationEntry, setEvaluationEntry] = useState<"home" | "period" | "replan">(redesigned?"period":"home");
   const [evaluationOpenKey,setEvaluationOpenKey]=useState(0);
   const [diagnosticInitialStep, setDiagnosticInitialStep] = useState<1 | 2 | 3>(1);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
@@ -239,8 +239,8 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
   const selectedNavigation = redesigned ? active === "Planificar" && annualDestination ? "Mi año" : active
     : f7Enabled && active !== "Biblioteca" ? primaryDestination(active) : active;
 
-  function navigate(section: string, afterSavedSetup = false) { if (!afterSavedSetup && !canLeaveWorkspace()) return false; navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry("home"); } setActive(section); const hash = hashForDestination(section); if (hash && destinationFromHash(window.location.hash) !== section) { window.history.pushState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change")); } return true; }
-  function navigatePrimary(section:string) { if(!navigate(section==="Mi año"?"Planificar":section))return; if(section==="Mi año" || section==="Planificar") writeWorkspaceLocation("Planificar",{tab:section==="Mi año"?"annual":"home",annualTools:"year",annualPlan:""}); if(section==="Evaluar"){writeWorkspaceLocation("Evaluar",{section:"home",period:"",view:"",student:"",competency:""},true);setEvaluationOpenKey(value=>value+1);} }
+  function navigate(section: string, afterSavedSetup = false) { if (!afterSavedSetup && !canLeaveWorkspace()) return false; navigationTouched.current = true; setStarting(false); if (section !== "Planificar") { setPlanningTarget(null); setSelectedResource(null); setCalendarActivity(null); } if (section === "Evaluar") { setEvaluationTarget(null); setEvaluationEntry(redesigned?"period":"home"); } setActive(section); const hash = hashForDestination(section); if (hash && destinationFromHash(window.location.hash) !== section) { window.history.pushState(null, "", hash); window.dispatchEvent(new Event("ayni-location-change")); } return true; }
+  function navigatePrimary(section:string) { if(!navigate(section==="Mi año"?"Planificar":section))return; if(section==="Mi año" || section==="Planificar") writeWorkspaceLocation("Planificar",{tab:section==="Mi año"?"annual":"home",annualTools:"year",annualPlan:""}); if(section==="Evaluar"){writeWorkspaceLocation("Evaluar",{section:redesigned?"period":"home",period:"",view:"",student:"",competency:""},true);setEvaluationOpenKey(value=>value+1);} }
   function openAnnualProject(proposalId?:string){if(!navigate("Planificar"))return;writeWorkspaceLocation("Planificar",{tab:"annual",annualTools:"year",annualPlan:"",...(proposalId?{annualProposal:proposalId,activityConsult:"",projectDetail:""}:{})});}
   function openDiagnostic(initialStep: 1 | 2 | 3 = 1, afterConfirmedEnrollment = false) { setPlanningTarget("diagnostic"); setDiagnosticInitialStep(initialStep); navigate("Planificar", afterConfirmedEnrollment); }
 
@@ -450,13 +450,13 @@ function EvidenceDialog({ open, onOpenChange, students, studentId, setStudentId,
   </Dialog>;
 }
 
-function EvaluationArea({ dashboard, initialTarget, initialSection, onPlan, onPrepareActivity, onToday }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; initialSection: "home" | "replan"; onPlan: () => void; onPrepareActivity: () => void; onToday: () => void }) {
+function EvaluationArea({ dashboard, initialTarget, initialSection, onPlan, onPrepareActivity, onToday }: { dashboard: LocalDashboard; initialTarget: { studentId: string; competencyId: string } | null; initialSection: "home" | "period" | "replan"; onPlan: () => void; onPrepareActivity: () => void; onToday: () => void }) {
   const [section, setSection] = useWorkspaceSubview("Evaluar", "section", evaluationSections, initialTarget ? "period" : initialSection);
   const [target, setTarget] = useState(initialTarget);
   const [periodView, setPeriodView] = useWorkspaceSubview("Evaluar", "entry", evaluationViews, "student");
   return <section className="mx-auto max-w-5xl space-y-5">
-    {section === "home" ? <EvaluationHome dashboard={dashboard} onReplan={() => setSection("replan")} onPeriod={(view, nextTarget) => { setTarget(nextTarget ?? null); setPeriodView(view); setSection("period"); writeWorkspaceLocation("Evaluar", { view, student: nextTarget?.studentId ?? "", competency: nextTarget?.competencyId ?? "" }, true); }} /> : <>
-      <Button variant="ghost" className="-ml-3 min-h-11 text-[#07576c]" onClick={() => setSection("home")}>← Volver a Evaluar</Button>
+    {!redesigned && section === "home" ? <EvaluationHome dashboard={dashboard} onReplan={() => setSection("replan")} onPeriod={(view, nextTarget) => { setTarget(nextTarget ?? null); setPeriodView(view); setSection("period"); writeWorkspaceLocation("Evaluar", { view, student: nextTarget?.studentId ?? "", competency: nextTarget?.competencyId ?? "" }, true); }} /> : <>
+      {(!redesigned || section === "replan") && <Button variant="ghost" className="-ml-3 min-h-11 text-[#07576c]" onClick={() => setSection(redesigned?"period":"home")}>← Volver a Evaluar</Button>}
       {section === "replan" ? <BimesterReplan onEvaluation={() => setSection("period")} onFinish={onToday} /> : <PeriodEvaluation key={`${target?.studentId ?? "all"}:${target?.competencyId ?? "all"}:${periodView}`} initialStudentId={target?.studentId} initialCompetencyId={target?.competencyId} initialView={periodView} onPlan={onPlan} onPrepareActivity={onPrepareActivity} />}
     </>}
   </section>;

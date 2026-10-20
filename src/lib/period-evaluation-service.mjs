@@ -30,6 +30,18 @@ export function conclusionIsCurrent(conclusion, assessment) {
   return Boolean(conclusion && assessment && conclusion.assessment_id === assessment.id && sameAssessmentSnapshot(conclusion.source_assessment_snapshot, sourceAssessmentSnapshot(assessment)));
 }
 
+// Reports describe confirmed learning. Missing evidence never becomes a forced grade.
+export function familyEvaluationReadiness(model) {
+  const relevant = model.rows.filter(row => row.sourceRows.length || row.assessment || row.draft);
+  const pendingGrades = relevant.filter(row => !row.assessment?.teacher_confirmed_at ||
+    !["AD", "A", "B", "C"].includes(row.assessment.achievement_level) || row.draft ||
+    !evidenceIsCurrent(row.assessment, row.sourceRows)).length;
+  const pendingConclusions = relevant.filter(row => row.assessment?.teacher_confirmed_at &&
+    !conclusionIsCurrent(row.conclusion, row.assessment)).length;
+  return { ready: relevant.length > 0 && !pendingGrades && !pendingConclusions,
+    pending_grades: pendingGrades, pending_conclusions: pendingConclusions };
+}
+
 export const conclusionRequiredForLevel = (level) => ["A", "B", "C"].includes(level);
 export const periodRowResolved = (row) => row.state === "confirmed" ||
   ["observation_pending", "insufficient_information", "pending"].includes(row.state);
