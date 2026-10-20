@@ -11,6 +11,7 @@ import { renderDiagnosticUnifiedWord } from "./diagnostic-unified-word.mjs";
 import { renderAnnualPlanUnifiedWord } from "./annual-plan-unified-word.mjs";
 import { renderLearningExperienceUnifiedWord } from "./learning-experience-unified-word.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
+import { renderFamilyReportWord } from "./family-report-word.mjs";
 
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const lines = (value) => Array.isArray(value) ? value.map(clean).filter(Boolean) : [];
@@ -173,31 +174,6 @@ function contentForActivity(document, names) {
   ];
 }
 
-function contentForFamilyReport(document, names) {
-  const value = document.content ?? {};
-  const field = (label, value) => {
-    const values = Array.isArray(value) ? lines(value) : clean(value).split(/\r?\n/).map(clean).filter(Boolean);
-    return values.map((text,index)=>new Paragraph({style:"Normal",spacing:{after:100,line:285},widowControl:true,
-      children:[...(index===0?[new TextRun({text:`${label}: `,bold:true,color:"086C7C"})]:[]),new TextRun(text)]}));
-  };
-  const children = [
-    ...section("En pocas palabras", value.introduction),
-  ];
-  for (const report of Array.isArray(value.sections) ? value.sections : []) {
-    children.push(heading(names.get(clean(report?.competency_id)) ?? "Aprendizajes observados", 2),
-      ...labelled("Valoración confirmada por la docente", document.achievement_levels?.find(row=>row.competency_v4_id===report.competency_id)?.achievement_level),
-      ...field("Lo que hemos visto", report?.progress_summary),
-      ...field("Así lo vimos", report?.examples),
-      ...field("Qué ayudó", report?.support_or_conditions),
-      ...field("Qué haremos después", report?.next_steps),
-      ...field("Ideas para casa", report?.family_suggestions),
-      ...field("Seguimos observando", report?.insufficiency_note));
-  }
-  children.push(...section("Para seguir acompañando", value.closing_note));
-  if (clean(value.family_agreements)) children.push(...section("Acuerdos con la familia", value.family_agreements));
-  return children;
-}
-
 function contentForPeriodClosure(document,names){
   const entries=document.content.entries??[],pending=document.content.pending_entries??[];
   const cell=children=>new TableCell({margins:{top:150,bottom:140,left:170,right:170},children});
@@ -220,6 +196,7 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
   if (!document || !["annual_plan", "diagnostic_summary", "experience", "activity", "family_report", "period_closure"].includes(document.kind)) {
     throw new Error("Documento no disponible para Word.");
   }
+  if (document.kind === 'family_report') return renderFamilyReportWord(document,competencyCards,{logo,studentPhoto});
   if (document.kind === "annual_plan" && document.content?.journey_version === 2) return renderAnnualJourneyWord(document, competencyCards, {logo});
   if (document.kind === "annual_plan" && document.source_plan_format === "annual_preplan_v1" && !document.formal_ready)
     throw new Error("El Word de esta versión se está preparando. Inténtalo nuevamente cuando esté listo.");
@@ -241,8 +218,8 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
   const detail = document.kind === "annual_plan" ? contentForAnnual(document, names) :
     document.kind === "diagnostic_summary" ? contentForDiagnostic(document) :
     document.kind === "experience" ? contentForExperience(document, names) :
-    document.kind === "activity" ? contentForActivity(document, names) : document.kind === "period_closure" ? contentForPeriodClosure(document,names) : contentForFamilyReport(document, names);
-  const polishedReport = ["family_report", "period_closure", "experience", "activity", "diagnostic_summary"].includes(document.kind);
+    document.kind === "activity" ? contentForActivity(document, names) : contentForPeriodClosure(document,names);
+  const polishedReport = ["period_closure", "experience", "activity", "diagnostic_summary"].includes(document.kind);
   const font = polishedReport ? "Poppins" : "Aptos";
   const ink = polishedReport ? "173352" : "000000";
   const doc = new Document({
@@ -268,8 +245,6 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
         ...(polishedReport ? [reportIdentification(document),new Paragraph({spacing:{after:70}})] : labelled("Año escolar", String(document.school_year ?? ""))),
         ...(Number(document.version) > 1 ? labelled("Versión", String(document.version)) : []),
         ...(!polishedReport ? [...labelled("Institución educativa", document.institution_name ?? document.document_context?.institution_name),...labelled("Aula", document.classroom)] : []),
-        ...(document.kind === "family_report" ? [
-          ...(studentPhoto?[new Paragraph({children:[new ImageRun({data:studentPhoto.data,type:studentPhoto.mimeType==="image/png"?"png":"jpg",transformation:{width:72,height:72}})]})]:[])] : []),
         ...detail,
       ],
     }],

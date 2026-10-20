@@ -36,7 +36,30 @@ test("Word familiar reúne identificación, valoración y conclusión canónica 
   const zip=await JSZip.loadAsync(await renderSavedDocumentWord(document,cards,{studentPhoto:{data:photo,mimeType:"image/jpeg"}})),xml=await zip.file("word/document.xml").async("string");
   for(const value of ["Luna Ficticia","5 años","Docente ficticia","Bimestre 3","Valoración confirmada por la docente","Explica su elección durante el juego."])assert.ok(xml.includes(value),value);
   assert.ok(Object.keys(zip.files).some(name=>name.startsWith("word/media/")));
-  const without=await JSZip.loadAsync(await renderSavedDocumentWord(document,cards));assert.equal(Object.keys(without.files).some(name=>name.startsWith("word/media/")),false);
+  const without=await JSZip.loadAsync(await renderSavedDocumentWord(document,cards));
+  assert.doesNotMatch(await without.file('word/document.xml').async('string'),/Foto del estudiante/,'Los símbolos de competencia no sustituyen ni inventan una foto');
+});
+
+test('Word familiar usa viñetas reales, notas docentes con color y foto en el bloque derecho',async()=>{
+ const photo=await sharp({create:{width:400,height:200,channels:3,background:'#eaf7ef'}}).png().toBuffer();
+ const ids=['COM_ORAL','COM_LECTURA','PS_CONVIVE','COM_ARTE'],grades=['AD','A','B','C'];
+ const sections=ids.map((competency_id,i)=>({competency_id,progress_summary:`Conclusión literal ${i}.`,examples:[`Ejemplo observado ${i}.`],support_or_conditions:[`Apoyo registrado ${i}.`],next_steps:[`Siguiente paso ${i}.`],family_suggestions:[`Idea para casa ${i}.`],insufficiency_note:i===3?'Falta observar otras situaciones.':null}));
+ const source={...base('family_report',{introduction:'Compartimos lo observado.',sections,closing_note:'Seguiremos acompañando.',family_agreements:'Leer juntos.'}),title:'Informe a la familia de Ana Torres',teacher_name:'María',age:5,achievement_levels:ids.map((competency_v4_id,i)=>({competency_v4_id,achievement_level:grades[i]}))};
+ const before=structuredClone(source),zip=await JSZip.loadAsync(await renderSavedDocumentWord(source,ids.map(id=>({id,name:id})),{logo:photo,studentPhoto:{data:photo,mimeType:'image/png'}})),xml=await zip.file('word/document.xml').async('string');
+ assert.deepEqual(source,before);
+ for(const section of sections)for(const value of [section.progress_summary,...section.examples,...section.support_or_conditions,...section.next_steps,...section.family_suggestions,section.insufficiency_note].filter(Boolean))assert.ok(xml.includes(value),value);
+ for(const fill of ['E6F2FF','DEF5E9','FFF2D5','FFEDEF'])assert.ok(xml.includes(fill),fill);
+ assert.ok((xml.match(/<w:numPr>/g)??[]).length>=16,'Las listas tienen numeración Word editable');
+ assert.equal((xml.match(/<w:tblHeader\/>/g)??[]).length,4,'Cada bloque repite su competencia y nota cuando continúa en otra página');
+ const firstTable=xml.match(/<w:tbl>[\s\S]*?<\/w:tbl>/)[0],cells=firstTable.match(/<w:tc>[\s\S]*?<\/w:tc>/g);
+ assert.equal(cells.length,2);assert.doesNotMatch(cells[0],/Foto del estudiante/);assert.match(cells[1],/Foto del estudiante/);
+ const extent=cells[1].match(/<wp:extent cx="(\d+)" cy="(\d+)"/);assert.ok(extent);assert.equal(Number(extent[1])/Number(extent[2]),2,'La foto conserva su proporción');
+ const parts=await Promise.all(Object.keys(zip.files).filter(name=>/^word\/(document|header\d+)\.xml$/.test(name)).map(name=>zip.file(name).async('string')));
+ const drawings=parts.join('').match(/<wp:docPr\b[^>]*>/g)??[];
+ assert.equal(drawings.length,6,'Foto, cuatro competencias y logo');
+ assert.equal(new Set(drawings.map(tag=>tag.match(/\bid="([^"]+)"/)[1])).size,drawings.length,'Cada imagen tiene un ID único en Word');
+ for(const tag of drawings)assert.match(tag,/\bname="[^"]+"/,'El nombre requerido evita que Word repare el archivo');
+ assert.match(await zip.file('docProps/core.xml').async('string'),/family-report-readable-v2/);
 });
 
 test("el plan anual se exporta a Word con secciones, encabezado y competencias, sin trazabilidad interna", async () => {

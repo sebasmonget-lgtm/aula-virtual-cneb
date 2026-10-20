@@ -8,8 +8,8 @@ const nextConfig: NextConfig = {
     "/health": ["./assets/project-images/masters/**/*"],
   },
   outputFileTracingIncludes: {
-    "/api/*": ["./knowledge/**/*", "./assets/**/*", "./public/workshops/**/*", "./public/project-illustrations/*.webp", "./biblioteca-talleres/**/*", "./skills/**/*", "./docs/auditoria-biblioteca-fichas-inventario.json", "./experiments/jev-competency-classifier/config/**/*", "./experiments/jev-competency-classifier/src/current-v2.mjs"],
-    "/health": ["./knowledge/**/*", "./assets/**/*", "./public/workshops/**/*", "./public/project-illustrations/*.webp", "./biblioteca-talleres/**/*", "./skills/**/*", "./docs/auditoria-biblioteca-fichas-inventario.json", "./experiments/jev-competency-classifier/config/**/*", "./experiments/jev-competency-classifier/src/current-v2.mjs"],
+    "/api/*": ["./knowledge/**/*", "./assets/**/*", "./public/workshops/**/*", "./public/competencies/compact/*.svg", "./public/project-illustrations/*.webp", "./biblioteca-talleres/**/*", "./skills/**/*", "./docs/auditoria-biblioteca-fichas-inventario.json", "./experiments/jev-competency-classifier/config/**/*", "./experiments/jev-competency-classifier/src/current-v2.mjs"],
+    "/health": ["./knowledge/**/*", "./assets/**/*", "./public/workshops/**/*", "./public/competencies/compact/*.svg", "./public/project-illustrations/*.webp", "./biblioteca-talleres/**/*", "./skills/**/*", "./docs/auditoria-biblioteca-fichas-inventario.json", "./experiments/jev-competency-classifier/config/**/*", "./experiments/jev-competency-classifier/src/current-v2.mjs"],
   },
 };
 
