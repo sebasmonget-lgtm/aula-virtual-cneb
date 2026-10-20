@@ -1492,3 +1492,12 @@ La IA familiar usa exclusivamente la nota docente vinculada a cada conclusión p
 Aplicar la mejora visual en la exportación Word de todos los informes, conservando la fuente canónica. Usar viñetas reales, símbolo/color de competencia, nivel docente visible e ideas para casa en un bloque propio; foto opcional arriba a la derecha sin deformarla. No resumir, eliminar ejemplos ni cambiar una nota al maquetar. Mantener autorización y carga privada de imagen en servidor. Los grupos breves se mantienen mediante filas, sin encadenar todos los párrafos con `keepNext`; la competencia y su nota se repiten si el bloque continúa en otra página.
 
 La preferencia docente final es dedicar una hoja a cada competencia. Comenzar cada bloque posterior con un salto explícito, mantener la identificación en la primera y el cierre tras la última, sin portada ni página final obligatorias. Conservar el resto de la presentación; si un texto excepcionalmente largo requiere continuidad, preservar el contenido antes que truncarlo.
+
+
+## 2026-10-20 — Lenguaje sencillo como criterio general de Ayni
+
+Ayni debe ayudar a entender al niño y decidir cómo acompañarlo, con palabras comunes, frases cortas y acciones concretas. Aplicar este criterio también al análisis previo, a las conclusiones descriptivas y a los informes para familias. Conservar nombres oficiales, citas y códigos curriculares donde correspondan. No inventar dificultades, apoyos ni hechos para completar apartados; distinguir apoyo realizado de propuesta futura. Evitar fórmulas repetidas y reemplazar «seguir observando» como único siguiente paso por una ayuda concreta cuando las fuentes la permitan.
+
+Se mantiene el recorrido análisis previo → valoración docente → conclusión descriptiva → informe familiar. Las 30–70 palabras de la conclusión son orientación de Ayni, no un límite normativo. El CNEB pide describir avances, dificultades y recomendaciones basándose en evidencias; no exigir una dificultad inexistente para llenar una plantilla.
+
+El informe conserva por código los campos canónicos de la conclusión. La redacción para familias se almacena aparte en `family_wording` v1, vinculada por huella a esos campos, con revisión/edición docente y lectura compartida en interfaz, Documentos y Word. Cambiarla no cambia las notas ni la conclusión original. Informes anteriores siguen visibles; «Preparar versión con lenguaje sencillo» usa el flujo explícito de nueva propuesta, sin sobrescribirlos al abrir. No hay migración.

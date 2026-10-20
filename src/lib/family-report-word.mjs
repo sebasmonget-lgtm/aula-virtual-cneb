@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import { AlignmentType, BorderStyle, Document, Footer, Header, HeadingLevel, ImageRun, PageNumber, Packer, Paragraph, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType } from 'docx';
 import { competencyVisual } from './competency-visuals.mjs';
 import { competencyLabels } from './competency-labels.mjs';
+import { familyReportSectionForReader } from './family-report-presentation.mjs';
 
 const INK='173352',MUTED='456078',BORDER='D1E2EA',WIDTH=9914;
 const levels={AD:{label:'Destacado',ink:'185E91',fill:'E6F2FF'},A:{label:'Esperado',ink:'12634E',fill:'DEF5E9'},B:{label:'En proceso',ink:'88520B',fill:'FFF2D5'},C:{label:'En inicio',ink:'A52C35',fill:'FFEDEF'}};
@@ -39,6 +40,7 @@ async function competencyIcon(id,index){
 }
 
 async function competencyBlock(section,names,achievementLevels,index){
+  section=familyReportSectionForReader(section);
   const id=clean(section.competency_id),name=names.get(id)||competencyLabels[id]||'Aprendizajes observados';
   const theme=competencyVisual(id),fill=theme?.background.slice(1)??'EDF6FB',color=theme?.foreground.slice(1)??INK;
   const grade=achievementLevels.find(row=>row.competency_v4_id===id)?.achievement_level,gradeTheme=levels[grade];
@@ -48,7 +50,7 @@ async function competencyBlock(section,names,achievementLevels,index){
   const gradeCell=gradeTheme?[new Paragraph({alignment:AlignmentType.CENTER,keepNext:true,spacing:{after:15},children:[text(grade,{size:30,bold:true,color:gradeTheme.ink})]}),
     new Paragraph({alignment:AlignmentType.CENTER,keepNext:true,spacing:{after:0,line:220},children:[text(gradeTheme.label,{size:17,bold:true,color:gradeTheme.ink})]})]:[paragraph('Sin valoración',{keepNext:true,alignment:AlignmentType.CENTER})];
   const summary=clean(section.progress_summary)?[label('Lo que hemos visto'),paragraph(section.progress_summary)]:[];
-  const examples=group('Así lo vimos',section.examples),support=group('Qué ayudó',section.support_or_conditions),next=group('Qué sigue en el aula',section.next_steps);
+  const examples=group('Así lo vimos',section.examples),support=group('Apoyos en el aula',section.support_or_conditions),next=group('Qué seguiremos trabajando',section.next_steps);
   const home=group('Ideas para casa',section.family_suggestions);
   const children=[new TableRow({cantSplit:true,tableHeader:true,children:[cell(header,WIDTH-1540,{columnSpan:2,shading:{fill}}),cell(gradeCell,1540,{shading:{fill:gradeTheme?.fill??fill}})]})];
   if(summary.length)children.push(new TableRow({cantSplit:true,children:[cell(summary,WIDTH,{columnSpan:3})]}));

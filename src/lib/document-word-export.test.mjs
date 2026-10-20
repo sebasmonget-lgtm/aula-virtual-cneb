@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import sharp from "sharp";
 import { PGlite } from "@electric-sql/pglite";
 import { prepareWordDownload, renderSavedDocumentWord, wordFilenameFor } from "./document-word-export.mjs";
+import { preserveConfirmedFamilySections } from './family-report-v4-service.mjs';
 
 const id = (number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
 const cards = [{ id: "COM_ORAL", name: "Se comunica oralmente en su lengua materna" }];
@@ -29,6 +30,14 @@ async function xmlForWithCards(document, competencyCards = cards) {
   return archive.file("word/document.xml").async("string");
 }
 const xmlFor = xmlForWithCards;
+
+test('Word imprime la versión sencilla sin modificar la conclusión ni la nota docente',async()=>{
+ const proposal={introduction:'Compartimos lo aprendido.',sections:[{competency_id:'COM_ORAL',progress_summary:'Ana contó lo que vio.',examples:['Explicó por qué eligió una figura.'],support_or_conditions:['Con una pregunta de la profesora.'],next_steps:['Conversaremos sobre otras figuras.'],family_suggestions:['Pregúntale por su dibujo.'],insufficiency_note:null}],closing_note:'Sigamos acompañándola.'};
+ const content=preserveConfirmedFamilySections(proposal,[{competency_v4_id:'COM_ORAL',details:{information_status:'sufficient',conclusion_text:'Expresa interpretaciones sustentadas en información contextual.',progress_examples:['Ejemplo canónico conservado.'],support_or_conditions:[],next_steps:[]}}],{captureFamilyWording:true});
+ const before=structuredClone(content),xml=await xmlFor({...base('family_report',content),achievement_levels:[{competency_v4_id:'COM_ORAL',achievement_level:'B'}]});
+ assert.match(xml,/Ana contó lo que vio/);assert.match(xml,/Con una pregunta de la profesora/);assert.match(xml,/En proceso/);
+ assert.doesNotMatch(xml,/Expresa interpretaciones sustentadas/);assert.deepEqual(content,before);
+});
 
 test("Word familiar reúne identificación, valoración y conclusión canónica con foto opcional",async()=>{
   const photo=await sharp({create:{width:20,height:20,channels:3,background:"#087d96"}}).jpeg().toBuffer();

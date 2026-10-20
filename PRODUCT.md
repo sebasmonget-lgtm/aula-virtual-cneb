@@ -34,3 +34,12 @@ El taller es opcional dentro del día: una generación Luna medium y fallback GP
 Evaluar calcula por código el contexto de actividades realizadas, criterios vigentes y referencias CNEB. Luna analiza observaciones originales del niño y competencia; el contexto familiar queda fuera. La docente decide y confirma AD/A/B/C. La conclusión usa las observaciones, la valoración docente y ese contexto calculado; el análisis previo de IA es auxiliar. Lotes durables conservan fuentes, versiones y huellas.
 
 El informe familiar conserva por código las conclusiones confirmadas. El contexto familiar solo ayuda a redactar recomendaciones y tiene una huella propia; cambiarlo no altera evidencias ni notas. Los acuerdos los escribe la docente y desaparecen del Word cuando están vacíos. Consolidado, cierre y exportación son código. La observación contextual no clasifica; Jev raw exige flags, aceptación de privacidad y benchmark, con salida manual disponible.
+
+
+## 2026-10-20 — Lenguaje sencillo como criterio general de Ayni
+
+Ayni debe ayudar a entender al niño y decidir cómo acompañarlo, con palabras comunes, frases cortas y acciones concretas. Aplicar este criterio también al análisis previo, a las conclusiones descriptivas y a los informes para familias. Conservar nombres oficiales, citas y códigos curriculares donde correspondan. No inventar dificultades, apoyos ni hechos para completar apartados; distinguir apoyo realizado de propuesta futura. Evitar fórmulas repetidas y reemplazar «seguir observando» como único siguiente paso por una ayuda concreta cuando las fuentes la permitan.
+
+Se mantiene el recorrido análisis previo → valoración docente → conclusión descriptiva → informe familiar. Las 30–70 palabras de la conclusión son orientación de Ayni, no un límite normativo. El CNEB pide describir avances, dificultades y recomendaciones basándose en evidencias; no exigir una dificultad inexistente para llenar una plantilla.
+
+El informe conserva por código los campos canónicos de la conclusión. La redacción para familias se almacena aparte en `family_wording` v1, vinculada por huella a esos campos, con revisión/edición docente y lectura compartida en interfaz, Documentos y Word. Cambiarla no cambia las notas ni la conclusión original. Informes anteriores siguen visibles; «Preparar versión con lenguaje sencillo» usa el flujo explícito de nueva propuesta, sin sobrescribirlos al abrir. No hay migración.

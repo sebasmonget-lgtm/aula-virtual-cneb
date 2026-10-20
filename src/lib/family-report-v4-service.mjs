@@ -1,5 +1,6 @@
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { stableFingerprint } from "./source-fingerprint-v4.mjs";
+import { familyWordingFields } from './family-report-presentation.mjs';
 
 export const FAMILY_REPORT_FIELDS = ["introduction", "sections", "closing_note"];
 export const FAMILY_REPORT_SECTION_FIELDS = ["competency_id", "information_status", "progress_summary", "examples", "support_or_conditions", "next_steps", "family_suggestions", "insufficiency_note"];
@@ -44,7 +45,7 @@ export function validateFamilyReport(output, competencyIds, sourceSnapshot) {
   if (output.family_agreements !== undefined && (typeof output.family_agreements !== "string" || output.family_agreements.length > 1200)) throw new Error("Escribe acuerdos breves con la familia.");
   const seen = new Set();
   for (const section of output.sections) {
-    if (!section || typeof section !== "object" || Array.isArray(section) || FAMILY_REPORT_SECTION_FIELDS.some((field) => !(field in section)) || Object.keys(section).some((field) => !FAMILY_REPORT_SECTION_FIELDS.includes(field))) throw new Error("Una sección no cumple family-report-v1.");
+    if (!section || typeof section !== "object" || Array.isArray(section) || FAMILY_REPORT_SECTION_FIELDS.some((field) => !(field in section)) || Object.keys(section).some((field) => ![...FAMILY_REPORT_SECTION_FIELDS,'family_wording'].includes(field))) throw new Error("Una sección no cumple family-report-v1.");
     if (!competencyIds.includes(section.competency_id) || seen.has(section.competency_id)) throw new Error("El informe introduce una competencia no seleccionada o duplicada.");
     seen.add(section.competency_id);
     const expected = reportInformationStatus(sourceSnapshot, section.competency_id);
@@ -54,8 +55,17 @@ export function validateFamilyReport(output, competencyIds, sourceSnapshot) {
     if (expected === "insufficient" ? typeof section.insufficiency_note !== "string" || !section.insufficiency_note.trim() : section.insufficiency_note !== null) throw new Error("La nota de información insuficiente no coincide con la fuente.");
     if (section.family_suggestions.some((item) => /\b(?:terapia|tratamiento|diagn[oó]stico|evaluar formalmente)\b/i.test(item))) throw new Error("Las sugerencias familiares no pueden prescribir tratamiento o evaluación formal.");
     if (expected === "insufficient" && /\b(?:logr[oó]|domina|plenamente|siempre)\b/i.test([section.progress_summary, ...section.examples].join(" "))) throw new Error("La información insuficiente no permite afirmar progreso firme.");
+    if(section.family_wording !== undefined) {
+      const wording=section.family_wording;
+      if(!wording||wording.version!==1||Object.keys(wording).some(field=>![...familyWordingFields,'version','source_fingerprint'].includes(field))||
+        typeof wording.progress_summary!=='string'||!wording.progress_summary.trim()||
+        familyWordingFields.slice(1).some(field=>!Array.isArray(wording[field])||wording[field].some(text=>typeof text!=='string'||!text.trim()))||
+        wording.source_fingerprint!==familyWordingFingerprint(section))throw new Error('La versión para la familia debe conservar su vínculo con la conclusión guardada.');
+      if(section.examples.length&&!wording.examples.length)throw new Error('Incluye un ejemplo observado en la versión para la familia.');
+      if(expected==='insufficient'&&/\b(?:logr[oó]|domina|plenamente|siempre)\b/i.test([wording.progress_summary,...wording.examples].join(' ')))throw new Error('Falta información para afirmar ese logro en la versión familiar.');
+    }
   }
-  const prose = [output.introduction, output.closing_note, ...output.sections.flatMap((section) => [section.progress_summary, section.insufficiency_note, ...listFields.flatMap((field) => section[field])])].filter(Boolean).join(" ");
+  const prose = [output.introduction, output.closing_note, ...output.sections.flatMap((section) => [section.progress_summary, section.insufficiency_note, ...listFields.flatMap((field) => section[field]),...(section.family_wording?familyWordingFields.flatMap(field=>section.family_wording[field]):[])])].filter(Boolean).join(" ");
   const forbiddenGrades = /\bAD\b|\b(?:nivel|obtuvo|alcanz[oó]|recibi[oó])\s+(?:AD|A|B|C)\b|\b(?:nota\s*\d{1,2}|calificaci[oó]n|ranking|percentil(?:es)?|aprobado|desaprobado)\b|\b\d{1,2}\/20\b|\b(?:[0-9]|1[0-9]|20)\s*(?:puntos|sobre\s+20)\b|\d{1,3}\s*%|\bpor ciento\b/i;
   const forbiddenComparisons = /\bcomparad[oa]\s+con\s+(?:sus\s+)?compa[ñn]er|\b(?:m[aá]s|menos|mejor|peor|igual|por\s+encima|por\s+debajo)\s+que\s+(?:otros\s+|sus\s+)?(?:ni[ñn]os|compa[ñn]eros)|\b(?:promedio\s+del?\s+(?:sal[oó]n|aula)|(?:sal[oó]n|aula)\s+promedio)\b/i;
   if (forbiddenGrades.test(prose) || forbiddenComparisons.test(prose) || /\b(?:terapia|tratamiento|diagn[oó]stico)\b/i.test(prose)) throw new Error("El informe no puede incluir notas, rankings, porcentajes, diagnósticos ni comparaciones.");
@@ -66,7 +76,15 @@ export function validateFamilyReport(output, competencyIds, sourceSnapshot) {
 export function buildFamilyReportInput({ age, competencyIds, studentName, conclusions, knownNames = [], castellanoL2Applicable = false, religionApplicable = false, familyRecommendationContext = null, confirmedAssessments = [] }) {
   const clean = (value) => neutralizeAssessmentText(value, knownNames);
   const findings = conclusions.filter((row) => competencyIds.includes(row.competency_v4_id)).map((row) => ({ competency_id: row.competency_v4_id, confirmed_achievement_level: confirmedAssessments.find(assessment=>assessment.id===row.assessment_id&&assessment.teacher_confirmed_at)?.achievement_level??null, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), information_status: row.details.information_status, conclusion_text: clean(row.details.conclusion_text), progress_examples: (row.details.progress_examples ?? []).map(clean), support_or_conditions: (row.details.support_or_conditions ?? []).map(clean), next_steps: (row.details.next_steps ?? []).map(clean), insufficiency_reason: clean(row.details.insufficiency_reason), caution: clean(row.details.caution) }));
-  return { workflow: "family_report", age, competency_ids: competencyIds, castellano_l2_applicable: castellanoL2Applicable, religion_applicable: religionApplicable, teacher_request: "El alumno evaluado se identifica en student_context.name cuando existe. Conserva los actores de cada nota y no le atribuyas acciones de otros. Usa family_recommendation_context solo para una o dos recomendaciones prácticas para casa, nunca para alterar el progreso, ejemplos, condiciones, siguientes pasos, nivel o conclusión confirmados. Comunicar a la familia solo las conclusiones descriptivas confirmadas seleccionadas. confirmed_achievement_level es la nota ya elegida por la docente; nunca la asignes ni la cambies. Úsala junto con los hechos para orientar family_suggestions: AD reconoce un logro concreto y propone ampliarlo; A invita a seguir practicando; B propone acompañamiento sencillo; C propone un paso pequeño con apoyo. No inventes logros ni dificultades por la letra. La aplicación muestra la nota por separado: no escribas letras de notas en la prosa. Conserva literalmente la conclusión y sus ejemplos. Usar frases cortas, palabras habituales, una idea por oración y ejemplos concretos que una familia pueda reconocer. Explicar con claridad qué se observó, qué ayudó y qué se puede hacer después. Copiar progress_examples en examples, sin omitir ni sustituir ejemplos por recomendaciones. El intervalo period_start/period_end delimita el informe; no afirma que ya se observó todo ese intervalo. No escribas fechas del período en introduction: ya aparecen en el encabezado del documento. Presenta solo lo observado, sin atribuirlo a todo el intervalo. No extender la ejecución observada a fechas futuras ni afirmar participación familiar realizada. Conservar el estado de información de cada competencia y evitar notas, niveles, comparaciones, diagnósticos, lenguaje burocrático y afirmaciones absolutas. Mantener literalmente los nombres oficiales de competencias cuando se usen.", family_recommendation_context: familyRecommendationContext, student_context: { id: "current_student", ...(studentName ? { name: studentName } : {}), teacher_confirmed_findings: findings } };
+  return { workflow: "family_report", age, competency_ids: competencyIds, castellano_l2_applicable: castellanoL2Applicable, religion_applicable: religionApplicable, teacher_request: [
+    "El alumno evaluado se identifica en student_context.name. Conserva quién hizo cada acción; no le atribuyas acciones de otros.",
+    "Prepara una versión para la familia con palabras comunes, frases cortas y una idea por oración. Conserva los hechos, apoyos, dificultades y dudas de las conclusiones confirmadas. Puedes reformularlos; no copies sus expresiones técnicas. El servidor conserva la conclusión original por separado.",
+    "En progress_summary explica qué hizo el niño y qué está aprendiendo en dos o tres frases. Evita repetir el nombre completo de la competencia o empezar cada sección con la misma fórmula. En examples incluye ejemplos concretos de progress_examples, sin convertir recomendaciones en hechos.",
+    "En support_or_conditions distingue el apoyo que recibió de una propuesta futura. Si la fuente dice ofrecerle, no afirmes que ya se le ofreció. En next_steps explica qué seguiremos trabajando y cómo ayudarlo; observar o registrar más no reemplaza una ayuda concreta. No inventes apoyos ni dificultades para llenar un apartado.",
+    "Usa family_recommendation_context solo para una o dos ideas sencillas para casa. No lo conviertas en progreso observado. Propón juegos y conversaciones breves, sin tareas extensas, compras ni asumir materiales o dispositivos disponibles.",
+    "confirmed_achievement_level es la nota elegida por la docente; nunca la asignes ni la cambies. Orienta las ideas para casa con esa nota y los hechos: AD reconoce y amplía un logro concreto; A invita a seguir practicando; B ofrece acompañamiento sencillo; C propone un paso pequeño con apoyo. No inventes logros ni dificultades por la letra. La aplicación muestra la nota por separado: no escribas letras de notas en la prosa.",
+    "El intervalo delimita el informe; no afirma observación de todo ese tiempo. No repitas fechas en introduction, ni anticipes hechos futuros o participación familiar realizada. Conserva el estado de información y la cautela cuando falten datos. Evita comparaciones, diagnósticos, etiquetas y afirmaciones absolutas. Conserva los nombres oficiales de competencias cuando se usen como título."
+  ].join(" "), family_recommendation_context: familyRecommendationContext, student_context: { id: "current_student", ...(studentName ? { name: studentName } : {}), teacher_confirmed_findings: findings } };
 }
 
 export function buildFamilyReportFallback(competencyIds, conclusions) {
@@ -89,16 +107,22 @@ export function buildFamilyReportFallback(competencyIds, conclusions) {
   },competencyIds,snapshot);
 }
 
-/** A family report composes recommendations; confirmed pedagogical text is immutable. */
-export function preserveConfirmedFamilySections(proposal, conclusions) {
+export function familyWordingFingerprint(section) {
+  return stableFingerprint(Object.fromEntries(['competency_id','information_status',...familyWordingFields,'insufficiency_note'].map(field=>[field,section[field]])));
+}
+
+/** Keep the confirmed wording as source and a separate, editable family reading version. */
+export function preserveConfirmedFamilySections(proposal, conclusions, { captureFamilyWording = false } = {}) {
   return { ...proposal, sections: proposal.sections.map(section => {
     const rows = conclusions.filter(row => row.competency_v4_id === section.competency_id);
     if (!rows.length) throw new Error("Falta una conclusión confirmada para este informe.");
     const clean = value => neutralizeAssessmentText(value, []);
     const list = field => [...new Set(rows.flatMap(row => (row.details[field] ?? []).map(clean)))];
-    return { ...section, progress_summary: rows.map(row => clean(row.details.conclusion_text)).join(" "),
+    const canonical={ ...section, progress_summary: rows.map(row => clean(row.details.conclusion_text)).join(" "),
       examples: list("progress_examples"), support_or_conditions: list("support_or_conditions"), next_steps: list("next_steps"),
       information_status: rows.every(row => row.details.information_status === "sufficient") ? "sufficient" : "insufficient",
       insufficiency_note: rows.every(row => row.details.information_status === "sufficient") ? null : rows.map(row => clean(row.details.insufficiency_reason)).find(Boolean) || "Se necesitan más observaciones." };
+    if(captureFamilyWording)canonical.family_wording={version:1,source_fingerprint:familyWordingFingerprint(canonical),...Object.fromEntries(familyWordingFields.map(field=>[field,typeof section[field]==='string'?clean(section[field]):(section[field]??[]).map(clean)]))};
+    return canonical;
   }) };
 }

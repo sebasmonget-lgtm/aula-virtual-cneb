@@ -68,7 +68,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
     if(!result.rows.length)throw new VersionConflictError("Otra preparación se guardó primero.");
   };
   const publicJob=(id,payload)=>({id,kind:payload.kind,status:payload.status==="running"&&Date.parse(payload.lease_until)<=Date.now()?"uncertain":payload.status,
-    total:payload.tasks.length,completed:payload.results.length,error:payload.error??null,items:payload.results.map(({student_id,competency_id,review_reason,proposal,saved_id,achievement_levels,metadata})=>({student_id,competency_id,review_reason,proposal,saved_id,achievement_levels,grade_informed:metadata?.confirmed_grades_context_version===1})),revision:payload.revision});
+    total:payload.tasks.length,completed:payload.results.length,error:payload.error??null,items:payload.results.map(({student_id,competency_id,review_reason,proposal,saved_id,achievement_levels,metadata})=>({student_id,competency_id,review_reason,proposal,saved_id,achievement_levels,grade_informed:metadata?.confirmed_grades_context_version===1,plain_language:metadata?.family_language_version===1})),revision:payload.revision});
   const presentJob=async(id,payload,data)=>{
     const result=publicJob(id,payload);
     if(payload.kind!=='analysis')result.items=result.items.map(item=>{
@@ -96,7 +96,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
       result.items=relevant.filter(row=>eligible(row)&&conclusionIsCurrent(row.conclusion,row.assessment)).map(row=>({student_id:row.student_id,competency_id:row.competency_v4_id,review_reason:conclusionReviewReason(row),proposal:row.conclusion.details,saved_id:row.conclusion.id}));result.total=relevant.length;
     }else{
       const reports=(await db.query(`select r.* from family_reports r join students s on s.id=r.student_id where s.classroom_id=$1 and s.status='active' and r.evaluation_period_id=$2 and r.status='active'`,[data.classroom.id,data.period.id])).rows;
-      result.items=reports.filter(report=>sameConclusionSourceSnapshot(report.source_conclusion_snapshot,conclusionSourceSnapshot(model.rows.filter(row=>row.student_id===report.student_id&&eligible(row)&&conclusionIsCurrent(row.conclusion,row.assessment)).map(row=>row.conclusion)))).map(report=>({student_id:report.student_id,competency_id:null,review_reason:reportReviewReason(model.rows.filter(row=>row.student_id===report.student_id&&eligible(row))),achievement_levels:model.rows.filter(row=>row.student_id===report.student_id&&report.source_conclusion_snapshot.some(source=>source.id===row.conclusion?.id)&&eligible(row)).map(row=>({competency_id:row.competency_v4_id,achievement_level:row.assessment.achievement_level})),proposal:report.details,saved_id:report.id,grade_informed:report.generation_metadata?.confirmed_grades_context_version===1}));result.total=model.students.length;
+      result.items=reports.filter(report=>sameConclusionSourceSnapshot(report.source_conclusion_snapshot,conclusionSourceSnapshot(model.rows.filter(row=>row.student_id===report.student_id&&eligible(row)&&conclusionIsCurrent(row.conclusion,row.assessment)).map(row=>row.conclusion)))).map(report=>({student_id:report.student_id,competency_id:null,review_reason:reportReviewReason(model.rows.filter(row=>row.student_id===report.student_id&&eligible(row))),achievement_levels:model.rows.filter(row=>row.student_id===report.student_id&&report.source_conclusion_snapshot.some(source=>source.id===row.conclusion?.id)&&eligible(row)).map(row=>({competency_id:row.competency_v4_id,achievement_level:row.assessment.achievement_level})),proposal:report.details,saved_id:report.id,grade_informed:report.generation_metadata?.confirmed_grades_context_version===1,plain_language:report.generation_metadata?.family_language_version===1}));result.total=model.students.length;
     }
     result.completed=result.items.length;return result;
   };
@@ -132,7 +132,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
         if(body.kind==="family")for(const task of tasks){
           const report=(await tx.query(`select id,details,source_conclusion_snapshot,generation_metadata from family_reports where student_id=$1 and evaluation_period_id=$2 and status='active' order by version desc limit 1`,[task.student_id,data.period.id])).rows[0];
           const usesNoFamilyContext=!task.snapshot.length && report?.generation_metadata?.source==="no_confirmed_conclusions";
-          if(report && (usesNoFamilyContext || (body.edit || report.generation_metadata?.confirmed_grades_context_version===1) && report.generation_metadata?.family_context_fingerprint===task.family_context_fingerprint) && sameConclusionSourceSnapshot(report.source_conclusion_snapshot,task.snapshot))task.existing=report;
+          if(report && (usesNoFamilyContext || (body.edit || report.generation_metadata?.confirmed_grades_context_version===1 && report.generation_metadata?.family_language_version===1) && report.generation_metadata?.family_context_fingerprint===task.family_context_fingerprint) && sameConclusionSourceSnapshot(report.source_conclusion_snapshot,task.snapshot))task.existing=report;
         }
         if(body.edit && tasks.some(task=>!task.existing))throw new VersionConflictError("Prepara primero el texto desde las fuentes actuales.");
         const id=randomUUID(),payload={teacher_id:teacherId,classroom_id:data.classroom.id,period_id:data.period.id,kind:body.kind,status:body.edit?"ready":"queued",revision:1,lease_token:randomUUID(),source_fingerprint:sourceFingerprint,
@@ -272,13 +272,13 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
         const input=job.kind==='conclusions'?buildDescriptiveConclusionInput({age:fresh.classroom.age,studentName,competencyId:task.competency_id,assessment:row.assessment,assessmentMaster:assessmentMasterEntry(computed,task.competency_id),evidenceRows:row.sourceRows,knownNames:names,priorConclusion:prior?.details?.conclusion_text}):buildFamilyReportInput({age:fresh.classroom.age,studentName,competencyIds:task.snapshot.map(source=>source.competency_id),conclusions:rows.filter(eligible).map(row=>row.conclusion),confirmedAssessments:rows.filter(eligible).map(row=>row.assessment),familyRecommendationContext,knownNames:names,castellanoL2Applicable:fresh.classroom.castellano_l2_applicable,religionApplicable:fresh.classroom.religion_applicable});
         const plan=resolveAIExecutionPlan({workflow:job.kind==='conclusions'?'descriptive_conclusion':'family_report',task:'generation'});
         phase='generation';const generated=await generate(input,{providerFactory:candidate=>createProvider(candidate),provider:createProvider(plan),executionPlan:plan});
-        phase='validation';const proposal=job.kind==='family'?canonicalFamilySections(generated.output,rows.filter(eligible).map(row=>row.conclusion)):generated.output;
+        phase='validation';const proposal=job.kind==='family'?canonicalFamilySections(generated.output,rows.filter(eligible).map(row=>row.conclusion),{captureFamilyWording:true}):generated.output;
         if(job.kind==='conclusions')validateDescriptiveConclusion(proposal,task.competency_id,row.assessment.details.information_status);
         else validateFamilyReport(proposal,task.snapshot.map(source=>source.competency_id),task.snapshot);
         if(job.kind==='family'&&task.family_context_fingerprint!==await currentFamilyRecommendationFingerprint(db,fresh.classroom.id,task.student_id))throw new VersionConflictError('La entrevista familiar cambió.');
         phase='save';await persist({...task,review_reason:job.kind==='conclusions'?conclusionReviewReason(row):reportReviewReason(rows.filter(eligible)),proposal,
           ...(job.kind==='family'?{achievement_levels:rows.filter(eligible).map(row=>({competency_id:row.competency_v4_id,achievement_level:row.assessment.achievement_level}))}:{}),
-          metadata:{...metadataForAudit(generated.metadata),...(job.kind==='family'?{family_context_fingerprint:task.family_context_fingerprint,confirmed_grades_context_version:1}:{})}});
+          metadata:{...metadataForAudit(generated.metadata),...(job.kind==='family'?{family_context_fingerprint:task.family_context_fingerprint,confirmed_grades_context_version:1,family_language_version:1}:{})}});
       }catch(error){job.failures[key(task)]=analysisFailure(error,phase,job.failures[key(task)]);throw error;}
     }));
     await checkpoint;

@@ -50,3 +50,8 @@ Campos editables con fondo suave `#f0f5fa`, borde `#748da4` y placeholder `#526b
 ### Corrección de controles activos · 2026-10-17
 
 El feedback posterior sustituye el fondo gris azulado del campo editable por blanco `#ffffff`: el gris `#e7edf3` se reserva a campos deshabilitados o de solo lectura. Bordes, foco y sombras de tarjetas se mantienen. Contraste del borde sobre blanco 3.45:1 y del placeholder 5.51:1. Las opciones de entrevista disponibles usan celeste `#f3fcff`, borde `#62869c`, texto `#234b63` y casilla bien visible; seleccionadas usan turquesa suave `#dcf4ef`, borde/indicador `#087d96` y marca de verificación. Hover distingue la acción sin reemplazar la selección. No se alteran etiquetas, tamaños, respuestas ni reglas de confirmación. Esta corrección prevalece sobre el fondo editable descrito en el apartado anterior.
+
+
+### Lenguaje sencillo en informes · 2026-10-20
+
+Se conserva el diseño actual. La versión familiar dice «Lo que observamos», «Apoyos en el aula» y «Qué seguiremos trabajando». El resumen es editable al revisar una nueva propuesta y la conclusión original se consulta en un detalle desplegable. Las versiones anteriores se actualizan solo con una acción explícita. Palabras cotidianas y recomendaciones breves, sin atribuir apoyos futuros al pasado ni añadir trámites.

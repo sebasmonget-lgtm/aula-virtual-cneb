@@ -18,6 +18,8 @@ import {AnnualProjectPreview} from "./annual-project-preview";
 import type {ChangeProposal} from "./annual-proposal-change-dialog";
 import { DocumentSyncPanel } from "./document-sync-panel";
 
+import {familyReportSectionForReader} from "@/src/lib/family-report-presentation.mjs";
+
 type DocumentKind = "annual_plan" | "diagnostic_summary" | "experience" | "activity" | "family_report" | "period_closure";
 type DocumentEntry = {
   id: string; kind: DocumentKind; subtype?: "project" | "unit"; title: string;
@@ -133,11 +135,11 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
         <p className="rounded-xl bg-[#eaf7fb] p-3 text-sm">{document.period_label || "Informe histórico sin período formal"}</p>
         <Section title="Para la familia" value={content.introduction} />
         {Array.isArray(content.sections) && content.sections.map((raw, index) => {
-          const section = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+          const section = familyReportSectionForReader(raw && typeof raw === "object" ? raw as Record<string, unknown> : {});
           return <section key={index} className="rounded-xl border border-[#dce8f0] p-4 sm:p-5"><h3 className="font-bold text-[#173352]">{names.get(text(section.competency_id)) ?? "Aprendizajes observados"}</h3>
             <p className="mt-2 leading-relaxed">{text(section.progress_summary)}</p>
-            <Section title="Ejemplos observados" value={section.examples} /><Section title="Qué ayudó" value={section.support_or_conditions} />
-            <Section title="Próximos pasos" value={section.next_steps} /><Section title="En casa" value={section.family_suggestions} />
+            <Section title="Ejemplos observados" value={section.examples} /><Section title="Apoyos en el aula" value={section.support_or_conditions} />
+            <Section title="Qué seguiremos trabajando" value={section.next_steps} /><Section title="En casa" value={section.family_suggestions} />
             <Section title="Información por completar" value={section.insufficiency_note} />
           </section>;
         })}

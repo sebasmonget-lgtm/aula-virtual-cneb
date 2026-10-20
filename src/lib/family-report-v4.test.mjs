@@ -7,6 +7,8 @@ import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { FAMILY_REPORT_OUTPUT_SCHEMA, generateAIWorkflowV4, InvalidAIGenerationError } from "./ai-generation-v4.mjs";
 import { buildFamilyReportFallback, buildFamilyReportInput, conclusionSourceSnapshot, sameConclusionSourceSnapshot, selectConfirmedConclusions, validateFamilyReport, validateFamilyReportPeriod } from "./family-report-v4-service.mjs";
 import { createFamilyReportRouteHandler } from "../../scripts/family-report-routes.mjs";
+import { preserveConfirmedFamilySections } from './family-report-v4-service.mjs';
+import { familyReportSectionForReader } from './family-report-presentation.mjs';
 
 const classroomId = "00000000-0000-4000-8000-000000000211";
 const teacherId = "00000000-0000-4000-8000-000000000021";
@@ -22,6 +24,25 @@ const sourceDetails = (competencyId, informationStatus = "sufficient") => ({ com
 const section = (competencyId, informationStatus = "sufficient") => ({ competency_id: competencyId, information_status: informationStatus, progress_summary: informationStatus === "sufficient" ? "En situaciones observadas compartió sus ideas." : "La información observada aún es limitada.", examples: informationStatus === "sufficient" ? ["Explicó su idea al grupo."] : [], support_or_conditions: ["Las preguntas abiertas facilitaron la conversación."], next_steps: ["Ofrecer nuevos momentos de diálogo."], family_suggestions: ["Conversar sobre lo que observa en casa."], insufficiency_note: informationStatus === "insufficient" ? "Se necesitan más situaciones para comprender su progreso." : null });
 const report = (ids = ["COM_ORAL"], statuses = {}) => ({ introduction: "Compartimos algunos avances observados durante este periodo.", sections: ids.map((id) => section(id, statuses[id] ?? "sufficient")), closing_note: "Seguiremos observando y acompañando juntos." });
 const url = (path) => `http://localhost${path}`;
+
+test('versión familiar editable conserva la conclusión original y detecta una fuente cambiada',()=>{
+ const sources=[{id:oralId,competency_v4_id:'COM_ORAL',period_start:start,period_end:end,version:1,updated_at:'2026-09-20',teacher_confirmed_at:'2026-09-20',details:sourceDetails('COM_ORAL')}];
+ const before=structuredClone(sources),proposal=report(),canonical=preserveConfirmedFamilySections(proposal,sources,{captureFamilyWording:true});
+ const snapshot=conclusionSourceSnapshot(sources);
+ validateFamilyReport(canonical,['COM_ORAL'],snapshot);
+ assert.equal(canonical.sections[0].progress_summary,sources[0].details.conclusion_text);
+ assert.equal(familyReportSectionForReader(canonical.sections[0]).progress_summary,proposal.sections[0].progress_summary);
+ canonical.sections[0].family_wording.progress_summary='Ana contó lo que vio y explicó su idea.';
+ const saved=preserveConfirmedFamilySections(canonical,sources);
+ validateFamilyReport(saved,['COM_ORAL'],snapshot);
+ assert.equal(saved.sections[0].family_wording.progress_summary,'Ana contó lo que vio y explicó su idea.');
+ assert.deepEqual(sources,before);
+ sources[0].details.conclusion_text='Una nueva conclusión de la profesora.';
+ assert.throws(()=>validateFamilyReport(preserveConfirmedFamilySections(saved,sources),['COM_ORAL'],snapshot),/vínculo/);
+ const unsafe=structuredClone(canonical);unsafe.sections[0].family_wording.progress_summary='Tiene diagnóstico y obtuvo AD.';
+ assert.throws(()=>validateFamilyReport(unsafe,['COM_ORAL'],snapshot),/notas/);
+ assert.equal(familyReportSectionForReader(proposal.sections[0]),proposal.sections[0],'Los históricos siguen siendo legibles');
+});
 
 test('la IA recibe solo la nota docente vinculada a cada conclusión, sin asignarla ni cambiarla',async()=>{
  const conclusions=[{assessment_id:'assessment-one',competency_v4_id:'COM_ORAL',period_start:start,period_end:end,details:sourceDetails('COM_ORAL')}];
@@ -206,6 +227,14 @@ test("draft reabre tras reload; edición manual conserva auditoría; regeneraci�
   assert.equal(opened.body.reports[0].status, "draft"); assert.deepEqual(opened.body.reports[0].selected_competency_ids, ["COM_ORAL"]);
   assert.doesNotMatch(JSON.stringify(opened.body), /generation_metadata|source_conclusion_ids|source_conclusion_snapshot|response_id|tokens|audit-only/);
   const before = (await f.db.query(`select * from family_reports where id=$1`, [saved.body.id])).rows[0];
+  assert.equal(before.details.sections[0].progress_summary,sourceDetails('COM_ORAL').conclusion_text);
+  const familyEdit=structuredClone(before.details);
+  familyEdit.sections[0].family_wording.progress_summary='Ana explicó su idea al conversar.';
+  familyEdit.sections[0].progress_summary='Cambio enviado al campo original por error.';
+  assert.equal((await f.call('PUT',`/api/family-reports/${saved.body.id}`,{proposal:familyEdit})).status,200);
+  const familySaved=(await f.db.query('select details from family_reports where id=$1',[saved.body.id])).rows[0].details;
+  assert.equal(familySaved.sections[0].progress_summary,sourceDetails('COM_ORAL').conclusion_text);
+  assert.equal(familySaved.sections[0].family_wording.progress_summary,'Ana explicó su idea al conversar.');
   assert.equal((await f.call("PUT", `/api/family-reports/${saved.body.id}`, { proposal: { ...report(), introduction: "Edición docente." } })).status, 200);
   const edited = (await f.db.query(`select * from family_reports where id=$1`, [saved.body.id])).rows[0];
   assert.deepEqual(edited.generation_metadata, before.generation_metadata); assert.deepEqual(edited.source_conclusion_snapshot, before.source_conclusion_snapshot);

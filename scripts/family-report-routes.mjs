@@ -131,11 +131,12 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
           result={output:buildFamilyReportFallback(ids,rows),metadata:{source:"confirmed_conclusions_fallback",reason:error.reason}};
           source="confirmed_conclusions";
         }
-        result.output = preserveConfirmedFamilySections(result.output, rows);
+        result.output = preserveConfirmedFamilySections(result.output, rows,{captureFamilyWording:source==='ai'});
+        validateFamilyReport(result.output,ids,conclusionSourceSnapshot(rows));
         const familyFingerprint = familyRecommendationFingerprint(interview);
         if (familyFingerprint !== await currentFamilyRecommendationFingerprint(db, context.id, student.id)) throw new Error("La entrevista familiar cambió. Prepara de nuevo las recomendaciones.");
         const generationId = randomUUID();
-        await pending.set(generationId, { workflow: "family_report", classroom_id: context.id, student_id: student.id, period_id:period?.id??null, period_start: body.periodStart, period_end: body.periodEnd, selected_competency_ids: ids, source_conclusion_ids: rows.map((row) => row.id), source_conclusion_snapshot: conclusionSourceSnapshot(rows), metadata: { ...metadataForAudit(result.metadata), family_context_fingerprint: familyFingerprint }, createdAt: Date.now() });
+        await pending.set(generationId, { workflow: "family_report", classroom_id: context.id, student_id: student.id, period_id:period?.id??null, period_start: body.periodStart, period_end: body.periodEnd, selected_competency_ids: ids, source_conclusion_ids: rows.map((row) => row.id), source_conclusion_snapshot: conclusionSourceSnapshot(rows), metadata: { ...metadataForAudit(result.metadata), family_context_fingerprint: familyFingerprint, ...(source==='ai'?{family_language_version:1}:{}) }, createdAt: Date.now() });
         send(response, 200, { proposal: result.output, generation_id: generationId, generation_source:source }, origin);
         return true;
       }
@@ -148,6 +149,7 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         if (!sameIds(Array.isArray(body.competencyIds) ? [...body.competencyIds].sort() : [], item.selected_competency_ids)) throw new Error("La selección no corresponde a la generación.");
         const { rows } = await validatedSources(context, student.id, body.periodStart, body.periodEnd, item.selected_competency_ids,period?.id);
         if (!sameConclusionSourceSnapshot(item.source_conclusion_snapshot, conclusionSourceSnapshot(rows))) throw new Error(staleMessage);
+        if(body.proposal?.sections?.some(section=>section.family_wording))body.proposal=preserveConfirmedFamilySections(body.proposal,rows);
         validateFamilyReport(body.proposal, item.selected_competency_ids, item.source_conclusion_snapshot);
         const existing = (await db.query(`select id,version from family_reports where student_id=$1 and period_start=$2::date and period_end=$3::date and status='draft'`, [student.id, body.periodStart, body.periodEnd])).rows[0];
         const version = existing?.version ?? Number((await db.query(`select coalesce(max(version),0)+1 as version from family_reports where student_id=$1 and period_start=$2::date and period_end=$3::date`, [student.id, body.periodStart, body.periodEnd])).rows[0].version);
@@ -167,6 +169,11 @@ export function createFamilyReportRouteHandler({ db, teacherId, annualPlanningCo
         if (body.generationId) await checkPending(item, context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end),row.evaluation_period_id);
         const ids = item?.selected_competency_ids ?? row.selected_competency_ids;
         const snapshot = item?.source_conclusion_snapshot ?? row.source_conclusion_snapshot;
+        if(body.proposal?.sections?.some(section=>section.family_wording)) {
+          const sources=await validatedSources(context,row.student_id,dateOnly(row.period_start),dateOnly(row.period_end),ids,row.evaluation_period_id);
+          if(!sameConclusionSourceSnapshot(snapshot,conclusionSourceSnapshot(sources.rows)))throw new Error(staleMessage);
+          body.proposal=preserveConfirmedFamilySections(body.proposal,sources.rows);
+        }
         validateFamilyReport(body.proposal, ids, snapshot);
         if (item) {
           const { rows } = await validatedSources(context, row.student_id, dateOnly(row.period_start), dateOnly(row.period_end), ids,row.evaluation_period_id);
