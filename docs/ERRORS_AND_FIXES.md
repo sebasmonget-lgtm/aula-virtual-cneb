@@ -1,5 +1,11 @@
 # Errores y soluciones
 
+## 2026-10-20 — Recurso de carátula fuera del paquete de descarga Word
+
+Síntoma: Word local correcto y 500 al descargar el nuevo Preview; el alias QA se conserva en la versión anterior. El adorno se había colocado en public/evaluation, fuera de los directorios públicos incluidos explícitamente por outputFileTracingIncludes. Se mueve a assets/templates, que ya forma parte del paquete servidor, conservando los mismos bytes. Comprobar con build de Next y descargas reales antes de promover. No fallar silenciosamente ni borrar textos para resolver un problema de empaquetado.
+
+La revisión también evita redistribuir porcentajes para forzar suma cien: dos cantidades iguales deben mostrar el mismo porcentaje, con aclaración breve del redondeo cuando haga falta. Pruebas de tercios y combinaciones, recibos de Preview en QA_CARATULA_CIRCULAR_2026-10-20.md. No datos pedagógicos modificados.
+
 ## 2026-10-20 — Faltaba la gráfica de asistencia en el informe familiar
 
 Síntoma: los informes y sus Word mostraban conclusiones y notas sin el resumen gráfico de asistencia acordado. Causa: los lectores familiares no consumían el resumen existente del calendario/asistencia. Solución: mismo cálculo autorizado por aula y bimestre en pantalla y descarga, filtrado al alumno; barras nativas en Word y barras con texto en la interfaz. Fecha de corte visible, tardanza separada, sin registro explícito. No nuevas llamadas a IA ni escrituras pedagógicas.

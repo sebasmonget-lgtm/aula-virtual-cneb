@@ -10,14 +10,13 @@ export function familyAttendanceChart(attendance) {
     { key: 'late', label: 'Tardanzas', count: late, color: '#C18B08' },
     { key: 'absent', label: 'Faltas', count: absent+excused, color: '#C9434F' },
   ].map(row => ({ ...row, width: recorded ? row.count / recorded * 100 : 0 }));
-  // Largest remainder keeps displayed percentages at exactly 100%, also for thirds.
-  const tenths=rows.map(row=>Math.floor(row.width*10));
-  if(recorded){const order=rows.map((row,i)=>({i,remainder:row.width*10-tenths[i]})).sort((a,b)=>b.remainder-a.remainder||a.i-b.i),remaining=1000-tenths.reduce((sum,n)=>sum+n,0);for(let i=0;i<remaining;i++)tenths[order[i].i]++;}
+  // Equal day counts must show equal percentages. Do not redistribute rounding.
+  const tenths=rows.map(row=>Math.round(row.width*10));
   const format=new Intl.NumberFormat('es-PE',{maximumFractionDigits:1});
   const resultRows=rows.map((row,i)=>({...row,percentage:tenths[i]/10,percentageLabel:recorded?`${format.format(tenths[i]/10)} %`:'—'}));
   return { rows:resultRows, total, recorded, pending, excused, attended: present + late, asOf: attendance.as_of,
     summary: !total ? 'Aún no hay días de clase en este período.' : pending === total ? 'Aún no hay asistencia registrada.' : `Asistió ${present + late} de ${total} días de clase.`,
-    note: [pending?`${pending} ${pending===1?'día sin registrar':'días sin registrar'}. Porcentajes sobre ${recorded} días registrados.`:'Las tardanzas se muestran por separado.',excused?`${excused} ${excused===1?'falta justificada incluida':'faltas justificadas incluidas'}.`:''].filter(Boolean).join(' ') };
+    note: [pending?`${pending} ${pending===1?'día sin registrar':'días sin registrar'}. Porcentajes sobre ${recorded} días registrados.`:'Las tardanzas se muestran por separado.',excused?`${excused} ${excused===1?'falta justificada incluida':'faltas justificadas incluidas'}.`:'',recorded&&Math.abs(tenths.reduce((sum,n)=>sum+n,0)-1000)>0?'Porcentajes redondeados.':''].filter(Boolean).join(' ') };
 }
 
 export function familyAttendanceDonutSvg(chart){

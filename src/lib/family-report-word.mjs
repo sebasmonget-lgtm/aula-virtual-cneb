@@ -85,7 +85,7 @@ async function competencyBlock(section,names,achievementLevels,index){
 export async function renderFamilyReportWord(document,competencyCards=[],{logo=null,studentPhoto=null,attendance=null}={}){
   const value=document.content??{},names=new Map(competencyCards.map(card=>[card.id,card.name??card.official_name]));
   const photo=await portrait(studentPhoto),student=clean(document.title).replace(/^Informe a la familia de\s+/i,'');
-  const coverWave=new Paragraph({spacing:{after:0,line:20},children:[new ImageRun({data:await readFile(path.join(process.cwd(),'public/evaluation/family-cover-wave.png')),type:'png',transformation:{width:794,height:208},altText:{id:'1002',name:'Decoración de la carátula',description:'Ondas de la plantilla Ayni'},floating:{horizontalPosition:{relative:'page',align:'center'},verticalPosition:{relative:'page',align:'bottom'},behindDocument:true,wrap:{type:'none'}}})]});
+  const coverWave=new Paragraph({spacing:{after:0,line:20},children:[new ImageRun({data:await readFile(path.join(process.cwd(),'assets/templates/family-cover-wave.png')),type:'png',transformation:{width:794,height:208},altText:{id:'1002',name:'Decoración de la carátula',description:'Ondas de la plantilla Ayni'},floating:{horizontalPosition:{relative:'page',align:'center'},verticalPosition:{relative:'page',align:'bottom'},behindDocument:true,wrap:{type:'none'}}})]});
   const period=clean(document.period_label)||'Informe histórico sin período formal',dates=[date(document.period_start),date(document.period_end)].filter(Boolean).join(' al ');
   const identification=[
     paragraph('Informe a la familia',{heading:HeadingLevel.TITLE,spacing:{after:150,line:360},children:[text('Informe a la familia',{size:38,bold:true})]}),
