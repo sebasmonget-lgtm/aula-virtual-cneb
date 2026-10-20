@@ -23,14 +23,16 @@ export async function assertPeriodDatesOpen(db,classroomId,start,end,{lock=false
 }
 
 export async function appendPeriodEvent(db, { classroomId, periodId, teacherId, event, reopenedVersionId }) {
-  const { state } = await periodEditState(db, classroomId, periodId);
-  const at = (await db.query("select now() as at")).rows[0].at;
-  const next = { ...state, ...(reopenedVersionId !== undefined ? { reopened_version_id: reopenedVersionId } : {}),
-    events: [...state.events, { ...event, by: teacherId, at: new Date(at).toISOString() }] };
+  // Append against the stored JSONB atomically; do not read and resend the entire ledger.
+  const patch = reopenedVersionId !== undefined ? { reopened_version_id: reopenedVersionId } : {};
   await db.query(`insert into period_closure_workflows(id,classroom_id,evaluation_period_id,step_state,updated_by)
-    values($1,$2,$3,jsonb_build_object('period_edit',$4::jsonb),$5)
-    on conflict(classroom_id,evaluation_period_id) do update set step_state=period_closure_workflows.step_state || excluded.step_state,updated_by=excluded.updated_by,updated_at=now()`,
-  [randomUUID(), classroomId, periodId, JSON.stringify(next), teacherId]);
+    values($1,$2,$3,jsonb_build_object('period_edit',$6::jsonb || jsonb_build_object('events',
+      jsonb_build_array($4::jsonb || jsonb_build_object('by',$5::uuid,'at',to_char(now() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'))))),$5)
+    on conflict(classroom_id,evaluation_period_id) do update set step_state=jsonb_set(period_closure_workflows.step_state,'{period_edit}',
+      coalesce(period_closure_workflows.step_state->'period_edit','{}'::jsonb) || $6::jsonb || jsonb_build_object('events',
+        coalesce(period_closure_workflows.step_state#>'{period_edit,events}','[]'::jsonb) || (excluded.step_state#>'{period_edit,events}'))),
+      updated_by=excluded.updated_by,updated_at=now()`,
+  [randomUUID(), classroomId, periodId, JSON.stringify(event), teacherId, JSON.stringify(patch)]);
 }
 
 export async function reopenPeriod(db, { classroomId, periodId, teacherId, expectedVersionId, reason }) {

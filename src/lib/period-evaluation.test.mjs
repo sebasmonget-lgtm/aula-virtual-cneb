@@ -1,10 +1,11 @@
+import { appendPeriodEvent } from './period-edit-guard.mjs';
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createPeriodEvaluationRouteHandler } from "../../scripts/period-evaluation-routes.mjs";
 import { createFamilyReportRouteHandler } from "../../scripts/family-report-routes.mjs";
-import { defaultEvaluationPeriods } from "./period-evaluation-service.mjs";
+import { defaultEvaluationPeriods, loadPeriodEvaluationRows, loadPeriodEvaluationPair } from "./period-evaluation-service.mjs";
 import { loadPlanningFeedback,planningFeedbackText } from "./planning-feedback.mjs";
 import { projectPeriodClosureDocument } from "./period-closure-history.mjs";
 import { loadAssessmentMasterSources } from "../../scripts/assessment-master-routes.mjs";
@@ -1072,5 +1073,36 @@ test('informe bloqueado hasta guardar todas las notas y conclusiones actuales, t
  await f.db.query("update evidences set observation_text='Se corrigió la observación.' where id=$1",[firstEvidence]);
  current=(await overview()).body;assert.equal(current.family_readiness.ready,false);
  result=await blocked();assert.equal(result.status,422);
+ }finally{await f.db.close();}
+});
+
+
+test('lectura individual equivale al modelo del aula y reduce consultas sin mezclar niños ni competencias',async()=>{
+ const f=await fixture();try{
+ await f.call('POST','/api/period-evaluations/suggest',{...batchScope,studentId:studentA,competencyId:'COM_ORAL'});
+ const period=(await f.call('GET','/api/period-evaluations/workspace')).body.periods[0];
+ const query=f.db.query.bind(f.db);let calls=0;f.db.query=(...args)=>{calls++;return query(...args);};
+ const model=await loadPeriodEvaluationRows(f.db,{classroomId:classId,period,applicableIds:new Set(['COM_ORAL'])});const fullCalls=calls;
+ calls=0;const pair=await loadPeriodEvaluationPair(f.db,{classroomId:classId,period,studentId:studentA,competencyId:'COM_ORAL'});
+ const expected=model.rows.find(r=>r.student_id===studentA&&r.competency_v4_id==='COM_ORAL');
+ assert.equal(pair.state,expected.state);assert.equal(pair.draft.id,expected.draft.id);assert.deepEqual(pair.draft.details,expected.draft.details);
+ assert.deepEqual(pair.sourceRows,expected.sourceRows);assert.equal(pair.assessment,expected.assessment);assert.equal(pair.conclusion,expected.conclusion);assert.ok(calls<fullCalls);
+ const other=await loadPeriodEvaluationPair(f.db,{classroomId:classId,period,studentId:studentB,competencyId:'COM_ORAL'});assert.equal(other.draft,null);assert.equal(other.sourceRows.length,0);
+ assert.equal(await loadPeriodEvaluationPair(f.db,{classroomId:otherClass,period,studentId:studentA,competencyId:'COM_ORAL'}),null);
+ const wrong=await loadPeriodEvaluationPair(f.db,{classroomId:classId,period,studentId:studentA,competencyId:'MAT_CANTIDAD'});assert.equal(wrong.draft,null);assert.equal(wrong.sourceRows.length,0);
+ }finally{await f.db.close();}
+});
+
+
+test('evento atómico conserva reapertura, otras secciones y orden del historial',async()=>{
+ const f=await fixture();try{
+ const append=(event,extra={})=>f.db.transaction(tx=>appendPeriodEvent(tx,{classroomId:classId,periodId:firstPeriod,teacherId:teacher,event,...extra}));
+ await append({type:'reopened'},{reopenedVersionId:'version-original'});
+ await f.db.query("update period_closure_workflows set step_state=step_state || '{\"unrelated\":{\"keep\":true}}'::jsonb where classroom_id=$1 and evaluation_period_id=$2",[classId,firstPeriod]);
+ await Promise.all([append({type:'saved',student_id:studentA}),append({type:'saved',student_id:studentB})]);
+ const state=(await f.db.query('select step_state from period_closure_workflows where classroom_id=$1 and evaluation_period_id=$2',[classId,firstPeriod])).rows[0].step_state;
+ assert.deepEqual(state.unrelated,{keep:true});assert.equal(state.period_edit.reopened_version_id,'version-original');assert.equal(state.period_edit.events.length,3);assert.equal(state.period_edit.events[0].type,'reopened');
+ assert.deepEqual(new Set(state.period_edit.events.slice(1).map(e=>e.student_id)),new Set([studentA,studentB]));
+ for(const event of state.period_edit.events){assert.equal(event.by,teacher);assert.equal(new Date(event.at).toISOString(),event.at);}
  }finally{await f.db.close();}
 });

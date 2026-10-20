@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { familyEvaluationReadiness } from "../src/lib/period-evaluation-service.mjs";
+import { familyEvaluationReadiness, loadPeriodEvaluationPair } from "../src/lib/period-evaluation-service.mjs";
 import {evaluationEvidenceMediaPath} from '../src/lib/evaluation-evidence-media.mjs';
 import { newAyniFeatureEnabled } from "../src/lib/new-ayni-feature-flag.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
@@ -149,6 +149,17 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
       .map((card) => ({ student_id: student.id, competency_id: card.id })));
   }
   async function selectedRow(body, {quick=false}={}) {
+    if(quick){
+      const classroom=await ownedClassroom(body.classroomId),period=await periodForClass(classroom,body.periodId);
+      const student=await studentForClass(classroom,body.studentId),{cards,knowledge}=await cardsForClass(classroom);
+      const card=cards.find(item=>item.id===body.competencyId);
+      if(!card)throw new Error("Esta competencia no corresponde a la edad o al aula.");
+      const row=await loadPeriodEvaluationPair(db,{classroomId:classroom.id,period,studentId:student.id,competencyId:card.id,includeOrdinary});
+      // An observed or already reviewed pair belongs to the scope by definition.
+      // With no record, retain the classroom model's worked/override scope rules.
+      if(row&&(row.sourceRows.length||row.assessment||row.draft))return {classroom,period,cards,knowledge,row,card,
+        labels:cards.map(stableCompetencyLabel),model:{students:[student],rows:[row]},evaluationMap:{entries:null}};
+    }
     const data = await context(body.classroomId, body.periodId,{sync:!quick});
     await studentForClass(data.classroom, body.studentId);
     const row = data.model.rows.find((item) => item.student_id === body.studentId && item.competency_v4_id === body.competencyId);

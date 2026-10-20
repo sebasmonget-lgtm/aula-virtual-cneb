@@ -1469,3 +1469,8 @@ Guardar y siguiente confirma borrador preparado y cambios docentes atómicamente
 Entrar a Evaluar abre directamente el bimestre de la fecha; el selector permite otro período y las tres pestañas son la única navegación principal interna. No repetir una pantalla con los mismos tres accesos. Informe a familias requiere notas actuales de los pares con fuentes y conclusiones vigentes de todos esos pares (también AD para tener texto familiar), sin exigir cierre formal. Esto no cambia que AD pueda cerrar sin conclusión ni convierte la ausencia de evidencia en una nota.
 
 La confirmación de la valoración solo espera las escrituras canónicas necesarias y la invalidación transaccional del contexto derivado. Se reconstruye la caché al consultar la ficha del niño, usando su mismo bloqueo de versión para evitar que un refresco anterior repueble datos antiguos. No lanzar tareas sin ciclo de vida durable ni cambiar notas de manera optimista antes del commit. La población manual de notas solo se autoriza para esta cuenta QA y preserva las decisiones ya introducidas por la persona usuaria.
+
+
+### Lectura y auditoría del guardado individual
+
+Para pares con evidencia, valoración o borrador propios, cargar solo ese niño y competencia; una pertenencia a alcance derivada de sus registros sigue las reglas existentes. Si no hay registros, consultar el alcance del aula para no habilitar competencias ajenas ni perder las trabajadas. Autorizar edad/aula/período/niño antes de la lectura y volver a validar fuentes/revisión/cierre en transacción. Append de eventos atómico sobre JSONB, sin reemplazar el historial con una copia leída previamente. No aumentar límites del pool como atajo ni prometer tiempos cloud a partir de tablas temporales.

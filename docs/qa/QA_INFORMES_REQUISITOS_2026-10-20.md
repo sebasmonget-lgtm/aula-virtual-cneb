@@ -26,3 +26,15 @@ Comprobaciones ejecutadas/recibos: regresiones y funcionales de período/familia
 Solo Preview en el proyecto staging y base QA lqrkhdjdxcejyamzrwoi; alias ayni-aula-qa-20261019.vercel.app. Producción queda en dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf /9a0920230350cd6b9050f35683a1f35d459e78c7. Commit limpio, push, build remoto y smoke antes de mover el alias.
 
 Rollback de código: revertir este commit o restaurar el alias a la Preview81b9c2a, sin tocar notas ni análisis. No hay migración. La caché eliminada es derivada y se reconstruye al abrir la ficha. Las notas QA son versiones canónicas editables desde Corregir valoración; conservar los IDs previos y el plan/recibos privados para revisar las decisiones añadidas.
+
+
+## Optimización adicional validada
+
+La primera medición HTTP no demostró mejora consistente tras invalidar la caché:5857/7965/6682ms (~6835ms), frente al baseline~6255ms. No se declara esa ronda más rápida. Se identifican y corrigen dos tramos adicionales: carga global de notas/borradores en la ficha individual y lectura/reenvío de todo el historial de eventos.
+
+La proyección individual mantiene los mismos datos/snapshots de su par, sin datos de otros niños o competencias. La ausencia de registros vuelve a las reglas de alcance del aula. El evento se añade mediante un solo upsert JSONB y conserva reapertura y secciones ajenas, incluso con eventos concurrentes. El contexto derivado sigue invalidado transaccionalmente y reconstruido en la ficha.
+
+Benchmark real con PostgreSQL temporal, mismo endpoint,3 pares por variante:antes3555/3540/3457ms y40 consultas; después2680/2682/2722ms y31 consultas. Media3517→2695ms (~23%). Excluye HTTP/Auth y refresco del snapshot; las seis notas se limitan a tablas temporales, no al aula QA.91 regresiones PASS, typecheck/lint/builds PASS. La verificación posterior de la Preview y la comparación HTTP de pares QA restantes se registran en recibos locales de entrega.
+
+La población real de QA se concilia desde GET de cada par, con nivel/análisis esperados antes de conservar un acuse recuperado. Se registraron503 de sesión y400 de selectores al aumentar peticiones, sin causa SQL individual disponible; no se afirma que el llenado careciera de incidencias. Los recibos y conteo final deben demostrar120 pares activos únicos,10 notas originales con hash intacto, y conservación de observaciones/asistencias/análisis.
+

@@ -46,6 +46,23 @@ export const conclusionRequiredForLevel = (level) => ["A", "B", "C"].includes(le
 export const periodRowResolved = (row) => row.state === "confirmed" ||
   ["observation_pending", "insufficient_information", "pending"].includes(row.state);
 
+/** Individual review uses the same sources without loading every child's grades and drafts. */
+export async function loadPeriodEvaluationPair(db,{classroomId,period,studentId,competencyId,includeOrdinary=false}) {
+  const records=(await db.query(`select
+    (select to_jsonb(a) from competency_assessments a where a.student_id=s.id and a.competency_v4_id=$2
+      and a.status='active' and (a.evaluation_period_id=$4 or (a.evaluation_period_id is null and a.period_start=$5::date and a.period_end=$6::date)) order by a.version desc limit 1) as assessment,
+    (select to_jsonb(a) from competency_assessments a where a.student_id=s.id and a.competency_v4_id=$2
+      and a.status='draft' and (a.evaluation_period_id=$4 or (a.evaluation_period_id is null and a.period_start=$5::date and a.period_end=$6::date)) order by a.version desc limit 1) as draft,
+    (select to_jsonb(c) from competency_descriptive_conclusions c where c.student_id=s.id and c.competency_v4_id=$2
+      and c.status='active' and (c.evaluation_period_id=$4 or (c.evaluation_period_id is null and c.period_start=$5::date and c.period_end=$6::date)) order by c.version desc limit 1) as conclusion
+    from students s where s.id=$1 and s.classroom_id=$3 and s.status='active'`,
+  [studentId,competencyId,classroomId,period.id,period.starts_on,period.ends_on])).rows[0];
+  if(!records)return null;
+  const sourceRows=await loadPeriodEvaluationEvidence(db,{classroomId,period,studentId,competencyId,includeOrdinary});
+  return {...records,student_id:studentId,competency_v4_id:competencyId,sourceRows,
+    state:evaluationState({...records,sourceRows})};
+}
+
 export function evaluationState({ assessment, conclusion, draft, sourceRows }) {
   if (assessment && !evidenceIsCurrent(assessment, sourceRows)) return "needs_review";
   if (draft) {
