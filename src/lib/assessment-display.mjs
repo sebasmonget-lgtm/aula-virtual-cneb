@@ -1,4 +1,11 @@
 /** Presentation compatibility for historical markers. New prose keeps its supplied names. */
+export const EVALUATION_LEVELS = Object.freeze([
+  { value:'AD', label:'Logro destacado', hint:'Muestra aprendizajes que van más allá de lo esperado.' },
+  { value:'A', label:'Logro esperado', hint:'Muestra lo esperado en las situaciones trabajadas.' },
+  { value:'B', label:'En proceso', hint:'Está cerca de lo esperado; aún necesita acompañamiento.' },
+  { value:'C', label:'En inicio', hint:'Muestra avances iniciales y necesita más tiempo y apoyo.' },
+]);
+
 export function assessmentDisplayText(value, studentName) {
   return String(value ?? '').replace(/\[estudiante_actual\]|\bcurrent_student\b/g, () => studentName || 'el niño observado')
     .replace(/\[estudiante\]/g, 'un estudiante');

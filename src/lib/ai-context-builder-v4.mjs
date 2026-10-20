@@ -2,6 +2,7 @@ import { loadKnowledgeBaseV4, validateKnowledgeBaseAge, validateKnowledgeBaseWor
 import { retrieveKnowledgeV4 } from "./knowledge-retrieval-v4.mjs";
 import { competencyApplicability } from "./competency-applicability.mjs";
 import { officialPerformanceContext } from "./official-performance-references.mjs";
+import { buildBriefAssessmentContext } from './assessment-brief.mjs';
 
 const SHORTLIST_SIZE = 3;
 
@@ -343,6 +344,12 @@ function validateInput(input, knowledgeBase) {
 export async function buildAIContext(input, knowledgeBase) {
   knowledgeBase ??= await loadKnowledgeBaseV4();
   const { uniqueIds: confirmedIds } = validateInput(input, knowledgeBase);
+  if(input.workflow==='assessment'&&input.analysis_format==='brief-v1'){
+    if(confirmedIds.length!==1)throw new RangeError('El análisis breve requiere una sola competencia.');
+    const card=knowledgeBase.competencyCards.find(card=>card.id===confirmedIds[0]);
+    if(!card||!cardIsApplicable(card,{castellanoL2Applicable:applicableL2(input),religionApplicable:applicableReligion(input)}))throw new RangeError('La competencia no es aplicable al aula.');
+    return buildBriefAssessmentContext(input,knowledgeBase);
+  }
   const confirmedCompetencyId = confirmedIds[0] ?? null;
   const workflowRequirements = knowledgeBase.workflows[input.workflow];
   const applicability = { castellanoL2Applicable: applicableL2(input), religionApplicable: applicableReligion(input) };

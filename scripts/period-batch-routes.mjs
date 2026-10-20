@@ -1,7 +1,9 @@
 import { currentFamilyRecommendationFingerprint } from "../src/lib/family-recommendation-fingerprint.mjs";
 import { loadConfirmedFamilyContext, summarizeFamilyInterview } from "../src/lib/family-interview-projection.mjs";
-import { neutralizeAssessmentText } from "../src/lib/assessment-v4-service.mjs";
-import { randomUUID } from "node:crypto";
+import { neutralizeAssessmentText, assessmentSourceSnapshot, validateAssessmentProposal } from "../src/lib/assessment-v4-service.mjs";
+import { buildBriefAssessmentInput,validateBriefAssessment,briefAssessmentAsAnalysis } from '../src/lib/assessment-brief.mjs';
+import { savePeriodEvaluationDraft } from "../src/lib/period-evaluation-draft-service.mjs";
+import { randomUUID, createHash } from "node:crypto";
 import { versionTransaction, VersionConflictError } from "../src/lib/version-integrity.mjs";
 import { assertPeriodOpen, invalidateStudentFamilyReport, appendPeriodEvent } from "../src/lib/period-edit-guard.mjs";
 import { evidenceIsCurrent, conclusionIsCurrent } from "../src/lib/period-evaluation-service.mjs";
@@ -11,6 +13,8 @@ import { preserveConfirmedFamilySections, buildFamilyReportInput, conclusionSour
 import { resolveAIExecutionPlan } from "../src/lib/ai-execution-router-v4.mjs";
 import { loadComputedAssessmentContext } from "./assessment-master-routes.mjs";
 import { assessmentMasterEntry } from "../src/lib/assessment-master-service.mjs";
+import { evaluationNeedsEarlyWarning } from '../src/lib/evaluation-preparation.mjs';
+import { limaToday } from '../src/lib/activity-schedule-integrity.mjs';
 
 const WORKFLOW = "period_evaluation_batch_v1";
 import { stableFingerprint } from "../src/lib/source-fingerprint-v4.mjs";
@@ -20,6 +24,15 @@ const key = task => `${task.student_id}:${task.competency_id ?? "family"}`;
 const eligible = row => row.assessment?.achievement_level && row.assessment.teacher_confirmed_at && !row.draft && evidenceIsCurrent(row.assessment,row.sourceRows);
 
 export function batchTasks(model, kind) {
+  if(kind==='analysis')return model.rows.filter(row=>row.sourceRows.length>0).map(row=>{
+    const current=row.draft??row.assessment;
+    const teacherText=row.draft?.draft_teacher_analysis??row.assessment?.details?.evidence_overview;
+    const manual=Boolean(row.draft&&teacherText?.trim()&&(!row.draft.generation_metadata?.analysis||teacherText!==row.draft.details?.evidence_overview));
+    const reusable=Boolean(teacherText?.trim()&&(manual||evidenceIsCurrent(current,row.sourceRows)));
+    return {student_id:row.student_id,competency_id:row.competency_v4_id,snapshot:assessmentSourceSnapshot(row.sourceRows),
+      existing:reusable?{id:current.id,details:{...current.details,evidence_overview:teacherText}}:null,
+      review_reason:manual&&!evidenceIsCurrent(current,row.sourceRows)?'Conservamos tu análisis docente; revisa las nuevas observaciones.':row.sourceRows.length<3?'Hay pocas evidencias de esta competencia.':null};
+  });
   const relevant = model.rows.filter(row => row.sourceRows.length > 0 || row.assessment);
   if ((kind === "conclusions" && !relevant.length) || relevant.some(row => !eligible(row))) throw new Error("Confirma las valoraciones pendientes antes de preparar los textos del período.");
   if (kind === "conclusions") return relevant.map(row => ({student_id:row.student_id,competency_id:row.competency_v4_id,
@@ -49,6 +62,11 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson
     total:payload.tasks.length,completed:payload.results.length,error:payload.error??null,items:payload.results.map(({student_id,competency_id,review_reason,proposal,saved_id})=>({student_id,competency_id,review_reason,proposal,saved_id})),revision:payload.revision});
   const presentJob=async(id,payload,data)=>{
     const result=publicJob(id,payload);
+    if(payload.kind==='analysis'){
+      const tasks=await freshTasks(data,'analysis');
+      if(hash(tasks.map(taskSource))!==payload.source_fingerprint){result.status='stale';result.error='Hay observaciones nuevas. Prepara los análisis pendientes; los textos docentes se conservan.';}
+      return result;
+    }
     if(payload.status!=="saved"){
       if(payload.status==="ready"){
         let current=false;
@@ -80,7 +98,9 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson
       send(response,200,{job:jobs.find(row=>row.payload.kind===kind)?await presentJob(jobs.find(row=>row.payload.kind===kind).id,jobs.find(row=>row.payload.kind===kind).payload,data):null},origin);return true;
     }
     if(url.pathname==="/api/period-evaluations/batches" && request.method==="POST") {
-      if(!["conclusions","family"].includes(body.kind))throw new Error("Elige conclusiones o informes familiares.");
+      if(!["analysis","conclusions","family"].includes(body.kind))throw new Error("Elige análisis, conclusiones o informes familiares.");
+      if(body.kind==='analysis'&&evaluationNeedsEarlyWarning(limaToday(),data.period.ends_on)&&body.acknowledgeEarly!==true)throw new VersionConflictError('El bimestre aún no termina. Confirma si deseas preparar los análisis con lo registrado hasta ahora.');
+      if(body.kind==='analysis'&&(body.regenerate||body.edit||body.studentId))throw new Error('La preparación del bimestre conserva los análisis guardados. Revisa un análisis individual para reemplazarlo.');
       const result=await versionTransaction(db,lock,async tx=>{
         await assertPeriodOpen(tx,data.classroom.id,data.period.id);
         let tasks=await freshTasks(data,body.kind,tx);
@@ -115,6 +135,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson
       const selected=current.tasks.map(task=>tasks.find(item=>key(item)===key(task)));
       if(selected.some(task=>!task)||hash(selected.map(taskSource))!==current.source_fingerprint)throw new VersionConflictError("Las fuentes cambiaron. Prepara únicamente los textos afectados.");
       if(action==="save") {
+        if(current.kind==='analysis')throw new Error('Los análisis se guardan como borradores; las valoraciones requieren confirmación docente individual.');
         if(current.status!=="ready"||Number(body.expectedRevision)!==current.revision)throw new VersionConflictError("Termina la preparación y recarga sus resultados antes de guardar.");
         if(!Array.isArray(body.items)||body.items.length!==current.tasks.length||new Set(body.items.map(key)).size!==current.tasks.length)throw new Error("Revisa todos los textos del lote antes de guardar.");
         const model=await loadRows(tx,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map(card=>card.id))});
@@ -154,6 +175,41 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,readJson
       await put(id,current,prior,tx);return current;
     });
     if(action==="save"||["ready","saved"].includes(job.status)){send(response,200,publicJob(id,job),origin);return true;}
+    if(job.kind==='analysis'){
+      const todo=job.tasks.filter(task=>!job.results.some(result=>key(result)===key(task))).slice(0,3);
+      let checkpoint=Promise.resolve();
+      const completed=await Promise.allSettled(todo.map(async task=>{
+        const fresh=await context(data.classroom.id,data.period.id);
+        const row=fresh.model.rows.find(row=>row.student_id===task.student_id&&row.competency_v4_id===task.competency_id);
+        if(!row||hash(assessmentSourceSnapshot(row.sourceRows))!==hash(task.snapshot))throw new VersionConflictError('Las observaciones cambiaron. Revisa los análisis pendientes.');
+        const cached=batchTasks(fresh.model,'analysis').find(item=>key(item)===key(task))?.existing;
+        let result;
+        if(cached)result={...task,proposal:cached.details,saved_id:cached.id,metadata:{source:'existing_canonical'}};
+        else{
+          const names=assessmentStudentNames(fresh.model.students),person=fresh.model.students.find(student=>student.id===task.student_id);
+          const computed=await loadComputedAssessmentContext(db,fresh.classroom,fresh.period,fresh.cards,row.sourceRows,task.competency_id,names);
+          const input=buildBriefAssessmentInput({age:Number(fresh.classroom.age),competencyId:task.competency_id,studentName:[person.first_name,person.last_name].filter(Boolean).join(' '),sourceRows:row.sourceRows,period:fresh.period,
+            applicability:{castellanoL2Applicable:fresh.classroom.castellano_l2_applicable,religionApplicable:fresh.classroom.religion_applicable}});
+          const plan={...resolveAIExecutionPlan({workflow:'assessment',task:'brief_trial'}),fallback:null};
+          const response=await generate(input,{executionPlan:plan,providerFactory:createProvider});
+          const brief=validateBriefAssessment(response.output,input),generated={...response,output:briefAssessmentAsAnalysis(brief)};
+          validateAssessmentProposal(generated.output,task.competency_id,row.sourceRows.length);
+          const metadata={analysis:metadataForAudit(generated.metadata),source_batch_id:id,brief_assessment:brief};
+          const saved=await savePeriodEvaluationDraft(db,{studentId:task.student_id,competencyId:task.competency_id,period:fresh.period,sourceRows:row.sourceRows,analysis:generated.output,metadata,
+            teacherAnalysis:generated.output.evidence_overview,provisionalLevel:row.draft?.provisional_level??row.assessment?.achievement_level??null,teacherJustification:row.draft?.draft_teacher_justification??row.assessment?.teacher_justification??'',
+            assessmentMasterId:computed.id,assessmentMasterSnapshot:computed.source_snapshot,expectedDraftRevision:row.draft?Number(row.draft.revision):null,expectedEvidenceFingerprint:createHash('sha256').update(JSON.stringify(task.snapshot)).digest('hex'),
+            loadCurrent:async tx=>{await assertPeriodOpen(tx,fresh.classroom.id,fresh.period.id);const latest=await loadRows(tx,{classroomId:fresh.classroom.id,period:fresh.period,applicableIds:new Set(fresh.cards.map(card=>card.id))});return latest.rows.find(item=>item.student_id===task.student_id&&item.competency_v4_id===task.competency_id)?.sourceRows??[];}});
+          result={...task,proposal:generated.output,saved_id:saved.id,metadata};
+        }
+        job.results.push(result);job.revision++;
+        checkpoint=checkpoint.then(()=>put(id,job,job.lease_token));await checkpoint;
+      }));
+      await checkpoint;
+      const failure=completed.find(result=>result.status==='rejected');
+      job.status=job.results.length===job.tasks.length?'ready':failure?'paused':'queued';
+      job.error=failure?'Algunos análisis necesitan reintento. Los que ya están guardados se conservan.':null;
+      job.revision++;await put(id,job,job.lease_token);send(response,200,publicJob(id,job),origin);return true;
+    }
     const task=job.tasks.find(task=>!job.results.some(result=>key(result)===key(task)));
     try {
       if(task) {

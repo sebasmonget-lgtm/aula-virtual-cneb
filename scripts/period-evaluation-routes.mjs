@@ -25,6 +25,8 @@ import { getCurrentClassroomContext, publicClassroomContext } from "../src/lib/c
 import { familyObservationHint } from "../src/lib/family-interview-projection.mjs";
 import { limaToday } from "../src/lib/activity-schedule-integrity.mjs";
 import {classroomObservationCoverage} from '../src/lib/classroom-observation-coverage.mjs';
+import { evaluationLevelGuidance } from '../src/lib/evaluation-level-guidance.mjs';
+import { buildBriefAssessmentInput,validateBriefAssessment,briefAssessmentAsAnalysis } from '../src/lib/assessment-brief.mjs';
 import { buildClassroomPeriodReportInput, buildGenericAssessmentWorkbook, buildPeriodStatistics, classroomReportFingerprint,
   isTeacherAchievementLevel, SIAGIE_EXPORT_STATUS, stableCompetencyLabel, syncPeriodEvaluationMap, validateClassroomPeriodReport } from "../src/lib/period-assessment-closure-service.mjs";
 
@@ -355,7 +357,10 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
         const currentFingerprint=hash(assessmentSourceSnapshot(data.row.sourceRows));
         const draft=data.row.draft;
         const diagnostic_antecedents=await diagnosticAntecedents(data.classroom,data.period,data.row.student_id,data.card.id);
-        send(response, 200, { classroom_id: data.classroom.id, period_id: data.period.id, student_id: data.row.student_id, competency_id: data.card.id, state: data.row.state, evidence_count: data.row.sourceRows.length, diagnostic_antecedents, evidence_fingerprint: currentFingerprint, timeline: data.row.sourceRows.map((item) => ({ id: item.id, observed_on: dateOnly(item.observed_on), registered_at: item.observed_at, activity_id: item.activity_id, activity_title: item.activity_title, criterion_id: item.criterion_id, criterion_text: item.criterion_text, performance_id: item.performance_id, observation_text: item.observation_text, media_available: item.media_available, media_url:evaluationEvidenceMediaPath(item) })), reference: official.rows.length ? { kind: "official", items: official.rows } : { kind: "cycle_standard", competency: curriculum?.canonical_name ?? data.card.official_name, capacities: curriculum?.canonical_capacity_names ?? data.card.capacities?.map((item)=>item.official_name) ?? [], standard_summary: curriculum?.cycle_ii_standard_semantic_summary ?? data.card.cycle_ii_standard_ai ?? "Estándar del ciclo pendiente de verificar.", age_performance: null }, assessment: data.row.assessment ? { id: data.row.assessment.id, achievement_level: data.row.assessment.achievement_level, teacher_justification: data.row.assessment.teacher_justification, details: data.row.assessment.details, teacher_confirmed_at: data.row.assessment.teacher_confirmed_at } : null, draft: draft ? { id:draft.id, revision:Number(draft.revision), current:hash(draft.source_evidence_snapshot??[])===currentFingerprint, teacher_analysis:draft.draft_teacher_analysis??"", conclusion_text:"", provisional_level:draft.provisional_level??null, teacher_justification:draft.draft_teacher_justification??"", details:draft.details } : null, insufficiency_reason: data.row.state === "insufficient_information" ? draft?.details?.insufficiency_reason ?? null : null, conclusion: data.row.conclusion?.details?.conclusion_text ?? null }, origin);
+        const previousPeriod=(await db.query(`select id,label,starts_on,ends_on from evaluation_periods where school_year_id=$1 and kind=$2 and ends_on<$3::date order by ends_on desc,starts_on desc limit 1`,[data.classroom.school_year_id,data.period.kind,data.period.starts_on])).rows[0];
+        const previousAssessment=previousPeriod?(await db.query(`select a.achievement_level,a.teacher_confirmed_at from competency_assessments a join students s on s.id=a.student_id where a.student_id=$1 and s.classroom_id=$2 and a.competency_v4_id=$3 and (a.evaluation_period_id=$4 or (a.evaluation_period_id is null and a.period_start=$5::date and a.period_end=$6::date)) and a.status='active' and a.teacher_confirmed_at is not null and a.achievement_level in ('AD','A','B','C') order by a.version desc,a.teacher_confirmed_at desc limit 1`,[data.row.student_id,data.classroom.id,data.card.id,previousPeriod.id,previousPeriod.starts_on,previousPeriod.ends_on])).rows[0]:null;
+        const previous_valuation=previousPeriod?{period_id:previousPeriod.id,period_label:previousPeriod.label,level:previousAssessment?.achievement_level??null,teacher_confirmed_at:previousAssessment?.teacher_confirmed_at??null}:null;
+        send(response, 200, { classroom_id: data.classroom.id, period_id: data.period.id, student_id: data.row.student_id, competency_id: data.card.id, state: data.row.state, evidence_count: data.row.sourceRows.length, diagnostic_antecedents, previous_valuation, evaluation_guidance: evaluationLevelGuidance(data.card.id,Number(data.classroom.age)), evidence_fingerprint: currentFingerprint, timeline: data.row.sourceRows.map((item) => ({ id: item.id, observed_on: dateOnly(item.observed_on), registered_at: item.observed_at, activity_id: item.activity_id, activity_title: item.activity_title, criterion_id: item.criterion_id, criterion_text: item.criterion_text, performance_id: item.performance_id, observation_text: item.observation_text, media_available: item.media_available, media_url:evaluationEvidenceMediaPath(item) })), reference: official.rows.length ? { kind: "official", items: official.rows } : { kind: "cycle_standard", competency: curriculum?.canonical_name ?? data.card.official_name, capacities: curriculum?.canonical_capacity_names ?? data.card.capacities?.map((item)=>item.official_name) ?? [], standard_summary: curriculum?.cycle_ii_standard_semantic_summary ?? data.card.cycle_ii_standard_ai ?? "Estándar del ciclo pendiente de verificar.", age_performance: null }, assessment: data.row.assessment ? { id: data.row.assessment.id, achievement_level: data.row.assessment.achievement_level, teacher_justification: data.row.assessment.teacher_justification, details: data.row.assessment.details, teacher_confirmed_at: data.row.assessment.teacher_confirmed_at } : null, draft: draft ? { id:draft.id, revision:Number(draft.revision), current:hash(draft.source_evidence_snapshot??[])===currentFingerprint, teacher_analysis:draft.draft_teacher_analysis??"", conclusion_text:"", provisional_level:draft.provisional_level??null, teacher_justification:draft.draft_teacher_justification??"", details:draft.details } : null, insufficiency_reason: data.row.state === "insufficient_information" ? draft?.details?.insufficiency_reason ?? null : null, conclusion: data.row.conclusion?.details?.conclusion_text ?? null }, origin);
         return true;
       }
       if (request.method === "POST" && url.pathname === "/api/period-evaluations/suggest") {
@@ -372,8 +377,9 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           data.period, data.cards, data.row.sourceRows, data.card.id, names);
         const masterEntry = assessmentMasterEntry(master, data.card.id);
         const cached = data.row.draft;
+        const briefRequested=body.brief===true;
         const evidenceHash = hash(assessmentSourceSnapshot(data.row.sourceRows));
-        if (!body.deepReview && !body.force && cached?.generation_metadata?.analysis &&
+        if (!body.deepReview && !body.force && cached?.generation_metadata?.analysis && (!briefRequested||cached.generation_metadata.brief_assessment) &&
             hash(cached.source_evidence_snapshot ?? []) === evidenceHash &&
             cached.assessment_master_snapshot?.fingerprint === master.source_snapshot.fingerprint) {
           send(response, 200, { generation_id: null, draft_id: cached.id, draft_revision: Number(cached.revision),
@@ -384,14 +390,17 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
             body.acknowledgedRevision !== Number(previous.revision)) {
           fail(response,origin,new Error('Antes de analizar, confirma que revisarás tu valoración y su sustento. El borrador anterior se conserva.'),409);return true;
         }
-        const input = buildAssessmentInput({ age: data.classroom.age, competencyId: data.card.id, studentName: [student.first_name,student.last_name].filter(Boolean).join(' '),
+        const input = briefRequested?buildBriefAssessmentInput({age:Number(data.classroom.age),competencyId:data.card.id,studentName:[student.first_name,student.last_name].filter(Boolean).join(' '),sourceRows:data.row.sourceRows,period:data.period,
+          applicability:{castellanoL2Applicable:data.classroom.castellano_l2_applicable,religionApplicable:data.classroom.religion_applicable}}):buildAssessmentInput({ age: data.classroom.age, competencyId: data.card.id, studentName: [student.first_name,student.last_name].filter(Boolean).join(' '),
           assessmentMaster: masterEntry,
           evidenceHistory: data.row.sourceRows.map((row) => sanitizeEvidenceForAssessment(row, names, currentNames)),
           criteriaHistory: data.row.sourceRows.map((row) => ({ criterion_text: neutralizeAssessmentText(row.criterion_text, names),
             expected_evidence: neutralizeAssessmentText(row.details?.expected_evidence, names),
             observation_focus: row.details?.observation_focus ?? [], evidence_scope: row.details?.evidence_scope ?? null })) });
-        const analysisPlan = resolveAIExecutionPlan({ workflow: "assessment", task: "generation" });
-        const analysis = await generate(input, { providerFactory: (plan) => createProvider(plan), executionPlan: body.deepReview === true ? resolveAIExecutionPlan({ workflow: "assessment_deep_review", task: "generation" }) : analysisPlan });
+        const analysisPlan = briefRequested?{...resolveAIExecutionPlan({workflow:'assessment',task:'brief_trial'}),fallback:null}:resolveAIExecutionPlan({ workflow: "assessment", task: "generation" });
+        const generated = await generate(input, { providerFactory: (plan) => createProvider(plan), executionPlan: !briefRequested&&body.deepReview === true ? resolveAIExecutionPlan({ workflow: "assessment_deep_review", task: "generation" }) : analysisPlan });
+        const brief=briefRequested?validateBriefAssessment(generated.output,input):null;
+        const analysis={...generated,output:brief?briefAssessmentAsAnalysis(brief):generated.output};
         validateAssessmentProposal(analysis.output, data.card.id, data.row.sourceRows.length);
         const conclusion = null, conclusionMetadata = null;
         const generationId = randomUUID(), evidenceFingerprint = hash(assessmentSourceSnapshot(data.row.sourceRows));
@@ -400,12 +409,12 @@ export function createPeriodEvaluationRouteHandler({ db, teacherId, evidenceStor
           throw new Error("Las observaciones cambiaron durante la sugerencia. Revísalas otra vez.");
         const draft = await savePeriodEvaluationDraft(db, { studentId: student.id, competencyId: data.card.id, period: data.period,
           sourceRows: latest.row.sourceRows, analysis: analysis.output,
-          metadata: { analysis: metadataForAudit(analysis.metadata), conclusion: conclusionMetadata }, assessmentMasterId: master.id, assessmentMasterSnapshot: master.source_snapshot,
+          metadata: { analysis: metadataForAudit(analysis.metadata), conclusion: conclusionMetadata,...(brief?{brief_assessment:brief}:{}) }, assessmentMasterId: master.id, assessmentMasterSnapshot: master.source_snapshot,
           teacherAnalysis: analysis.output.evidence_overview, conclusionText: "",
           provisionalLevel: previous?.provisional_level ?? previous?.achievement_level ?? null,
           teacherJustification: previous?.draft_teacher_justification ?? previous?.teacher_justification ?? "",
           reanalysisPrevious: previous ? {revision:Number(previous.revision),teacher_analysis:previous.draft_teacher_analysis ?? previous.details?.evidence_overview ?? '',provisional_level:previous.provisional_level ?? previous.achievement_level ?? null,teacher_justification:previous.draft_teacher_justification ?? previous.teacher_justification ?? '',source_evidence_snapshot:previous.source_evidence_snapshot} : null,
-          expectedDraftRevision:data.row.draft?.revision??null,expectedEvidenceFingerprint:evidenceFingerprint,
+          expectedDraftRevision:data.row.draft?Number(data.row.draft.revision):null,expectedEvidenceFingerprint:evidenceFingerprint,
           loadCurrent:async(tx)=>{await assertPeriodOpen(tx,data.classroom.id,data.period.id);const model=await loadRows(tx,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map((card)=>card.id))});return model.rows.find((row)=>row.student_id===student.id&&row.competency_v4_id===data.card.id)?.sourceRows??[];} });
         await pending.set(generationId, { workflow: "period_evaluation", classroom_id: data.classroom.id, period_id: data.period.id, student_id: student.id, competency_v4_id: data.card.id, evidence_fingerprint: evidenceFingerprint, analysis: analysis.output, conclusion, analysis_metadata: metadataForAudit(analysis.metadata), conclusion_metadata: conclusionMetadata, createdAt: Date.now() });
         send(response, 200, { generation_id: generationId, draft_id: draft.id, draft_revision:draft.revision,evidence_fingerprint: evidenceFingerprint, analysis: analysis.output, conclusion }, origin); return true;

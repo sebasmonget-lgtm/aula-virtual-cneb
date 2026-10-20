@@ -32,7 +32,7 @@ export const AI_ROUTING_POLICY = Object.freeze({
     criterion_realignment: Object.freeze({ tier: "judgment_generation" }),
     assessment_master: Object.freeze({ execution: "code" }),
     evidence_capture: Object.freeze({ execution: "code" }),
-    assessment: Object.freeze({ tier: "routine_generation", fallback_tier: "judgment_generation" }),
+    assessment: Object.freeze({ tier: "routine_generation", fallback_tier: "judgment_generation", task_tiers:Object.freeze({brief_trial:'structured_light'}) }),
     assessment_deep_review: Object.freeze({ tier: "judgment_generation" }),
     descriptive_conclusion: Object.freeze({ tier: "routine_generation", fallback_tier: "focused_writing" }),
     descriptive_conclusion_deep_review: Object.freeze({ tier: "focused_writing" }),

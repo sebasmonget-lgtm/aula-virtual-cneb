@@ -1,0 +1,1259 @@
+{
+  "status": "historical_superseded_by_no_grade_request",
+  "schema": "assessment-brief-v1",
+  "source": "Comparación misma solicitud sin plan; solo cambia reasoning_effort",
+  "model": "gpt-6-luna",
+  "stats": {
+    "low": {
+      "calls": 10,
+      "valid": 10,
+      "totalCostUSD": 0.0031842150000000002,
+      "meanMs": 5874.4,
+      "medianMs": 5818.5,
+      "minMs": 3785,
+      "maxMs": 9198,
+      "inputTokens": 19453,
+      "outputTokens": 3780,
+      "cachedInputTokens": 9884,
+      "cacheWriteTokens": 9539
+    },
+    "medium": {
+      "calls": 10,
+      "valid": 10,
+      "totalCostUSD": 0.0056768750000000005,
+      "meanMs": 6362.6,
+      "medianMs": 6456,
+      "minMs": 4230,
+      "maxMs": 8268,
+      "inputTokens": 19453,
+      "outputTokens": 6492,
+      "cachedInputTokens": 0,
+      "cacheWriteTokens": 19423
+    },
+    "high": {
+      "calls": 10,
+      "valid": 10,
+      "meanMs": 11291.1,
+      "medianMs": 10856.5,
+      "minMs": 8182,
+      "maxMs": 16905,
+      "inputTokens": 19453,
+      "outputTokens": 9743,
+      "cachedInputTokens": 0,
+      "cacheWriteTokens": 19423,
+      "totalCostUSD": 0.007302375
+    }
+  },
+  "projected200": {
+    "low": {
+      "ordinaryUSD": 0.076706,
+      "cacheWriteUSD": 0.0864325
+    },
+    "medium": {
+      "ordinaryUSD": 0.103826,
+      "cacheWriteUSD": 0.1135525
+    },
+    "high": {
+      "ordinaryUSD": 0.136336,
+      "cacheWriteUSD": 0.1460625
+    }
+  },
+  "high": {
+    "startedAt": "2026-10-20T14:50:21.538Z",
+    "finishedAt": "2026-10-20T14:51:24.722Z",
+    "wallMs": 63185,
+    "model": "gpt-6-luna",
+    "reasoning": "high",
+    "retries": 0,
+    "fallback": false,
+    "maxConcurrency": 3,
+    "canonicalWrites": 0,
+    "canonicalAssessmentsUnchanged": true,
+    "usageWrites": 12,
+    "totalCostEstimateUSD": 0.008770135,
+    "stats": {
+      "calls": 10,
+      "valid": 10,
+      "meanMs": 11291.1,
+      "medianMs": 10856.5,
+      "minMs": 8182,
+      "maxMs": 16905,
+      "inputTokens": 19453,
+      "outputTokens": 9743,
+      "cachedInputTokens": 0,
+      "cacheWriteTokens": 19423,
+      "totalCostUSD": 0.007302375
+    },
+    "results": [
+      {
+        "key": "Diego-CYT_INDAGA",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "ae20c245d2a319bb9bdc3739ee758e89bb0fb20710b436f5cae0c8d636187b38",
+        "valid": true,
+        "output": {
+          "competency_id": "CYT_INDAGA",
+          "student_name": "Diego Ramos Vega",
+          "information_status": "sufficient",
+          "analysis_paragraph": "Diego agrupó y contó semillas, dijo que las grandes podrían crecer más y propuso mirarlas varios días. Al encontrar raíces, observó que no todas cambiaban al mismo tiempo y pidió volver a mirarlas. Estas acciones muestran que observa, plantea una posible explicación y propone cómo seguir indagando. Falta observar si compara luego lo que ocurre con su idea y comunica qué aprendió.",
+          "suggested_level": "A",
+          "suggestion_reason": "Sus observaciones, explicación y propuesta de volver a mirar muestran actuaciones esperadas para indagar a los 5 años.",
+          "evidence_refs": [
+            "o1",
+            "o2"
+          ],
+          "performance_refs": [
+            "PCI2016.CYT_INDAGA.5.01",
+            "PCI2016.CYT_INDAGA.5.02",
+            "PCI2016.CYT_INDAGA.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 9782,
+        "usage": {
+          "input_tokens": 1883,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 1880,
+          "output_tokens": 722,
+          "total_tokens": 2605
+        },
+        "estimatedCostUSD": 0.0005963
+      },
+      {
+        "key": "Camila-PS_CONVIVE",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "a5fe4cb7cb9f0f09b104445ff99dd7aa60b6c8e660e0beaa2958819bb89230bc",
+        "valid": true,
+        "output": {
+          "competency_id": "PS_CONVIVE",
+          "student_name": "Camila Huamán Castro",
+          "information_status": "sufficient",
+          "analysis_paragraph": "Camila Huamán Castro expresó qué le molestaba en el juego, escuchó a su compañera y acordó compartir las canastas; al guardar bloques, propuso una tarea y aceptó hacerla en conjunto. En la actividad grupal, eligió acompañar con palmas, propuso escuchar primero a quienes querían cantar y dijo que un compañero también podía participar mirando. Estas acciones muestran que propone acuerdos, escucha otras elecciones y colabora con materiales comunes, como se espera a los 5 años. No se observa necesidad de apoyo en estas situaciones; conviene seguir observando cómo participa en otros acuerdos y en el cuidado de espacios y materiales.",
+          "suggested_level": "A",
+          "suggestion_reason": "Sugiero A porque expresó sus elecciones, escuchó a otros y acordó cómo participar y colaborar en las situaciones observadas.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.PS_CONVIVE.5.01",
+            "PCI2016.PS_CONVIVE.5.03",
+            "PCI2016.PS_CONVIVE.5.04",
+            "PCI2016.PS_CONVIVE.5.05"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 11215,
+        "usage": {
+          "input_tokens": 1959,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 1956,
+          "output_tokens": 1063,
+          "total_tokens": 3022
+        },
+        "estimatedCostUSD": 0.0007763
+      },
+      {
+        "key": "Emilia-COM_LECTURA",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "64169ce56ee848e79292623702b099b77a593e60ce8694fed111345b28ef7b1e",
+        "valid": true,
+        "output": {
+          "competency_id": "COM_LECTURA",
+          "student_name": "Emilia Cárdenas Ruiz",
+          "information_status": "sufficient",
+          "analysis_paragraph": "Emilia relaciona imágenes y palabras conocidas para explicar sus respuestas: vinculó “páginas” con un libro y la forma de la luna con una pista de la adivinanza. También contó lo que hizo un personaje usando dos imágenes. Estas actuaciones muestran comprensión apoyada en ilustraciones y pistas, en línea con lo esperado para su edad. Falta observar si revisa una interpretación y cómo opina sobre otros textos a partir de sus intereses y experiencia.",
+          "suggested_level": "A",
+          "suggestion_reason": "Propongo A porque Emilia explica sus respuestas usando imágenes, palabras conocidas y pistas del texto.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.COM_LECTURA.5.01"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 11810,
+        "usage": {
+          "input_tokens": 1902,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 1899,
+          "output_tokens": 919,
+          "total_tokens": 2821
+        },
+        "estimatedCostUSD": 0.000697175
+      },
+      {
+        "key": "insufficient-irrelevant",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "ed2da9021adfcb9714988cf21fa20491fb79ba243ef16982cd64fadc4d798995",
+        "valid": true,
+        "output": {
+          "competency_id": "MAT_CANTIDAD",
+          "student_name": "Luciana Torres Medina",
+          "information_status": "insufficient",
+          "analysis_paragraph": "En “La tienda”, Luciana eligió la bolsa roja y pidió sentarse junto a su amiga. El registro no muestra cómo contó o repartió objetos ni si comparó cantidades, como se esperaba observar. Por eso, aún no se puede valorar cómo usa el conteo o relaciona cantidades, ni qué apoyo necesita. Falta observarla al repartir objetos y registrar qué hace o dice.",
+          "suggested_level": null,
+          "suggestion_reason": "El registro solo consigna su elección de una bolsa y dónde pidió sentarse; no muestra cómo comparó cantidades.",
+          "evidence_refs": [
+            "o1"
+          ],
+          "performance_refs": [
+            "PCI2016.MAT_CANTIDAD.5.03",
+            "PCI2016.MAT_CANTIDAD.5.04",
+            "PCI2016.MAT_CANTIDAD.5.05"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 8182,
+        "usage": {
+          "input_tokens": 1911,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 1908,
+          "output_tokens": 670,
+          "total_tokens": 2581
+        },
+        "estimatedCostUSD": 0.0005738
+      },
+      {
+        "key": "other-actor",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "0e721ab4ed5b20a192d891663696a4aab02b4eb8ecd26a91554c706fe2b1d1de",
+        "valid": true,
+        "output": {
+          "competency_id": "COM_LECTURA",
+          "student_name": "Diego Ramos Vega",
+          "information_status": "insufficient",
+          "analysis_paragraph": "En Lee diversos tipos de textos escritos en su lengua materna, para su edad se espera que anticipe cómo seguirá un texto usando pistas y que opine sobre lo leído; aún falta observar qué hace Diego. El 2 de noviembre, Camila dijo que la niña buscaría agua porque llevaba una jarra; Diego estuvo sentado a su lado y sonrió. El 5 de noviembre, Camila contó el final y justificó su idea; Diego escuchó, sin intervención registrada. No quedó registrada una interpretación propia de Diego; conviene observar qué dice del cuento y qué pistas usa.",
+          "suggested_level": null,
+          "suggestion_reason": "Los registros consignan que Diego sonrió y escuchó, pero no una interpretación propia.",
+          "evidence_refs": [
+            "o1",
+            "o2"
+          ],
+          "performance_refs": [
+            "PCI2016.COM_LECTURA.5.02",
+            "PCI2016.COM_LECTURA.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 11262,
+        "usage": {
+          "input_tokens": 1798,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 1795,
+          "output_tokens": 1013,
+          "total_tokens": 2811
+        },
+        "estimatedCostUSD": 0.000731175
+      },
+      {
+        "key": "Valentina-MAT_CANTIDAD",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "9d42f5b70c70f971e77fb9456aaa82e44c37746c607de257e036d3eb50e1d35b",
+        "valid": true,
+        "output": {
+          "competency_id": "MAT_CANTIDAD",
+          "student_name": "Valentina Rojas Salazar",
+          "information_status": "sufficient",
+          "analysis_paragraph": "Valentina preparó cuatro semillas para cada recipiente y comparó las cantidades; después organizó los recipientes según cuántas semillas se abrieron, contrastó el resultado con lo que había pensado y propuso repetir la observación. Estas acciones muestran comparación y agrupación por cantidad, relacionadas con “Resuelve problemas de cantidad” y con desempeños previstos para su edad. No quedó registrado cómo contó ni si explicó el criterio; tampoco hay evidencia para precisar qué apoyo podría necesitar. La sugerencia es provisional y se limita a estas situaciones.",
+          "suggested_level": "A",
+          "suggestion_reason": "Sugiero A porque comparó cantidades y organizó los recipientes según la cantidad de semillas abiertas; la evidencia se limita a estas situaciones.",
+          "evidence_refs": [
+            "o1",
+            "o2"
+          ],
+          "performance_refs": [
+            "PCI2016.MAT_CANTIDAD.5.01"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 16905,
+        "usage": {
+          "input_tokens": 1984,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 1981,
+          "output_tokens": 1594,
+          "total_tokens": 3578
+        },
+        "estimatedCostUSD": 0.001044925
+      },
+      {
+        "key": "developing-reading",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "a96b5b0e568d63726c54308393ef1bbda9f8a441a77b6871183750f38b26025f",
+        "valid": true,
+        "output": {
+          "competency_id": "COM_LECTURA",
+          "student_name": "Bruno Castro Ríos",
+          "information_status": "sufficient",
+          "analysis_paragraph": "Bruno nombró al perro y la casa de la ilustración y recordó quién salió de casa. Después de que la docente volvió a leer una parte, dijo que el personaje regresó a buscar su pelota. Dijo que le gustó el conejo porque saltaba, pero necesitó preguntas y ver la escena para relacionarlo con la historia; al predecir, no encontró una pista para explicar su respuesta. Necesita apoyo para usar pistas del texto, y conviene observar si puede hacerlo en otras lecturas.",
+          "suggested_level": "B",
+          "suggestion_reason": "Necesitó que la docente señalara y volviera a leer para explicar por qué el personaje regresó, y preguntas para relacionar el salto con la historia.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.COM_LECTURA.5.01",
+            "PCI2016.COM_LECTURA.5.02",
+            "PCI2016.COM_LECTURA.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 10133,
+        "usage": {
+          "input_tokens": 1933,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 1930,
+          "output_tokens": 848,
+          "total_tokens": 2781
+        },
+        "estimatedCostUSD": 0.00066555
+      },
+      {
+        "key": "initial-quantity",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "649c6dcddb5ceb1090eab650ffeefd81532c80edff19af4d828ae666bce105b8",
+        "valid": true,
+        "output": {
+          "competency_id": "MAT_CANTIDAD",
+          "student_name": "Daniel Vega Rojas",
+          "information_status": "sufficient",
+          "analysis_paragraph": "En “Resuelve problemas de cantidad”, Daniel puso tres vasos para cuatro compañeros y dijo que todos tenían uno; al señalarle al compañero sin vaso, reconoció quién faltaba. En otros repartos, después del modelo o con ayuda directa, logró poner un objeto por persona, pero al repetir o al retirarse la ayuda volvió a juntar varios con un niño. Esto muestra que aún necesita apoyo para sostener la correspondencia uno a uno, desempeño previsto para su edad. Falta observar si lo realiza por sí mismo en otras situaciones cotidianas de reparto.",
+          "suggested_level": "B",
+          "suggestion_reason": "Las observaciones muestran que necesita modelo o ayuda directa y aún no mantiene un objeto por persona al repartir sin apoyo.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.MAT_CANTIDAD.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 10498,
+        "usage": {
+          "input_tokens": 2100,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 2097,
+          "output_tokens": 900,
+          "total_tokens": 3000
+        },
+        "estimatedCostUSD": 0.000712425
+      },
+      {
+        "key": "advanced-reading",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "9ed7d90fde1ee8d5eb0618eb1540837012cca9686e1d38c73a724e4a578969cb",
+        "valid": true,
+        "output": {
+          "competency_id": "COM_LECTURA",
+          "student_name": "Alma Flores Ruiz",
+          "information_status": "sufficient",
+          "analysis_paragraph": "En las tres lecturas, Alma comparó versiones, explicó la intención del personaje y apoyó sus ideas en imágenes, frases y partes del cuento; también revisó una idea tras escuchar otra interpretación. Estas acciones muestran que interpreta textos y da razones a partir de información del cuento, en relación con lo esperado para su edad. Conviene ofrecerle cuentos y preguntas que la inviten a seguir explicando sus ideas; falta observar cómo reconoce palabras conocidas y anticipa el contenido o la continuación en otros textos. La sugerencia es provisional.",
+          "suggested_level": "A",
+          "suggestion_reason": "Comparó versiones, justificó sus interpretaciones con partes del cuento y revisó una idea tras escuchar otra.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.COM_LECTURA.5.02",
+            "PCI2016.COM_LECTURA.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 13366,
+        "usage": {
+          "input_tokens": 1922,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 1919,
+          "output_tokens": 1152,
+          "total_tokens": 3074
+        },
+        "estimatedCostUSD": 0.000816175
+      },
+      {
+        "key": "contradictory-quantity",
+        "pass": 1,
+        "effort": "high",
+        "requestHash": "4bfe474796849383978d7da9fab906db1fee61db3f7f8a6c71be1ef3242fffe7",
+        "valid": true,
+        "output": {
+          "competency_id": "MAT_CANTIDAD",
+          "student_name": "Emma Medina Silva",
+          "information_status": "sufficient",
+          "analysis_paragraph": "En Resuelve problemas de cantidad, Emma repartió una cuchara a cada uno de cuatro muñecos y comprobó que todos tenían una. En otra ocasión dejó a un niño sin hoja y dijo que alcanzaba sin revisar; luego, con un recordatorio, revisó lugares vacíos y añadió servilletas hasta que todos tuvieron una. Conviene observar si reparte y comprueba por sí misma en nuevas situaciones.",
+          "suggested_level": "B",
+          "suggestion_reason": "Logró repartir uno a uno en algunas ocasiones, pero también hubo una ocasión sin revisión y otra con recordatorio.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.MAT_CANTIDAD.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 9758,
+        "usage": {
+          "input_tokens": 2061,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 2058,
+          "output_tokens": 862,
+          "total_tokens": 2923
+        },
+        "estimatedCostUSD": 0.00068855
+      },
+      {
+        "key": "advanced-reading",
+        "pass": 2,
+        "effort": "high",
+        "requestHash": "9ed7d90fde1ee8d5eb0618eb1540837012cca9686e1d38c73a724e4a578969cb",
+        "valid": true,
+        "output": {
+          "competency_id": "COM_LECTURA",
+          "student_name": "Alma Flores Ruiz",
+          "information_status": "sufficient",
+          "analysis_paragraph": "En Lee diversos tipos de textos escritos en su lengua materna, Alma explica diferencias e intenciones de personajes usando ilustraciones y partes del cuento: pidió releer una frase, justificó un final alternativo con dos partes y revisó su idea al escuchar otra interpretación. Estas actuaciones van más allá de lo que muestran los desempeños de 5 años sobre reconocer rasgos, anticipar el texto y opinar desde la experiencia, y responden al criterio trabajado. En estas situaciones no se observó que necesitara apoyo para justificar sus interpretaciones; conviene seguir observando estas actuaciones con otros textos y sus gustos por lo leído.",
+          "suggested_level": "AD",
+          "suggestion_reason": "Compara versiones, justifica sus interpretaciones con partes del cuento y revisa su idea; estas actuaciones superan lo previsto en los desempeños de 5 años.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.COM_LECTURA.5.01",
+            "PCI2016.COM_LECTURA.5.02",
+            "PCI2016.COM_LECTURA.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 10708,
+        "usage": {
+          "input_tokens": 1922,
+          "cached_input_tokens": 1919,
+          "cache_write_tokens": 0,
+          "output_tokens": 940,
+          "total_tokens": 2862
+        },
+        "estimatedCostUSD": 0.00048949
+      },
+      {
+        "key": "initial-quantity",
+        "pass": 2,
+        "effort": "high",
+        "requestHash": "649c6dcddb5ceb1090eab650ffeefd81532c80edff19af4d828ae666bce105b8",
+        "valid": true,
+        "output": {
+          "competency_id": "MAT_CANTIDAD",
+          "student_name": "Daniel Vega Rojas",
+          "information_status": "sufficient",
+          "analysis_paragraph": "En Resuelve problemas de cantidad, el desempeño esperado para su edad incluye establecer correspondencia uno a uno en situaciones cotidianas. Daniel repartió un objeto por persona con modelo o apoyo directo; en varias ocasiones puso varios objetos junto a una persona y dejó a otras sin material. Al retirarse la ayuda, volvió a repartir de manera desigual y no comprobó por sí mismo si alcanzaba para todos. Conviene observar cómo reparte en otras situaciones cotidianas y si logra verificarlo.",
+          "suggested_level": "B",
+          "suggestion_reason": "Daniel repartió uno por persona con modelo o apoyo directo, pero no sostuvo el reparto al repetirlo o al retirarse la ayuda.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.MAT_CANTIDAD.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 20048,
+        "usage": {
+          "input_tokens": 2100,
+          "cached_input_tokens": 2097,
+          "cache_write_tokens": 0,
+          "output_tokens": 1914,
+          "total_tokens": 4014
+        },
+        "estimatedCostUSD": 0.00097827
+      }
+    ]
+  },
+  "comparisons": [
+    {
+      "key": "Emilia-COM_LECTURA",
+      "low": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Emilia Cárdenas Ruiz",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Emilia relacionó imágenes y palabras de una adivinanza para explicar su respuesta y descartar el sol. También contó qué hizo un personaje después de una caída, usando dos imágenes, y anticipó información a partir de pistas, actuaciones acordes con la lectura de textos con ilustraciones. La evidencia permite sugerir un nivel para esta competencia, pero falta observar cómo revisa una interpretación y cómo opina sobre textos desde sus intereses y experiencia.",
+        "suggested_level": "A",
+        "suggestion_reason": "Emilia explicó sus respuestas con pistas e imágenes, en actuaciones acordes con lo esperado para su edad.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.01",
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      },
+      "medium": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Emilia Cárdenas Ruiz",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Emilia relacionó imágenes y palabras con información de textos: vinculó “páginas” con un libro y usó pistas e imágenes para elegir la luna y descartar el sol. También contó lo que hizo un personaje a partir de dos imágenes. Estas actuaciones muestran que identifica información e interpreta pistas, acorde con lo esperado para su edad en las situaciones observadas. No se registra si revisó su interpretación ni qué apoyo necesitó; conviene observarlo en otras lecturas.",
+        "suggested_level": "A",
+        "suggestion_reason": "Relacionó pistas e imágenes para explicar sus respuestas en las situaciones observadas.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.01",
+          "PCI2016.COM_LECTURA.5.02"
+        ]
+      },
+      "high": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Emilia Cárdenas Ruiz",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Emilia relaciona imágenes y palabras conocidas para explicar sus respuestas: vinculó “páginas” con un libro y la forma de la luna con una pista de la adivinanza. También contó lo que hizo un personaje usando dos imágenes. Estas actuaciones muestran comprensión apoyada en ilustraciones y pistas, en línea con lo esperado para su edad. Falta observar si revisa una interpretación y cómo opina sobre otros textos a partir de sus intereses y experiencia.",
+        "suggested_level": "A",
+        "suggestion_reason": "Propongo A porque Emilia explica sus respuestas usando imágenes, palabras conocidas y pistas del texto.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.01"
+        ]
+      }
+    },
+    {
+      "key": "Camila-PS_CONVIVE",
+      "low": {
+        "competency_id": "PS_CONVIVE",
+        "student_name": "Camila Huamán Castro",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Camila expresó qué le molestaba y acordó cómo compartir la canasta; al guardar los bloques, escuchó otra propuesta y acordó colaborar. En la actividad grupal, eligió acompañar con palmas y aceptó que un compañero participara mirando. Estas actuaciones se relacionan con expresar ideas, escuchar y llegar a acuerdos, como se espera para su edad. Conviene seguir observando cómo participa en la creación de acuerdos y en el cuidado de espacios y materiales compartidos.",
+        "suggested_level": "A",
+        "suggestion_reason": "Las observaciones muestran que Camila expresa sus ideas, escucha otras propuestas y acuerda cómo participar y colaborar.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.PS_CONVIVE.5.01",
+          "PCI2016.PS_CONVIVE.5.03",
+          "PCI2016.PS_CONVIVE.5.05"
+        ]
+      },
+      "medium": {
+        "competency_id": "PS_CONVIVE",
+        "student_name": "Camila Huamán Castro",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Camila expresó qué le molestó, escuchó a su compañera y acordó cómo seguir jugando. Al recoger, aceptó hacer la tarea junto con otro niño; en la actividad grupal, propuso escuchar distintas formas de participar y aceptó que un compañero mirara. Estas actuaciones muestran acuerdos y respeto por las elecciones de los demás, acorde con lo esperado para su edad. Conviene seguir observando cómo participa en otros acuerdos y en el cuidado de los espacios y materiales comunes.",
+        "suggested_level": "A",
+        "suggestion_reason": "Camila escuchó, tomó acuerdos y respetó distintas formas de participar en las situaciones observadas.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.PS_CONVIVE.5.01",
+          "PCI2016.PS_CONVIVE.5.03",
+          "PCI2016.PS_CONVIVE.5.05"
+        ]
+      },
+      "high": {
+        "competency_id": "PS_CONVIVE",
+        "student_name": "Camila Huamán Castro",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Camila Huamán Castro expresó qué le molestaba en el juego, escuchó a su compañera y acordó compartir las canastas; al guardar bloques, propuso una tarea y aceptó hacerla en conjunto. En la actividad grupal, eligió acompañar con palmas, propuso escuchar primero a quienes querían cantar y dijo que un compañero también podía participar mirando. Estas acciones muestran que propone acuerdos, escucha otras elecciones y colabora con materiales comunes, como se espera a los 5 años. No se observa necesidad de apoyo en estas situaciones; conviene seguir observando cómo participa en otros acuerdos y en el cuidado de espacios y materiales.",
+        "suggested_level": "A",
+        "suggestion_reason": "Sugiero A porque expresó sus elecciones, escuchó a otros y acordó cómo participar y colaborar en las situaciones observadas.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.PS_CONVIVE.5.01",
+          "PCI2016.PS_CONVIVE.5.03",
+          "PCI2016.PS_CONVIVE.5.04",
+          "PCI2016.PS_CONVIVE.5.05"
+        ]
+      }
+    },
+    {
+      "key": "Diego-CYT_INDAGA",
+      "low": {
+        "competency_id": "CYT_INDAGA",
+        "student_name": "Diego Ramos Vega",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Diego agrupó semillas por tamaño, contó hasta cinco y dijo que las grandes podrían crecer más. Propuso observarlas varios días y luego separó las que tenían raíz; dijo que no todas cambiaban al mismo tiempo. Estas acciones muestran curiosidad, una posible explicación y propuestas para observar; falta observar cómo compara lo que predijo con los cambios y qué comunica sobre lo aprendido.",
+        "suggested_level": "A",
+        "suggestion_reason": "Agrupó y contó semillas, propuso observarlas y reconoció diferencias entre ellas.",
+        "evidence_refs": [
+          "o1",
+          "o2"
+        ],
+        "performance_refs": [
+          "PCI2016.CYT_INDAGA.5.01",
+          "PCI2016.CYT_INDAGA.5.02",
+          "PCI2016.CYT_INDAGA.5.03"
+        ]
+      },
+      "medium": {
+        "competency_id": "CYT_INDAGA",
+        "student_name": "Diego Ramos Vega",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Diego agrupó semillas por tamaño, las contó y dijo que las grandes podrían crecer más; propuso volver a mirarlas. Al encontrar dos con raíz, las separó y contó, y comentó que no todas cambiaban al mismo tiempo. Estas acciones muestran que observa cambios, plantea una posible explicación y propone observar durante varios días. Aún falta observar cómo registra lo que encuentra y cómo compara su idea inicial con lo observado.",
+        "suggested_level": "A",
+        "suggestion_reason": "La sugerencia de A se apoya en sus observaciones de las semillas, su explicación sobre los cambios y su propuesta de volver a mirarlas.",
+        "evidence_refs": [
+          "o1",
+          "o2"
+        ],
+        "performance_refs": [
+          "PCI2016.CYT_INDAGA.5.01",
+          "PCI2016.CYT_INDAGA.5.02",
+          "PCI2016.CYT_INDAGA.5.03"
+        ]
+      },
+      "high": {
+        "competency_id": "CYT_INDAGA",
+        "student_name": "Diego Ramos Vega",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Diego agrupó y contó semillas, dijo que las grandes podrían crecer más y propuso mirarlas varios días. Al encontrar raíces, observó que no todas cambiaban al mismo tiempo y pidió volver a mirarlas. Estas acciones muestran que observa, plantea una posible explicación y propone cómo seguir indagando. Falta observar si compara luego lo que ocurre con su idea y comunica qué aprendió.",
+        "suggested_level": "A",
+        "suggestion_reason": "Sus observaciones, explicación y propuesta de volver a mirar muestran actuaciones esperadas para indagar a los 5 años.",
+        "evidence_refs": [
+          "o1",
+          "o2"
+        ],
+        "performance_refs": [
+          "PCI2016.CYT_INDAGA.5.01",
+          "PCI2016.CYT_INDAGA.5.02",
+          "PCI2016.CYT_INDAGA.5.03"
+        ]
+      }
+    },
+    {
+      "key": "Valentina-MAT_CANTIDAD",
+      "low": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Valentina Rojas Salazar",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Valentina preparó cuatro semillas para cada recipiente y comparó las cantidades. Luego organizó los recipientes según cuántas semillas habían abierto y comparó ese resultado con lo que había pensado. Estas acciones muestran que relaciona y organiza cantidades en una situación concreta. En otros mensajes cotidianos, conviene observar cómo cuenta y explica sus agrupaciones.",
+        "suggested_level": "A",
+        "suggestion_reason": "La preparación de cuatro semillas por recipiente y la organización según la cantidad observada muestran aprendizajes esperados para su edad.",
+        "evidence_refs": [
+          "o1",
+          "o2"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.01",
+          "PCI2016.MAT_CANTIDAD.5.03",
+          "PCI2016.MAT_CANTIDAD.5.04"
+        ]
+      },
+      "medium": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Valentina Rojas Salazar",
+        "information_status": "sufficient",
+        "analysis_paragraph": "En la competencia Resuelve problemas de cantidad, Valentina preparó cuatro semillas para cada recipiente y comparó las cantidades. Luego organizó los recipientes según cuántas semillas habían abierto y comparó el resultado con lo que había pensado. Falta observar cómo explica el criterio que usó y cómo comunica o representa las cantidades.",
+        "suggested_level": "A",
+        "suggestion_reason": "La comparación de cantidades y la organización según una cantidad observada respaldan provisionalmente el nivel esperado en estas situaciones.",
+        "evidence_refs": [
+          "o1",
+          "o2"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.01"
+        ]
+      },
+      "high": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Valentina Rojas Salazar",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Valentina preparó cuatro semillas para cada recipiente y comparó las cantidades; después organizó los recipientes según cuántas semillas se abrieron, contrastó el resultado con lo que había pensado y propuso repetir la observación. Estas acciones muestran comparación y agrupación por cantidad, relacionadas con “Resuelve problemas de cantidad” y con desempeños previstos para su edad. No quedó registrado cómo contó ni si explicó el criterio; tampoco hay evidencia para precisar qué apoyo podría necesitar. La sugerencia es provisional y se limita a estas situaciones.",
+        "suggested_level": "A",
+        "suggestion_reason": "Sugiero A porque comparó cantidades y organizó los recipientes según la cantidad de semillas abiertas; la evidencia se limita a estas situaciones.",
+        "evidence_refs": [
+          "o1",
+          "o2"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.01"
+        ]
+      }
+    },
+    {
+      "key": "other-actor",
+      "low": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Diego Ramos Vega",
+        "information_status": "insufficient",
+        "analysis_paragraph": "Diego estuvo sentado junto a una compañera y sonrió mientras ella explicó qué podría pasar en el cuento. En otra lectura, escuchó sin que se registrara una intervención suya. Estas observaciones no permiten saber qué comprende o interpreta Diego ni qué pistas usa; hace falta observar sus comentarios o predicciones sobre un texto.",
+        "suggested_level": null,
+        "suggestion_reason": "Los registros describen acciones de Diego, pero no muestran su comprensión del texto.",
+        "evidence_refs": [
+          "o1",
+          "o2"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.01",
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      },
+      "medium": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Diego Ramos Vega",
+        "information_status": "insufficient",
+        "analysis_paragraph": "En las dos situaciones, Diego estuvo sentado junto a Camila y sonrió; después escuchó sin intervención registrada. No hay una actuación suya que muestre qué comprendió del cuento ni que explique una idea con pistas, aspectos relacionados con los desempeños de lectura de su edad. Hace falta observar qué dice o señala sobre las ilustraciones, qué anticipa y qué razones da.",
+        "suggested_level": null,
+        "suggestion_reason": "Lo registrado muestra que Diego escuchó, pero no permite valorar qué comprendió ni cómo usó pistas del cuento.",
+        "evidence_refs": [
+          "o1",
+          "o2"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      },
+      "high": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Diego Ramos Vega",
+        "information_status": "insufficient",
+        "analysis_paragraph": "En Lee diversos tipos de textos escritos en su lengua materna, para su edad se espera que anticipe cómo seguirá un texto usando pistas y que opine sobre lo leído; aún falta observar qué hace Diego. El 2 de noviembre, Camila dijo que la niña buscaría agua porque llevaba una jarra; Diego estuvo sentado a su lado y sonrió. El 5 de noviembre, Camila contó el final y justificó su idea; Diego escuchó, sin intervención registrada. No quedó registrada una interpretación propia de Diego; conviene observar qué dice del cuento y qué pistas usa.",
+        "suggested_level": null,
+        "suggestion_reason": "Los registros consignan que Diego sonrió y escuchó, pero no una interpretación propia.",
+        "evidence_refs": [
+          "o1",
+          "o2"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      }
+    },
+    {
+      "key": "insufficient-irrelevant",
+      "low": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Luciana Torres Medina",
+        "information_status": "insufficient",
+        "analysis_paragraph": "En «La tienda», Luciana eligió la bolsa roja y pidió sentarse junto a su amiga. No se registró qué hizo al contar o repartir objetos, por lo que no hay evidencia para comparar sus cantidades con lo esperado para su edad. Hace falta observar qué hace y dice al repartir objetos.",
+        "suggested_level": null,
+        "suggestion_reason": "La observación registra su elección de bolsa y dónde pidió sentarse, pero no cómo comparó cantidades al repartir.",
+        "evidence_refs": [
+          "o1"
+        ],
+        "performance_refs": []
+      },
+      "medium": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Luciana Torres Medina",
+        "information_status": "insufficient",
+        "analysis_paragraph": "En “La tienda”, Luciana eligió la bolsa roja y pidió sentarse junto a su amiga. No se registró qué hizo al contar o repartir objetos, por lo que no hay evidencia de que comparara cantidades o estableciera correspondencia uno a uno. Con esta observación no es posible valorar su avance en “Resuelve problemas de cantidad” respecto de los referentes de su edad.",
+        "suggested_level": null,
+        "suggestion_reason": "La observación solo registra la elección de una bolsa y dónde pidió sentarse, no cómo contó o repartió.",
+        "evidence_refs": [
+          "o1"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.03",
+          "PCI2016.MAT_CANTIDAD.5.05"
+        ]
+      },
+      "high": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Luciana Torres Medina",
+        "information_status": "insufficient",
+        "analysis_paragraph": "En “La tienda”, Luciana eligió la bolsa roja y pidió sentarse junto a su amiga. El registro no muestra cómo contó o repartió objetos ni si comparó cantidades, como se esperaba observar. Por eso, aún no se puede valorar cómo usa el conteo o relaciona cantidades, ni qué apoyo necesita. Falta observarla al repartir objetos y registrar qué hace o dice.",
+        "suggested_level": null,
+        "suggestion_reason": "El registro solo consigna su elección de una bolsa y dónde pidió sentarse; no muestra cómo comparó cantidades.",
+        "evidence_refs": [
+          "o1"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.03",
+          "PCI2016.MAT_CANTIDAD.5.04",
+          "PCI2016.MAT_CANTIDAD.5.05"
+        ]
+      }
+    },
+    {
+      "key": "advanced-reading",
+      "low": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Alma Flores Ruiz",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Alma comparó dos versiones del cuento, señaló imágenes y pidió releer una frase para comprobar la diferencia. Explicó lo que buscaba el personaje, relacionó la ilustración con sus palabras y justificó cómo cambiaría el final con partes del cuento. Estas acciones muestran que interpreta y opina apoyándose en información del texto; conviene observar cómo lo hace con otros textos y situaciones.",
+        "suggested_level": "A",
+        "suggestion_reason": "Alma explicó sus interpretaciones con imágenes y partes del cuento, de acuerdo con lo esperado para su edad.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.01",
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      },
+      "medium": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Alma Flores Ruiz",
+        "information_status": "sufficient",
+        "analysis_paragraph": "En Lee diversos tipos de textos escritos en su lengua materna, Alma comparó versiones de un cuento, explicó las intenciones de un personaje y señaló partes para apoyar sus ideas. También revisó su interpretación al escuchar otra y anticipó cómo cambiaría el final. En estas lecturas mostró interpretaciones más elaboradas que las previstas para su edad. Conviene observar cómo lo hace con otros textos y en otras situaciones; estos registros no permiten afirmar que lo haga siempre.",
+        "suggested_level": "AD",
+        "suggestion_reason": "La comparación de versiones, la justificación con partes del cuento y la revisión de sus ideas muestran actuaciones que van más allá de lo esperado para su edad.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.01",
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      },
+      "high": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Alma Flores Ruiz",
+        "information_status": "sufficient",
+        "analysis_paragraph": "En las tres lecturas, Alma comparó versiones, explicó la intención del personaje y apoyó sus ideas en imágenes, frases y partes del cuento; también revisó una idea tras escuchar otra interpretación. Estas acciones muestran que interpreta textos y da razones a partir de información del cuento, en relación con lo esperado para su edad. Conviene ofrecerle cuentos y preguntas que la inviten a seguir explicando sus ideas; falta observar cómo reconoce palabras conocidas y anticipa el contenido o la continuación en otros textos. La sugerencia es provisional.",
+        "suggested_level": "A",
+        "suggestion_reason": "Comparó versiones, justificó sus interpretaciones con partes del cuento y revisó una idea tras escuchar otra.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      }
+    },
+    {
+      "key": "developing-reading",
+      "low": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Bruno Castro Ríos",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Bruno nombró al perro y la casa en la ilustración, recordó quién salió de casa y dijo que le gustó el conejo porque saltaba. Para anticipar qué pasaría, explicar por qué volvió el personaje y relacionar su opinión con la historia, necesitó opciones, preguntas o que la docente volviera a mostrar y leer una parte. Está próximo a explicar sus ideas apoyándose en pistas del texto y requiere acompañamiento. Falta observar cómo lo hace en otras lecturas con distintos apoyos.",
+        "suggested_level": "B",
+        "suggestion_reason": "Las observaciones muestran identificación y opinión, pero para anticipar y explicar necesitó apoyo de la docente.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.01",
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      },
+      "medium": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Bruno Castro Ríos",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Bruno nombró al perro y la casa en la ilustración, recordó quién salió y, tras releer el cuento, dijo que el personaje volvió a buscar su pelota. También expresó que le gustó el conejo porque saltaba, pero necesitó preguntas y volver a mirar la escena para relacionarlo con la historia. Al anticipar lo que podía pasar, no explicó una pista y eligió solo después de que la docente ofreció opciones; conviene observar si explica sus ideas con menos ayuda.",
+        "suggested_level": "B",
+        "suggestion_reason": "Sugiero B porque Bruno expresa algunas ideas sobre el texto, pero necesita apoyo para explicar sus interpretaciones con información de la historia.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.01",
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      },
+      "high": {
+        "competency_id": "COM_LECTURA",
+        "student_name": "Bruno Castro Ríos",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Bruno nombró al perro y la casa de la ilustración y recordó quién salió de casa. Después de que la docente volvió a leer una parte, dijo que el personaje regresó a buscar su pelota. Dijo que le gustó el conejo porque saltaba, pero necesitó preguntas y ver la escena para relacionarlo con la historia; al predecir, no encontró una pista para explicar su respuesta. Necesita apoyo para usar pistas del texto, y conviene observar si puede hacerlo en otras lecturas.",
+        "suggested_level": "B",
+        "suggestion_reason": "Necesitó que la docente señalara y volviera a leer para explicar por qué el personaje regresó, y preguntas para relacionar el salto con la historia.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.COM_LECTURA.5.01",
+          "PCI2016.COM_LECTURA.5.02",
+          "PCI2016.COM_LECTURA.5.03"
+        ]
+      }
+    },
+    {
+      "key": "initial-quantity",
+      "low": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Daniel Vega Rojas",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Daniel repartió un objeto por persona después de recibir apoyo o un modelo, y en una ocasión reconoció quién no tenía vaso cuando la docente se lo señaló. Al repetir el reparto y cuando la ayuda se retiró, volvió a juntar varios objetos para una persona y dejó a otros sin recibirlos. Aún falta observar que reparta y compruebe por sí mismo si alcanza en situaciones cotidianas, como plantea el desempeño de correspondencia uno a uno.",
+        "suggested_level": "B",
+        "suggestion_reason": "La correspondencia uno a uno apareció con apoyo, pero Daniel no la sostuvo al repetir el reparto o al retirarse la ayuda.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.03"
+        ]
+      },
+      "medium": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Daniel Vega Rojas",
+        "information_status": "sufficient",
+        "analysis_paragraph": "En Resuelve problemas de cantidad, Daniel aún no reparte un objeto a cada persona de forma consistente: en varias ocasiones dejó a alguien sin objeto o puso varios junto a una sola persona. Con apoyo de la docente logró repartir uno por persona, pero al retirarlo volvió a necesitar ayuda. Esto muestra que requiere acompañamiento para establecer correspondencia uno a uno; falta observar otras situaciones de cantidad.",
+        "suggested_level": "B",
+        "suggestion_reason": "Las observaciones muestran que Daniel requiere apoyo para repartir un objeto por persona de forma consistente.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.03"
+        ]
+      },
+      "high": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Daniel Vega Rojas",
+        "information_status": "sufficient",
+        "analysis_paragraph": "En “Resuelve problemas de cantidad”, Daniel puso tres vasos para cuatro compañeros y dijo que todos tenían uno; al señalarle al compañero sin vaso, reconoció quién faltaba. En otros repartos, después del modelo o con ayuda directa, logró poner un objeto por persona, pero al repetir o al retirarse la ayuda volvió a juntar varios con un niño. Esto muestra que aún necesita apoyo para sostener la correspondencia uno a uno, desempeño previsto para su edad. Falta observar si lo realiza por sí mismo en otras situaciones cotidianas de reparto.",
+        "suggested_level": "B",
+        "suggestion_reason": "Las observaciones muestran que necesita modelo o ayuda directa y aún no mantiene un objeto por persona al repartir sin apoyo.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.03"
+        ]
+      }
+    },
+    {
+      "key": "contradictory-quantity",
+      "low": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Emma Medina Silva",
+        "information_status": "sufficient",
+        "analysis_paragraph": "En “Resuelve problemas de cantidad”, Emma repartió una cuchara a cada uno de cuatro muñecos y comprobó que todos tenían una. En otra ocasión dejó a un niño sin hoja y dijo que alcanzaba sin revisar; después repartió servilletas con un recordatorio y completó los lugares vacíos. Esto muestra que puede hacer correspondencia uno a uno, pero aún necesita apoyo para revisar que todos reciban un objeto. Falta observar si lo hace de manera constante sin recordatorio.",
+        "suggested_level": "B",
+        "suggestion_reason": "Las actuaciones muestran que está próxima a establecer correspondencia uno a uno, pero aún requiere un recordatorio para revisar el reparto.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.03"
+        ]
+      },
+      "medium": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Emma Medina Silva",
+        "information_status": "sufficient",
+        "analysis_paragraph": "Emma Medina Silva repartió una cuchara a cada uno de cuatro muñecos y comprobó que todos tenían una. En otra ocasión dejó a un compañero sin hoja y dijo que alcanzaba, sin revisar. Luego repartió servilletas con un recordatorio y añadió las que faltaban al revisar los lugares vacíos. Estas actuaciones muestran que puede repartir uno a uno, aunque falta observar si revisa y completa el reparto en distintas situaciones sin recordatorio.",
+        "suggested_level": "B",
+        "suggestion_reason": "Se acerca al reparto uno a uno esperado para su edad: lo logró, pero también dejó a un niño sin hoja y luego necesitó un recordatorio para revisar.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.03"
+        ]
+      },
+      "high": {
+        "competency_id": "MAT_CANTIDAD",
+        "student_name": "Emma Medina Silva",
+        "information_status": "sufficient",
+        "analysis_paragraph": "En Resuelve problemas de cantidad, Emma repartió una cuchara a cada uno de cuatro muñecos y comprobó que todos tenían una. En otra ocasión dejó a un niño sin hoja y dijo que alcanzaba sin revisar; luego, con un recordatorio, revisó lugares vacíos y añadió servilletas hasta que todos tuvieron una. Conviene observar si reparte y comprueba por sí misma en nuevas situaciones.",
+        "suggested_level": "B",
+        "suggestion_reason": "Logró repartir uno a uno en algunas ocasiones, pero también hubo una ocasión sin revisión y otra con recordatorio.",
+        "evidence_refs": [
+          "o1",
+          "o2",
+          "o3"
+        ],
+        "performance_refs": [
+          "PCI2016.MAT_CANTIDAD.5.03"
+        ]
+      }
+    }
+  ],
+  "boundaryRepeats": {
+    "low": [
+      {
+        "key": "advanced-reading",
+        "effort": "low",
+        "requestHash": "9ed7d90fde1ee8d5eb0618eb1540837012cca9686e1d38c73a724e4a578969cb",
+        "valid": true,
+        "output": {
+          "competency_id": "COM_LECTURA",
+          "student_name": "Alma Flores Ruiz",
+          "information_status": "sufficient",
+          "analysis_paragraph": "Alma explicó diferencias entre dos versiones del cuento, infirió la intención del personaje y apoyó sus ideas señalando imágenes y partes del texto. También revisó su propuesta después de escuchar otra interpretación; en estos registros no se observa qué apoyo necesitó. Conviene seguir observando cómo explica sus ideas en otros textos y situaciones de lectura.",
+          "suggested_level": "A",
+          "suggestion_reason": "Sus explicaciones se apoyan en indicios del texto y muestran comprensión acorde con lo esperado para su edad.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.COM_LECTURA.5.01",
+            "PCI2016.COM_LECTURA.5.02",
+            "PCI2016.COM_LECTURA.5.03"
+          ]
+        },
+        "usage": {
+          "input_tokens": 1922,
+          "cached_input_tokens": 1919,
+          "cache_write_tokens": 0,
+          "output_tokens": 377,
+          "total_tokens": 2299
+        },
+        "durationMs": 5358,
+        "estimatedCostUSD": 0.00020799
+      },
+      {
+        "key": "initial-quantity",
+        "effort": "low",
+        "requestHash": "649c6dcddb5ceb1090eab650ffeefd81532c80edff19af4d828ae666bce105b8",
+        "valid": true,
+        "output": {
+          "competency_id": "MAT_CANTIDAD",
+          "student_name": "Daniel Vega Rojas",
+          "information_status": "sufficient",
+          "analysis_paragraph": "Daniel repartió materiales, pero no dio por sí solo un objeto a cada persona ni comprobó si alcanzaba. En una ocasión reconoció que faltaba un vaso cuando la docente se lo señaló; con modelo y apoyo directo logró repartir uno por persona. Al repetir la tarea, volvió a entregar varios objetos a una persona y dejó a otros sin material. Falta observar si puede hacerlo y comprobarlo con menor ayuda en otras situaciones cotidianas.",
+          "suggested_level": "B",
+          "suggestion_reason": "La correspondencia uno a uno aún requiere modelo o apoyo directo, como muestran los repartos observados.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.MAT_CANTIDAD.5.03"
+          ]
+        },
+        "usage": {
+          "input_tokens": 2100,
+          "cached_input_tokens": 2097,
+          "cache_write_tokens": 0,
+          "output_tokens": 339,
+          "total_tokens": 2439
+        },
+        "durationMs": 4403,
+        "estimatedCostUSD": 0.00019077
+      }
+    ],
+    "medium": [
+      {
+        "key": "advanced-reading",
+        "effort": "medium",
+        "requestHash": "9ed7d90fde1ee8d5eb0618eb1540837012cca9686e1d38c73a724e4a578969cb",
+        "valid": true,
+        "output": {
+          "competency_id": "COM_LECTURA",
+          "student_name": "Alma Flores Ruiz",
+          "information_status": "sufficient",
+          "analysis_paragraph": "Alma compara versiones de un cuento y explica diferencias apoyándose en imágenes y frases; también relaciona lo que dice un personaje con lo que muestra la ilustración. Al proponer otro final, busca partes del cuento para justificar su idea y la revisa al escuchar otra interpretación. Estas acciones muestran que interpreta textos con pistas, en línea con lo esperado para su edad. Conviene seguir observando cómo identifica palabras conocidas y expresa sus gustos sobre distintos textos; no se registra un apoyo específico que necesite.",
+          "suggested_level": "A",
+          "suggestion_reason": "Alma sustenta sus interpretaciones con imágenes y partes del cuento, como se espera para su edad.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.COM_LECTURA.5.01",
+            "PCI2016.COM_LECTURA.5.02"
+          ]
+        },
+        "usage": {
+          "input_tokens": 1922,
+          "cached_input_tokens": 1919,
+          "cache_write_tokens": 0,
+          "output_tokens": 577,
+          "total_tokens": 2499
+        },
+        "durationMs": 6634,
+        "estimatedCostUSD": 0.00030799
+      },
+      {
+        "key": "initial-quantity",
+        "effort": "medium",
+        "requestHash": "649c6dcddb5ceb1090eab650ffeefd81532c80edff19af4d828ae666bce105b8",
+        "valid": true,
+        "output": {
+          "competency_id": "MAT_CANTIDAD",
+          "student_name": "Daniel Vega Rojas",
+          "information_status": "sufficient",
+          "analysis_paragraph": "Al repartir vasos, Daniel dijo que todos tenían uno, aunque faltó un vaso; reconoció quién no tenía cuando la docente se lo señaló. Con un modelo, repartió una cuchara a cada muñeco, pero luego volvió a poner ambas junto a uno. Al repartir hojas, necesitó apoyo y, al retirarlo, entregó varias a un niño y dejó a otros sin hoja. Esto muestra que aún necesita acompañamiento para establecer correspondencia uno a uno y comprobar si alcanza; falta observar cómo lo hace de manera autónoma.",
+          "suggested_level": "B",
+          "suggestion_reason": "Las observaciones muestran que Daniel logra repartir uno a cada persona con apoyo, pero no lo mantiene al retirar la ayuda.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.MAT_CANTIDAD.5.03"
+          ]
+        },
+        "usage": {
+          "input_tokens": 2100,
+          "cached_input_tokens": 2097,
+          "cache_write_tokens": 0,
+          "output_tokens": 639,
+          "total_tokens": 2739
+        },
+        "durationMs": 7833,
+        "estimatedCostUSD": 0.00034077
+      }
+    ],
+    "high": [
+      {
+        "key": "advanced-reading",
+        "pass": 2,
+        "effort": "high",
+        "requestHash": "9ed7d90fde1ee8d5eb0618eb1540837012cca9686e1d38c73a724e4a578969cb",
+        "valid": true,
+        "output": {
+          "competency_id": "COM_LECTURA",
+          "student_name": "Alma Flores Ruiz",
+          "information_status": "sufficient",
+          "analysis_paragraph": "En Lee diversos tipos de textos escritos en su lengua materna, Alma explica diferencias e intenciones de personajes usando ilustraciones y partes del cuento: pidió releer una frase, justificó un final alternativo con dos partes y revisó su idea al escuchar otra interpretación. Estas actuaciones van más allá de lo que muestran los desempeños de 5 años sobre reconocer rasgos, anticipar el texto y opinar desde la experiencia, y responden al criterio trabajado. En estas situaciones no se observó que necesitara apoyo para justificar sus interpretaciones; conviene seguir observando estas actuaciones con otros textos y sus gustos por lo leído.",
+          "suggested_level": "AD",
+          "suggestion_reason": "Compara versiones, justifica sus interpretaciones con partes del cuento y revisa su idea; estas actuaciones superan lo previsto en los desempeños de 5 años.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.COM_LECTURA.5.01",
+            "PCI2016.COM_LECTURA.5.02",
+            "PCI2016.COM_LECTURA.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 10708,
+        "usage": {
+          "input_tokens": 1922,
+          "cached_input_tokens": 1919,
+          "cache_write_tokens": 0,
+          "output_tokens": 940,
+          "total_tokens": 2862
+        },
+        "estimatedCostUSD": 0.00048949
+      },
+      {
+        "key": "initial-quantity",
+        "pass": 2,
+        "effort": "high",
+        "requestHash": "649c6dcddb5ceb1090eab650ffeefd81532c80edff19af4d828ae666bce105b8",
+        "valid": true,
+        "output": {
+          "competency_id": "MAT_CANTIDAD",
+          "student_name": "Daniel Vega Rojas",
+          "information_status": "sufficient",
+          "analysis_paragraph": "En Resuelve problemas de cantidad, el desempeño esperado para su edad incluye establecer correspondencia uno a uno en situaciones cotidianas. Daniel repartió un objeto por persona con modelo o apoyo directo; en varias ocasiones puso varios objetos junto a una persona y dejó a otras sin material. Al retirarse la ayuda, volvió a repartir de manera desigual y no comprobó por sí mismo si alcanzaba para todos. Conviene observar cómo reparte en otras situaciones cotidianas y si logra verificarlo.",
+          "suggested_level": "B",
+          "suggestion_reason": "Daniel repartió uno por persona con modelo o apoyo directo, pero no sostuvo el reparto al repetirlo o al retirarse la ayuda.",
+          "evidence_refs": [
+            "o1",
+            "o2",
+            "o3"
+          ],
+          "performance_refs": [
+            "PCI2016.MAT_CANTIDAD.5.03"
+          ]
+        },
+        "model": "gpt-6-luna",
+        "reasoning": "high",
+        "fallback": false,
+        "durationMs": 20048,
+        "usage": {
+          "input_tokens": 2100,
+          "cached_input_tokens": 2097,
+          "cache_write_tokens": 0,
+          "output_tokens": 1914,
+          "total_tokens": 4014
+        },
+        "estimatedCostUSD": 0.00097827
+      }
+    ]
+  },
+  "conclusion": "High aporta algunos textos más detallados pero no demuestra notas más fiables: Alma A→AD con contexto idéntico; medium AD→A; low A→A. La persona usuaria descarta toda sugerencia de nota después de la comparación.",
+  "applicationModelChanged": false,
+  "published": false
+}

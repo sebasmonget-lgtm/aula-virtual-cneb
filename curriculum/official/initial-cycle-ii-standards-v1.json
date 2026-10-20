@@ -1,0 +1,143 @@
+{
+  "version": "pci-inicial-2016-cycle-ii-standards-v1",
+  "source": {
+    "id": "PCI_INICIAL_CANONICAL",
+    "title": "Programa Curricular de Educación Inicial",
+    "publisher": "Ministerio de Educación del Perú",
+    "year": 2016,
+    "url": "https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf",
+    "sha256": "1f5e7330099c894181b82265dccab9478e094b15cc766ef680608468a82c0821"
+  },
+  "transcription": {
+    "checked_on": "2026-10-20",
+    "method": "Full cycle-II paragraph on each pinned performance spread; line-end hyphens/whitespace normalized and superscript footnote callouts 13/15/23 removed. No examples or cycle-I descriptions."
+  },
+  "standards": [
+    {
+      "id": "PCI2016.PS_IDENTIDAD.CII",
+      "competency_id": "PS_IDENTIDAD",
+      "cycle": "II",
+      "text": "Construye su identidad al tomar conciencia de los aspectos que lo hacen único. Se identifica en algunas de sus características físicas, así como sus cualidades e intereses, gustos y preferencias. Se siente miembro de su familia y del grupo de aula al que pertenece. Practica hábitos saludables reconociendo que son importantes para él. Actúa de manera autónoma en las actividades que realiza y es capaz de tomar decisiones, desde sus posibilidades y considerando a los demás. Expresa sus emociones e identifica el motivo que las originan. Busca y acepta la compañía de un adulto significativo ante situaciones que lo hacen sentir vulnerable, inseguro, con ira, triste o alegre.",
+      "printed_page": 78,
+      "pdf_page": 80,
+      "content_sha256": "4d42bb51ca5366dd2a05f6a4f9196969179fec01206b6e47744b80ca139e84c2"
+    },
+    {
+      "id": "PCI2016.PS_CONVIVE.CII",
+      "competency_id": "PS_CONVIVE",
+      "cycle": "II",
+      "text": "Convive y participa democráticamente cuando interactúa de manera respetuosa con sus compañeros desde su propia iniciativa, cumple con sus deberes y se interesa por conocer más sobre las diferentes costumbres y características de las personas de su entorno inmediato. Participa y propone acuerdos y normas de convivencia para el bien común. Realiza acciones con otros para el buen uso de los espacios, materiales y recursos comunes.",
+      "printed_page": 86,
+      "pdf_page": 88,
+      "content_sha256": "d9d51a9e9610991c3430ac3208d1729afc748145e4763f050f11445f9ef6e5ed"
+    },
+    {
+      "id": "PCI2016.PS_RELIGION.CII",
+      "competency_id": "PS_RELIGION",
+      "cycle": "II",
+      "text": "Realiza acciones por propia iniciativa para agradecer el amor que recibe de su familia y de su entorno. Participa de acciones que muestren su solidaridad y generosidad hacia su prójimo como muestra del amor que recibe de Dios.",
+      "printed_page": 92,
+      "pdf_page": 94,
+      "content_sha256": "9a0d86271ca97d378028d78f5d27d2f36f992de2023624d61032c9c83ad33f4b"
+    },
+    {
+      "id": "PCI2016.PSICO_MOTRICIDAD.CII",
+      "competency_id": "PSICO_MOTRICIDAD",
+      "cycle": "II",
+      "text": "Se desenvuelve de manera autónoma a través de su motricidad cuando explora y descubre su lado dominante y sus posibilidades de movimiento por propia iniciativa en situaciones cotidianas. Realiza acciones motrices básicas en las que coordina movimientos para desplazarse con seguridad y utiliza objetos con precisión, orientándose y regulando sus acciones en relación a estos, a las personas, el espacio y el tiempo. Expresa corporalmente sus sensaciones, emociones y sentimientos a través del tono, gesto, posturas, ritmo y movimiento en situaciones de juego.",
+      "printed_page": 104,
+      "pdf_page": 106,
+      "content_sha256": "0f5a685e247dd8811694306d69a6d197c453b927d658a0be9a7169fabab823f9"
+    },
+    {
+      "id": "PCI2016.COM_ORAL.CII",
+      "competency_id": "COM_ORAL",
+      "cycle": "II",
+      "text": "Se comunica oralmente mediante diversos tipos de textos; identifica información explícita; realiza inferencias sencillas a partir de esta información e interpreta recursos no verbales y paraverbales de las personas de su entorno. Opina sobre lo que más/ menos le gustó del contenido del texto. Se expresa espontáneamente a partir de sus conocimientos previos, con el propósito de interactuar con uno o más interlocutores conocidos en una situación comunicativa. Desarrolla sus ideas manteniéndose por lo general en el tema; utiliza vocabulario de uso frecuente y una pronunciación entendible, se apoya en gestos y lenguaje corporal. En un intercambio, generalmente participa y responde en forma pertinente a lo que le dicen.",
+      "printed_page": 118,
+      "pdf_page": 120,
+      "content_sha256": "5428417caab04a812c489d1041ac5b50244f7030485bac57e23049e47017ad96"
+    },
+    {
+      "id": "PCI2016.COM_LECTURA.CII",
+      "competency_id": "COM_LECTURA",
+      "cycle": "II",
+      "text": "Lee diversos tipos de textos que tratan temas reales o imaginarios que le son cotidianos, en los que predominan palabras conocidas y que se acompañan con ilustraciones. Construye hipótesis o predicciones sobre la información contenida en los textos y demuestra comprensión de las ilustraciones y de algunos símbolos escritos que transmiten información. Expresa sus gustos y preferencias en relación a los textos leídos a partir de su propia experiencia. Utiliza algunas convenciones básicas de los textos escritos.",
+      "printed_page": 124,
+      "pdf_page": 126,
+      "content_sha256": "623f833f3560deb00f9e7b7bdcabc58e60aa4e61a9e5509ef46be3c8479eb7f5"
+    },
+    {
+      "id": "PCI2016.COM_ARTE.CII",
+      "competency_id": "COM_ARTE",
+      "cycle": "II",
+      "text": "Crea proyectos artísticos al experimentar y manipular libremente diversos medios y materiales para descubrir sus propiedades expresivas. Explora los elementos básicos de los lenguajes del arte como el sonido, los colores y el movimiento. Explora sus propias ideas imaginativas que construye a partir de sus vivencias y las transforma en algo nuevo mediante el juego simbólico, el dibujo, la pintura, la construcción, la música y el movimiento creativo. Comparte espontáneamente sus experiencias y creaciones.",
+      "printed_page": 136,
+      "pdf_page": 138,
+      "content_sha256": "2f6ac1d7e4be724bbdd1a135d7ac5e90f6428142c984a23a1487144f01ec3761"
+    },
+    {
+      "id": "PCI2016.MAT_CANTIDAD.CII",
+      "competency_id": "MAT_CANTIDAD",
+      "cycle": "II",
+      "text": "Resuelve problemas referidos a relacionar objetos de su entorno según sus características perceptuales; agrupar, ordenar hasta el quinto lugar, seriar hasta 5 objetos, comparar cantidades de objetos y pesos, agregar y quitar hasta 5 elementos, realizando representaciones con su cuerpo, material concreto o dibujos. Expresa la cantidad de hasta 10 objetos, usando estrategias como el conteo. Usa cuantificadores: “muchos” “pocos”, “ninguno”, y expresiones: “más que” “menos que”. Expresa el peso de los objetos “pesa más”, “pesa menos” y el tiempo con nociones temporales como “antes o después”, “ayer” “hoy” o “mañana”.",
+      "printed_page": 174,
+      "pdf_page": 176,
+      "content_sha256": "471af82110311442a2ca021348d6413b8034be56f0d2aeadbcda73b305bee037"
+    },
+    {
+      "id": "PCI2016.MAT_FORMA.CII",
+      "competency_id": "MAT_FORMA",
+      "cycle": "II",
+      "text": "Resuelve problemas al relacionar los objetos del entorno con formas bidimensionales y tridimensionales. Expresa la ubicación de personas en relación a objetos en el espacio “cerca de” “lejos de” “al lado de”, y de desplazamientos “hacia adelante, hacia atrás”, “hacia un lado, hacia el otro”. Así también expresa la comparación de la longitud de dos objetos: “es más largo que”, “es más corto que”. Emplea estrategias para resolver problemas, al construir objetos con material concreto o realizar desplazamientos en el espacio.",
+      "printed_page": 180,
+      "pdf_page": 182,
+      "content_sha256": "796e8dc2f7a577722168545d00632bfeef8be8d1fc219699f223fae15d50ea71"
+    },
+    {
+      "id": "PCI2016.CYT_INDAGA.CII",
+      "competency_id": "CYT_INDAGA",
+      "cycle": "II",
+      "text": "Explora los objetos, el espacio y hechos que acontecen en su entorno, hace preguntas con base en su curiosidad, propone posibles respuestas, obtiene información al observar, manipular y describir; compara aspectos del objeto o fenómeno para comprobar la respuesta y expresa en forma oral o gráfica lo que hizo y aprendió.",
+      "printed_page": 190,
+      "pdf_page": 192,
+      "content_sha256": "7adc1adf1c1019928ded942152e8b4bf20d242acf6aa49ec9f63916a2a3e92e0"
+    },
+    {
+      "id": "PCI2016.COM_ESCRITURA.CII",
+      "competency_id": "COM_ESCRITURA",
+      "cycle": "II",
+      "text": "Escribe a partir de sus hipótesis de escritura diversos tipos de textos sobre temas variados considerando el propósito y el destinatario a partir de su experiencia previa. Desarrolla sus ideas en torno a un tema con la intención de transmitir ideas o emociones. Sigue la linealidad y direccionalidad de la escritura.",
+      "printed_page": 130,
+      "pdf_page": 132,
+      "content_sha256": "311746698edcc24ecf008c3fd519e397fe7be1d6716f88138b48846b2fd69d0d"
+    },
+    {
+      "id": "PCI2016.CAST_L2_ORAL.CII",
+      "competency_id": "CAST_L2_ORAL",
+      "cycle": "II",
+      "text": "Se comunica oralmente mediante palabras o frases breves. Obtiene información de textos acompañados de expresiones corporales, gestos y tono de voz de su interlocutor. Responde a través de algunas palabras aisladas, con apoyo de gestos y expresiones corporales y de su lengua materna.",
+      "printed_page": 146,
+      "pdf_page": 148,
+      "content_sha256": "6f509d5b8a141aeaf52d5161de66324dd61e24138b62cf11c290d36a982129cc"
+    },
+    {
+      "id": "PCI2016.TRANS_TIC.CII",
+      "competency_id": "TRANS_TIC",
+      "cycle": "II",
+      "text": "Se desenvuelve en los entornos virtuales cuando busca y manipula objetos del entorno virtual para realizar actividades preferidas que le permita registrar, comunicar ideas y emociones.",
+      "printed_page": 204,
+      "pdf_page": 206,
+      "content_sha256": "08e799a3f2d93c9b91676c2f82f376d27c96d252a4f1ecca3c717c9bfda8dafa"
+    },
+    {
+      "id": "PCI2016.TRANS_AUTONOMO.CII",
+      "competency_id": "TRANS_AUTONOMO",
+      "cycle": "II",
+      "text": "Gestiona su aprendizaje al darse cuenta lo que debe aprender al nombrar qué puede lograr respecto a una tarea, reforzado por la escucha a la facilitación adulta, e incorpora lo que ha aprendido en otras actividades. Sigue su propia estrategia al realizar acciones que va ajustando y adaptando a la “tarea” planteada. Comprende que debe actuar al incluir y seguir una estrategia que le es modelada o facilitada. Monitorea lo realizado para lograr la tarea al evaluar con facilitación externa los resultados obtenidos siendo ayudado para considerar el ajuste requerido y disponerse al cambio.",
+      "printed_page": 210,
+      "pdf_page": 212,
+      "content_sha256": "bde7cdea2818e3631c25d37638e9072c7a5836663e06bb5be996a3a74e6a271f"
+    }
+  ]
+}

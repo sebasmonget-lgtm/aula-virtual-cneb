@@ -1413,3 +1413,32 @@ Aplicación del 20/10: las fichas oficiales descargadas declaran sus páginas in
 Petición posterior amplía el alcance: usar más fichas pertinentes en talleres. Integración curada por edad, competencia, acciones reales y propósito; explicitar cómo se usa la ficha y permitir elegirla, sin imprimir todas obligatoriamente. Nuevas propuestas se admiten para materiales que requieren un recorrido propio (poemas/instructivos/escenas); no se anexan a cuentos con otros personajes o propósitos ajenos. Originales íntegros, selección de páginas/recortables y orientación revisadas; no inferir todas las páginas infantiles por ser impares. La colección completa sigue pendiente de curaduría, no de asignación automática por coincidencias de palabras.
 
 Evaluar reutiliza la identidad cromática/pictogramas ya asociados y alias breves para consulta, conservando nombres oficiales en ayudas y datos. Guardar una observación ya conserva ese registro; no confirma una valoración AD/A/B/C. Se aclara la copia que confundía ambas cosas, sin automatizar decisiones docentes. Navegación de tres espacios más marcada; no cambia el flujo, cierres ni permisos.
+
+
+## 2026-10-20 — Análisis breve con sugerencia provisional y decisión docente
+
+La persona usuaria autoriza probar Luna low por niño y competencia y solicitar una nota orientativa AD/A/B/C. Esto sustituye cualquier restricción anterior de no mostrar sugerencias de letra; permanece prohibido elegir o confirmar automáticamente la nota final. La sugerencia se conserva en metadatos separados, con motivo y referencias; los radios y la valoración docente permanecen intactos. No crear una rúbrica oficial por letra que MINEDU no publica en los desempeños de edad.
+
+Contexto mínimo verificado: competencia/capacidades, estándar del ciclo II, desempeños oficiales de la edad, criterios previstos y observaciones originales fechadas, nombre/edad/período y lengua relevante si existe. No enviar fotos, audio, asistencia ni antecedentes familiares. Sin mínimos inventados de días ni conteo de desempeños como algoritmo de nota. Si no hay sustento o referente de edad, no sugerir una letra. Perfil breve explícito low sin fallback; no cambiar el modelo por defecto de otros flujos.
+
+Preparación de bimestre con tres pares en paralelo, persistencia individual, recuperación y reutilización; cancelar primario y cinco segundos reales antes de continuar anticipadamente. No bloquear la revisión manual ni repetir llamadas al entrar. Prueba inicial no autoriza generar automáticamente toda el aula ni publicar. Evidencia y límites AD/C en QA_EVALUAR_ANALISIS_BREVE_2026-10-20.md.
+
+
+## 2026-10-20 — Comparación Luna low/medium; elección pendiente
+
+La persona usuaria solicita otra ronda medium para decidir después qué implementar, hacer commit/push y publicar Preview. Se comparan diez pares con idéntico contexto final (hash de solicitud sin plan), low repetido para evitar mezclar versiones del prompt, y cuatro repeticiones dirigidas de lectura avanzada/dificultad persistente. 24 llamadas válidas, sin fallback/reintentos, tres simultáneas. Sin escrituras pedagógicas cloud: hash de valoraciones/borradores intacto, solo telemetría.
+
+En primera pasada nueve de diez letras coinciden; medium propone AD frente a A para Alma, pero vuelve a A en la repetición idéntica. Ambos B para Daniel en ambas pasadas. Medium precisa algunos textos/referencias pero no demuestra notas más fiables; AD/C siguen sin calibración docente. Low provisional resulta razonable, sin imponer la elección. Modelo de aplicación no cambiado ni commit/push/despliegue ejecutados.
+
+Promedio primera pasada: low5,87s, medium6,36s. Costos observados por diez USD0,003184/0,005677, con caché desigual; normalizados a entrada ordinaria USD0,003835/0,005191. Proyección 200 pares similares ~USD0,077/0,104; con toda entrada como escritura de caché ~USD0,086/0,114. Total nueva ronda USD0.00990861, dentro del máximo QA USD6. No factura ni garantía con más notas. Detalle/24 textos/criterios/límites en docs/qa/QA_COMPARACION_LUNA_LOW_MEDIUM_2026-10-20.md y JSON compañero.
+
+
+## 2026-10-20 — Decisión vigente: IA solo analiza, nota exclusivamente docente
+
+La persona usuaria revoca la sugerencia de nota, pide ver la valoración del bimestre anterior y acorta el análisis a30–70 palabras. Esta instrucción sustituye la autorización previa de sugerir AD/A/B/C. El perfil breve v2 excluye escala/calificaciones y campos suggested_level/suggestion_reason; dos o tres frases, objetivo40–55 palabras. El validador impide campos extra y notas explícitas en el texto. Se retira ai_suggestion del API/caché y de la interfaz, también para metadatos históricos. No se borran antecedentes ni notas docentes.
+
+La referencia anterior se consulta por misma aula/año/tipo de período, niño/competencia y período inmediatamente anterior. Solo nota activa confirmada, con compatibilidad por fechas para legado sin ID; sin saltar una ausencia intermedia. Solo se muestra a la profesora y no entra a IA. Aviso informativo al elegir una menor, sin imponer progresión automática ni modificar reglas de confirmación.
+
+High comparativo histórico:12 llamadas válidas, promedio11,29s y proyección normalizada antigua ~USD0,136–0,146/200, incremento~USD0,06 frente a low. No resuelve A/AD: A→AD en repetición idéntica. La decisión posterior elimina esa función, no se cambia el modelo del producto por asumir que high es mejor. Perfil final sin nota verificado en tres casos controlados con IA real:54/61/63 palabras; costeUSD0.001966775. Siete verificaciones de formato en distintas etapas, una rechazada inicialmente por longitud. Nueva etapa completa USD0.014782610; acumulado conservador ~USD4,79 de6. Sin escrituras pedagógicas cloud, solo uso IA; notas/borradores mantienen hash.
+
+89 regresiones PASS; límites29/30/70/71, API histórica sin sugerencia y consulta/autorización de nota previa. Lint/typecheck/Vinext PASS; Next webpack PASS. UI local real con API simulada, escritorio/390px, anterior identificada y radios vacíos; no atribuir esa nota de muestra a la base QA. Cambios locales sin commit/push/despliegue. Evidencia/rollback en docs/qa/QA_EVALUAR_SOLO_ANALISIS_2026-10-20.md; comparación histórica en QA_COMPARACION_LUNA_HIGH_2026-10-20.md.

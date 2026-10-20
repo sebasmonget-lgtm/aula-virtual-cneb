@@ -2227,3 +2227,19 @@ Solución: cuarenta originales curados en doce talleres, tres guías nuevas cohe
 Evaluar: «por confirmar» se interpretaba como confirmación de observaciones. El contador corresponde a valoraciones. Se explicita la diferencia y se conserva la elección docente de nivel. El recurso parents.webp de 160px perdía nitidez ampliado: se añade una versión de 640px solo para estas pantallas. Los assets y la pantalla Mi año permanecen intactos.
 
 Empaquetado detectado al incorporar los originales: tracing incluía unos 120MB de PNG maestros de edición de imágenes que solo usa el script de construcción. Runtime lee el campo file del índice (61 JPEG), no master. Exclusión precisa en Next y .vercelignore conserva originales en el repo y todos los recursos de ejecución. Limitación comprobada: Next/Windows compara globs con rutas inversas y retiene masters en la traza local; no atribuir la proyección Linux de 150,2MB a una publicación real. Smoke de la futura Preview debe comprobar los recursos y el tamaño del paquete antes de darla por aprobada.
+
+
+## 2026-10-20 — Analizar evidencias consumía IA y no mostraba resultado
+
+Síntoma: clic sin resultado aparente; llamadas de assessment completadas pero borrador vacío. Causa raíz reproducida: PostgreSQL devuelve revision bigint como cadena; la ruta enviaba esa cadena al guardado, cuya comparación numérica producía un falso version_conflict. Solución: convertir la revisión a Number antes del guardado. Se mantiene control de cambios reales y cierre; no ocultar conflictos válidos. Prevención: regresión con adaptador que devuelve revisiones como string, comprobación inmediata del párrafo, feedback/carga/error junto al botón y reutilización del resultado vigente.
+
+Durante el piloto, el validador exigía el nombre completo también dentro del párrafo, aunque student_name ya lo identificaba de forma exacta. Siete respuestas fueron rechazadas; se ajusta a nombre completo exacto en el campo y nombre propio como palabra en el párrafo. Se validan competencia, edad, referencias y longitud. No basta validar JSON para certificar la calidad pedagógica. El modelo inventó un mínimo de días para considerar suficiente un caso: se elimina explícitamente ese umbral en la instrucción y se repite el caso dirigido (null→A). AD/C quedan pendientes de calibración docente. 87 regresiones, lint/typecheck/builds PASS; evidencia detallada en QA_EVALUAR_ANALISIS_BREVE_2026-10-20.md.
+
+
+## 2026-10-20 — Límite y función del análisis, sin notas sugeridas
+
+Hallazgo de la comparación: medium y high variaron A/AD con las mismas notas; no se declara que más esfuerzo resuelva la calibración. La persona usuaria retira la función de sugerir nota. Se elimina en origen la escala y las instrucciones de calificación, los campos de salida y su presentación/API, conservando notas/historial docentes. El validador rechaza claves extra y calificaciones explícitas; una sugerencia antigua en metadatos tampoco se muestra.
+
+Un resultado del perfil inicial sin nota excedió 100 palabras y se rechazó sin truncar ni guardar. Se orienta la generación a un margen corto; después de la nueva indicación, el contrato definitivo exige 30–70 palabras y dos o tres frases. Pruebas de límites 29/30/70/71 y tres muestras de IA reales con 54/61/63 palabras pasan. No equivale a garantizar que cualquier salida futura cumpla: una respuesta inválida sigue sin guardarse. Referencia anterior solo confirmada y del mismo niño/competencia/período inmediato; no se envía a IA ni impone una progresión automática.
+
+Validación: 89 regresiones, lint, TypeScript y builds Vinext/Next webpack PASS. UI local de escritorio/390px con API simulada y notas de ejemplo, sin escrituras pedagógicas cloud. Evidencia y límites en docs/qa/QA_EVALUAR_SOLO_ANALISIS_2026-10-20.md. Sin migración, commit, push o despliegue.

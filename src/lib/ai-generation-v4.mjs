@@ -3,6 +3,7 @@ import { recordAIQAResult } from "./ai-qa-trace.mjs";
 import { resolveAIFallbackPlan, resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { prepareAIRequestV4 } from "./prepare-ai-request-v4.mjs";
 import { validateAssessmentProposal } from "./assessment-v4-service.mjs";
+import { BRIEF_ASSESSMENT_SCHEMA, validateBriefAssessment } from './assessment-brief.mjs';
 import { CONCLUSION_FIELDS, validateDescriptiveConclusion } from "./descriptive-conclusion-v4-service.mjs";
 import { FAMILY_REPORT_FIELDS, FAMILY_REPORT_SECTION_FIELDS, validateFamilyReport } from "./family-report-v4-service.mjs";
 import { ASSESSMENT_MASTER_OUTPUT_SCHEMA, validateAssessmentMaster } from "./assessment-master-service.mjs";
@@ -212,7 +213,7 @@ function validateWorkflowOutput(input, output, bundle, confirmedCompetencyId) {
     : ["project", "unit"].includes(input.workflow) ? assertExperienceOutput(output, bundle, input.workflow)
     : ["criterion_and_evidence", "criterion_realignment"].includes(input.workflow) ? assertCriterionEvidenceOutput(output, bundle, confirmedCompetencyId)
     : input.workflow === "assessment_master" ? assertAssessmentMasterOutput(output, bundle)
-    : input.workflow === "assessment" ? assertAssessmentOutput(output, bundle, confirmedCompetencyId, input.evidence_history?.length ?? 0)
+    : input.workflow === "assessment" ? input.analysis_format==='brief-v1'?validateBriefAssessment(output,input):assertAssessmentOutput(output, bundle, confirmedCompetencyId, input.evidence_history?.length ?? 0)
     : input.workflow === "descriptive_conclusion" ? assertDescriptiveConclusionOutput(output, bundle, confirmedCompetencyId,
       input.analysis_status ?? input.student_context?.teacher_confirmed_findings?.information_status)
     : input.workflow === "family_report" ? assertFamilyReportOutput(output, bundle, input)
@@ -289,6 +290,7 @@ export async function generateAIWorkflowV4(input, { provider, providerFactory, k
   let outputSchema = input.workflow === "annual_plan" ? (input.annual_stage === "development" ? ANNUAL_PLAN_DEVELOPMENT_SCHEMA : ANNUAL_PLAN_OUTPUT_SCHEMA) : input.workflow === "project" ? PROJECT_OUTPUT_SCHEMA : input.workflow === "unit" ? UNIT_OUTPUT_SCHEMA : input.workflow === "criterion_realignment" ? CRITERION_EVIDENCE_OUTPUT_SCHEMA : input.workflow === "assessment_master" ? ASSESSMENT_MASTER_OUTPUT_SCHEMA : input.workflow === "assessment" ? ASSESSMENT_OUTPUT_SCHEMA : input.workflow === "descriptive_conclusion" ? DESCRIPTIVE_CONCLUSION_OUTPUT_SCHEMA : input.workflow === "family_report" ? FAMILY_REPORT_OUTPUT_SCHEMA : input.workflow === "classroom_period_report" ? CLASSROOM_PERIOD_REPORT_SCHEMA : ACTIVITY_OUTPUT_SCHEMA;
   const inheritedPrimary = input.workflow === "activity" ? input.learning_experience_context?.inherited_route_item?.competency_id : null;
   const confirmedCompetencyId = inheritedPrimary ?? (input.competency_ids?.length === 1 ? input.competency_ids[0] : null);
+  if(input.workflow==='assessment'&&input.analysis_format==='brief-v1')outputSchema=BRIEF_ASSESSMENT_SCHEMA;
   if (input.workflow === "descriptive_conclusion" && confirmedCompetencyId) {
     outputSchema = { ...outputSchema, properties: { ...outputSchema.properties,
       competency_id: { type: "string", enum: [confirmedCompetencyId] } } };

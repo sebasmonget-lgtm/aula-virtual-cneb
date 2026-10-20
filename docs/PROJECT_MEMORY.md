@@ -1008,3 +1008,40 @@ Empaquetado: la inclusión general de assets sumaba originales de edición de im
 ## 2026-10-20 — Entrega solicitada para QA del cierre
 
 La persona usuaria autoriza commit, push y publicación exclusivamente Preview de los cambios finales. Preparar el reloj QA de la misma cuenta al 18/12/2026 por la tarde, manteniendo el Bimestre 4 abierto y todas las valoraciones pendientes de decisión docente. La asistencia y observaciones ya completadas se conservan; no volver a cargar fixtures ni confirmar notas/cierre. Usar configuración exclusiva del despliegue con la base QA independiente y activar el control de reloj ya existente. Producción verificada antes de publicar: dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf, SHA 9a0920230350cd6b9050f35683a1f35d459e78c7. El resultado efectivo del despliegue y smoke se registra en .local/release-20261020/, sin secretos en Git.
+
+
+## 2026-10-20 — Primera prueba de evaluación breve con Luna low
+
+Se implementa localmente preparación de análisis por niño/competencia, tres en paralelo, guardado individual recuperable y sin regeneración al reingresar. Confirmación anticipada con Cancelar primario/enfocado y cinco segundos reales; revisión manual disponible. Guía breve por edad/competencia, cuatro opciones AD/A/B/C y desempeños oficiales desplegables. Se corrige falso409 por bigint string de PostgreSQL y se localiza la respuesta/error de Analizar evidencias.
+
+Autorización nueva: sugerir una letra como orientación separada, nunca elegir radio, provisional_level o confirmar nota. Perfil compacto en pipeline común; competencia/capacidades, un estándar oficial ciclo II y desempeños de la edad, notas fechadas y criterios como referentes previstos. No imágenes, entrevistas, asistencia ni currículo completo. Catálogo nuevo de 14 estándares versionados; no declarar completo el master oficial previo. Contrato histórico sin brief:true y demás modelos intactos.
+
+Piloto real: 18 llamadas Luna low sin fallback, 11 respuestas válidas en diez casos distintos; siete rechazos iniciales durante desarrollo del validador. Cuatro pares de notas QA y seis casos controlados; sin evidencia pertinente o acción propia no asigna letra. Tendencia conservadora A/B: AD y C no calibrados todavía. Corrección de mínimo inventado de días y repetición dirigida documentada. Costo total estimado USD 0.00753762, sin escrituras pedagógicas cloud y cero notas confirmadas antes/después; solo telemetría IA. Cap vigente USD6, no ejecutar toda la matriz aún.
+
+87 regresiones PASS y cuatro del mismo conjunto repetidas; lint, npx tsc --noEmit y builds Vinext/Next webpack PASS. UI local real con API simulada en escritorio/390px; no confundir con recorrido cloud. Cambios locales no publicados ni comprometidos. Evidencia y rollback: docs/qa/QA_EVALUAR_ANALISIS_BREVE_2026-10-20.md y JSON compañero.
+
+
+## 2026-10-20 — Comparación Luna low/medium; elección pendiente
+
+La persona usuaria solicita otra ronda medium para decidir después qué implementar, hacer commit/push y publicar Preview. Se comparan diez pares con idéntico contexto final (hash de solicitud sin plan), low repetido para evitar mezclar versiones del prompt, y cuatro repeticiones dirigidas de lectura avanzada/dificultad persistente. 24 llamadas válidas, sin fallback/reintentos, tres simultáneas. Sin escrituras pedagógicas cloud: hash de valoraciones/borradores intacto, solo telemetría.
+
+En primera pasada nueve de diez letras coinciden; medium propone AD frente a A para Alma, pero vuelve a A en la repetición idéntica. Ambos B para Daniel en ambas pasadas. Medium precisa algunos textos/referencias pero no demuestra notas más fiables; AD/C siguen sin calibración docente. Low provisional resulta razonable, sin imponer la elección. Modelo de aplicación no cambiado ni commit/push/despliegue ejecutados.
+
+Promedio primera pasada: low5,87s, medium6,36s. Costos observados por diez USD0,003184/0,005677, con caché desigual; normalizados a entrada ordinaria USD0,003835/0,005191. Proyección 200 pares similares ~USD0,077/0,104; con toda entrada como escritura de caché ~USD0,086/0,114. Total nueva ronda USD0.00990861, dentro del máximo QA USD6. No factura ni garantía con más notas. Detalle/24 textos/criterios/límites en docs/qa/QA_COMPARACION_LUNA_LOW_MEDIUM_2026-10-20.md y JSON compañero.
+
+
+## 2026-10-20 — Decisión vigente: IA solo analiza, nota exclusivamente docente
+
+La persona usuaria revoca la sugerencia de nota, pide ver la valoración del bimestre anterior y acorta el análisis a30–70 palabras. Esta instrucción sustituye la autorización previa de sugerir AD/A/B/C. El perfil breve v2 excluye escala/calificaciones y campos suggested_level/suggestion_reason; dos o tres frases, objetivo40–55 palabras. El validador impide campos extra y notas explícitas en el texto. Se retira ai_suggestion del API/caché y de la interfaz, también para metadatos históricos. No se borran antecedentes ni notas docentes.
+
+La referencia anterior se consulta por misma aula/año/tipo de período, niño/competencia y período inmediatamente anterior. Solo nota activa confirmada, con compatibilidad por fechas para legado sin ID; sin saltar una ausencia intermedia. Solo se muestra a la profesora y no entra a IA. Aviso informativo al elegir una menor, sin imponer progresión automática ni modificar reglas de confirmación.
+
+High comparativo histórico:12 llamadas válidas, promedio11,29s y proyección normalizada antigua ~USD0,136–0,146/200, incremento~USD0,06 frente a low. No resuelve A/AD: A→AD en repetición idéntica. La decisión posterior elimina esa función, no se cambia el modelo del producto por asumir que high es mejor. Perfil final sin nota verificado en tres casos controlados con IA real:54/61/63 palabras; costeUSD0.001966775. Siete verificaciones de formato en distintas etapas, una rechazada inicialmente por longitud. Nueva etapa completa USD0.014782610; acumulado conservador ~USD4,79 de6. Sin escrituras pedagógicas cloud, solo uso IA; notas/borradores mantienen hash.
+
+89 regresiones PASS; límites29/30/70/71, API histórica sin sugerencia y consulta/autorización de nota previa. Lint/typecheck/Vinext PASS; Next webpack PASS. UI local real con API simulada, escritorio/390px, anterior identificada y radios vacíos; no atribuir esa nota de muestra a la base QA. Cambios locales sin commit/push/despliegue. Evidencia/rollback en docs/qa/QA_EVALUAR_SOLO_ANALISIS_2026-10-20.md; comparación histórica en QA_COMPARACION_LUNA_HIGH_2026-10-20.md.
+
+## 2026-10-20 — Entrega autorizada de Evaluar para continuar QA
+
+La persona usuaria solicita commit y push de los cambios validados para continuar QA. Se prepara publicación exclusivamente Preview en el proyecto staging existente y la base QA independiente; sin integración Git automática. El perfil breve de la aplicación conserva Luna low, sin sugerir notas y con 30–70 palabras; las comparaciones medium/high son auditorías históricas, no un cambio silencioso del modelo. No iniciar el análisis de toda la clase ni confirmar valoraciones durante el smoke de entrega.
+
+Antes de publicar: rama remota sincronizada en 78bb172, 89 regresiones y lint/typecheck/builds Vinext/Next webpack aprobados. Baseline de Producción: dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf, SHA 9a0920230350cd6b9050f35683a1f35d459e78c7. La entrega usa commit identificable, árbol limpio y configuración exclusiva del despliegue. Resultado efectivo, smoke autenticado y verificación de alias/Producción se registran en .local/release-evaluar-20261020/; no dar por publicado hasta esas comprobaciones. Sin migración ni restauración/reemplazo de datos QA.
