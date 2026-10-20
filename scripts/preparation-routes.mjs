@@ -29,8 +29,8 @@ function futurePreview(project,proposal,chat){
 export async function handlePreparationRoutes({request,response,url,db,teacherId,origin,send,readJson,annualPlanningContext,projectFlowSource,projectFlowRow,domainRequest}) {
   if(!url.pathname.startsWith("/api/preparation/"))return false;
   try {
-    // Older failed drafts may have lost their receipt. Ask for the same explicit
-    // decision again; never infer availability or rewrite a confirmed project.
+    // Resuming an owned draft accepts the selected proposal's resources, just as
+    // preparing it does. Never rewrite a confirmed project or infer new resources.
     const resourceReview=async job=>{
       if(job.legacy||job.kind!=='project'||!['failed','uncertain'].includes(job.status)||!job.payload.project_id)return null;
       const project=(await db.query(`select e.id,e.revision,e.details,p.proposal from learning_experiences e join annual_plans p on p.id=e.annual_plan_id
@@ -138,7 +138,7 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const candidate=plan.proposal.proposed_experiences.find(row=>row.proposal_id===body.proposalId);
       if(!candidate||proposalIntentIssues(candidate,[],plan.proposal.curriculum_reference??[]).length)
         throw new VersionConflictError('Antes de preparar, completa con Ayni las dos competencias y los materiales concretos de este proyecto. Conservamos lo que ya está guardado.');
-      const readiness=resourceReadiness(candidate,body.resourcesConfirmed,teacherId);
+      const readiness=resourceReadiness(candidate,true,teacherId,'project_preparation');
       // Reject an invalid calendar before confirming a scoped annual revision.
       // The authoritative saved proposal already excludes holidays and weekends.
       if(!Array.isArray(candidate.instructional_dates)||dates.some(date=>!candidate.instructional_dates.includes(date)))
@@ -218,14 +218,13 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
     const [,id,action]=match,row=await ownedPreparationJob(db,teacherId,id);
     if(!action && request.method==="GET"){
       const recovered=row.status==='uncertain'?await recoverSavedPreparationResult(db,teacherId,id):row;
-      const review=await resourceReview(recovered);
-      send(response,200,{...publicPreparationJob(needsAcceptedProjectContinuation(recovered)?await recoverAcceptedProjectContinuation(db,teacherId,id):recovered),required_resources:review?.resources??[]},origin);return true;
+      send(response,200,publicPreparationJob(needsAcceptedProjectContinuation(recovered)?await recoverAcceptedProjectContinuation(db,teacherId,id):recovered),origin);return true;
     }
     if(action==="retry" && request.method==="POST"){
       const body=await readJson(request),review=await resourceReview(row);
       if(review){
         if(row.status==='uncertain'&&body.acceptPotentialRepeat!==true)throw new VersionConflictError('Confirma el reintento antes de continuar.');
-        const receipt=resourceReadiness(review.proposal,body.resourcesConfirmed,teacherId);
+        const receipt=resourceReadiness(review.proposal,true,teacherId,'project_resume');
         const saved=await db.query(`update learning_experiences set details=jsonb_set(details,'{resource_readiness}',$1::jsonb)
           where id=$2 and classroom_id=$3 and status='draft' and revision=$4 and details->'project_master' is null returning id`,[JSON.stringify(receipt),review.project.id,row.classroom_id,review.project.revision]);
         if(!saved.rows.length)throw new VersionConflictError('El proyecto cambió. Revisa su preparación antes de continuar.');

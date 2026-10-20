@@ -75,7 +75,7 @@ test('las 246 variantes se publican con adaptación y criterio propios en las tr
         const snapshot=(await db.query('select details from activities where id=$1',[saved.id])).rows[0].details;
         assert.equal(snapshot.workshop_catalog.age,age);
         assert.equal(snapshot.workshop_catalog.id,w.id);
-        assert.equal(snapshot.workshop_catalog.version,'1.3.0');
+        assert.equal(snapshot.workshop_catalog.version,'1.5.0');
         assert.equal((await scheduleLibraryWorkshop(db,{teacherId,classroomId:c.classroomId,workshopId:w.id,occursOn:dates[index],clientRequestId:
           (await db.query('select generation_metadata from activities where id=$1',[saved.id])).rows[0].generation_metadata.client_request_id,today:'2026-03-16'})).id,saved.id);
       }

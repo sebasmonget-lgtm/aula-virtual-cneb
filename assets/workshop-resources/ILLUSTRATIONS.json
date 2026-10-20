@@ -1,0 +1,69 @@
+{
+  "version": "1.1.0",
+  "tool": "image_gen built-in",
+  "processing": "Generated with the built-in tool. No quality/size API parameter exposed. Final images optimized with sharp: support icons <=320px, puddle 600px, two story strips 1080px wide. Transparent alpha preserved; text remains native PDF, not baked into images.",
+  "style": "Warm Ayni storybook illustration, turquoise/mint/navy palette, clear outlines, transparent background, no lettering; readable small.",
+  "prompts": [
+    {
+      "file": "public/workshop-illustrations/water-painting.png",
+      "prompt": "Small preschool materials vignette: shallow cup with little clean water, wooden broad brush with turquoise grip, folded towel, dark cardboard with water strokes. Warm polished Ayni storybook style, transparent background, no text, readable at 160px."
+    },
+    {
+      "file": "public/workshop-illustrations/wet-brush.png",
+      "prompt": "Match the first vignette style and objects. A child hand holds the handle of the broad wooden turquoise-grip brush and dips just its bristles in a stable cup with little clean water. Only hand, brush and cup; no spilling; transparent background; no text; readable at 150px."
+    },
+    {
+      "file": "public/workshop-illustrations/paint-with-water.png",
+      "prompt": "Match the first vignette style and objects. Child hand holds the brush handle while bristles touch dark blue cardboard and draw one curving water stroke. Only hand, brush and cardboard, no text, transparent background, readable at 150px."
+    },
+    {
+      "file": "public/workshop-illustrations/water-dries.png",
+      "prompt": "Match the first vignette style. Two matching dark blue cardboard rectangles: fresh clear water curve on the left, same curve faint and drying on the right; small curved arrow showing time passing. No text, extra objects or faces, transparent background, readable at 150px."
+    },
+    {
+      "files": [
+        "public/workshop-illustrations/story-lila.png"
+      ],
+      "prompt": "Medium-detail wide story strip, three separate scenes, same warm Ayni girl Lila: seed in hand beside terracotta pot; watering same pot with no sprout; pointing to a sprout with two leaves. Transparent background, no text, navy outlines, mint turquoise yellow."
+    },
+    {
+      "files": [
+        "public/workshop-illustrations/story-nina.png"
+      ],
+      "prompt": "Medium-detail wide story strip, three scenes, same warm Ayni girl Nina in yellow: narrow block tower; fallen blocks and thoughtful child; stable wider-base tower. Same doll throughout, transparent background, no text."
+    },
+    {
+      "files": [
+        "public/workshop-illustrations/book-clean-hands.png",
+        "public/workshop-illustrations/book-on-table.png",
+        "public/workshop-illustrations/book-turn-page.png",
+        "public/workshop-illustrations/book-on-shelf.png"
+      ],
+      "prompt": "One small-support strip of four distinct book-care actions, warm Ayni style: clean dry hands beside towel; book resting on table; lifting one page by corner; returning book to low shelf. Transparent, no text. Mechanically split into four small PNGs."
+    },
+    {
+      "files": [
+        "public/workshop-illustrations/poem-puddle.png"
+      ],
+      "prompt": "Small supporting warm Ayni puddle illustration reflecting blue sky and a cloud, two rain ripples and a few grass leaves. No text, transparent background, modest detail."
+    },
+    {
+      "files": [
+        "public/workshop-illustrations/riddle-sun.png",
+        "public/workshop-illustrations/riddle-moon.png"
+      ],
+      "prompt": "Two small separated icons, golden round sun with rounded rays and pale golden crescent moon. Navy contour, gentle watercolor texture, no faces, no text, transparent background. Mechanically split into two PNGs."
+    },
+    {
+      "files": [
+        "public/workshop-illustrations/motor-1.png",
+        "public/workshop-illustrations/motor-2.png",
+        "public/workshop-illustrations/motor-3.png",
+        "public/workshop-illustrations/motor-4.png",
+        "public/workshop-illustrations/motor-5.png",
+        "public/workshop-illustrations/motor-6.png"
+      ],
+      "prompt": "Six small separated warm Ayni motor actions, 3x2 grid: walk on flat broad tape line; zigzag around low cones; tiny two-foot hop over floor line; carry small cloth bag with both hands in front; turn gently; crouch through wide floor-level hoop held by adult hands. No heights, no text, transparent background. Mechanically split into six 320px PNGs."
+    }
+  ]
+}

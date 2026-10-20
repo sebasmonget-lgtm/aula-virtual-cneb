@@ -103,7 +103,8 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   const workshopWord = await JSZip.loadAsync(await renderActivityUnifiedWord(withWorkshop, cards));
   const workshopXml = await workshopWord.file("word/document.xml").async("string");
   assert.doesNotMatch(workshopXml, /V\. CUADERNO DE CAMPO/);
-  assert.match(workshopXml, /TALLER/,'La sección opcional posterior se conserva');
+  assert.match(workshopXml, /V\. TALLER/,'La sección opcional sigue a los referentes sin saltos de numeración');
+  assert.doesNotMatch(workshopXml, /VIII\. TALLER/);
   assert.match(workshopXml, /Aún no hay observaciones registradas/);
   assert.doesNotMatch(workshopXml, /\{\{/);
 });

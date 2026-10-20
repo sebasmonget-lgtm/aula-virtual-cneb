@@ -30,7 +30,8 @@ const suggestions=[
 ];
 
 export type ProjectChat={id:string|null;revision:number;messages:{role:string;text:string}[];ready:boolean;chips:string[];pendingTurn:string|null;status:string};
-export function AnnualProposalChangeDialog({row,index,names,hasConfirmedYear,onClose,onRead,onChatRead,onSend,onGenerate,onApply,onDiscard,futureOnly=false,creating=false,modeActions,library,teacherName}: {
+export function AnnualProposalChangeDialog({row,index,names,hasConfirmedYear,onClose,onRead,onChatRead,onSend,onGenerate,onApply,onDiscard,futureOnly=false,creating=false,modeActions,library,teacherName,onContinue}: {
+  onContinue?:()=>void;
   row:ChangeProposal;index:number;names:Map<string,string>;hasConfirmedYear:boolean;onClose:()=>void;
   futureOnly?:boolean;
   teacherName?:string;creating?:boolean;modeActions?:(disabled:boolean)=>ReactNode;library?:ReactNode;
@@ -41,6 +42,7 @@ export function AnnualProposalChangeDialog({row,index,names,hasConfirmedYear,onC
 }) {
   const [text,setText]=useState(""),[chat,setChat]=useState<ProjectChat>(()=>initialProjectChat(teacherName,creating));
   const [pending,setPending]=useState("");
+  const [adjusting,setAdjusting]=useState(false),[restored,setRestored]=useState(false);
   const [saved,setSaved]=useState<ProposalPreviewState|null>(null),[review,setReview]=useState(false);
   const [busy,setBusy]=useState<string|null>(null),[audioBusy,setAudioBusy]=useState(false),[error,setError]=useState("");
   const readOnOpen=useRef({onRead,onChatRead}),messageLog=useRef<HTMLDivElement>(null);
@@ -50,7 +52,7 @@ export function AnnualProposalChangeDialog({row,index,names,hasConfirmedYear,onC
   useEffect(()=>{let live=true;
     restoration.current=Promise.all([readOnOpen.current.onRead(),readOnOpen.current.onChatRead()]).then(([value,conversation])=>{
       const restored=presentProjectChat(conversation,teacherName,creating);
-      if(live&&!sending.current){setSaved(value);setReview(!!value?.preview);setChat(restored);}return restored;
+      if(live&&!sending.current){setSaved(value);setReview(!!value?.preview);setChat(restored);setRestored(true);}return restored;
     });
     void restoration.current.catch(()=>{if(live)setError("No pudimos recuperar la conversación. Intenta enviar tu mensaje de nuevo.");});
     return()=>{live=false;};
@@ -61,7 +63,7 @@ export function AnnualProposalChangeDialog({row,index,names,hasConfirmedYear,onC
     const value=retry?chat.messages.filter(m=>m.role==="teacher").at(-1)?.text??"":text.trim();
     const turnId=retry?chat.pendingTurn:crypto.randomUUID();if(!turnId)return;
     if(retry&&chat.status==="uncertain"&&!window.confirm("La respuesta anterior pudo terminar. ¿Quieres reintentar aunque pueda repetir esa llamada?"))return;
-    sending.current=true;if(!retry){setPending(value);setText("");}setBusy("sending");setError("");try{const restored=await restoration.current?.catch(()=>onChatRead());const current=chat.id?chat:restored??chat;setChat(presentProjectChat(await onSend(value,current,turnId,retry,current.status==="uncertain"),teacherName,creating));setPending("");setReview(false);}
+    setAdjusting(true);sending.current=true;if(!retry){setPending(value);setText("");}setBusy("sending");setError("");try{const restored=await restoration.current?.catch(()=>onChatRead());const current=chat.id?chat:restored??chat;setChat(presentProjectChat(await onSend(value,current,turnId,retry,current.status==="uncertain"),teacherName,creating));setPending("");setReview(false);}
     catch(cause){const recovered=await onChatRead().catch(()=>null);if(recovered)setChat(recovered);if(!recovered?.messages.some(m=>m.role==="teacher"&&m.text===value))setText(value);setPending("");setError(cause instanceof Error?cause.message:"No pudimos recuperar la respuesta. Tus mensajes enviados siguen guardados.");}finally{sending.current=false;setBusy(null);}}
   async function generate(){if(working||!chat?.id||chat.pendingTurn)return;setBusy("generating");setError("");try{setSaved(await onGenerate(chat));setReview(true);}
     catch(cause){setError(cause instanceof Error?cause.message:"No pudimos preparar la propuesta. La conversación sigue guardada.");}finally{setBusy(null);}}
@@ -70,12 +72,13 @@ export function AnnualProposalChangeDialog({row,index,names,hasConfirmedYear,onC
   async function close(){if(working)return;setBusy("closing");setError("");try{if(saved?.preview)await onDiscard(saved);onClose();}
     catch(cause){setError(cause instanceof Error?cause.message:"No pudimos cerrar la revisión. Vuelve a intentarlo.");setBusy(null);}}
   const preview=review?saved?.preview:null;
-  return <Dialog open onOpenChange={open=>{if(!open)void close();}}><DialogContent aria-busy={working} showCloseButton={false} className="max-h-[90dvh] overflow-y-auto rounded-2xl p-5 sm:max-w-5xl sm:p-6" onInteractOutside={event=>event.preventDefault()}>
+  return <Dialog open onOpenChange={open=>{if(!open)void close();}}><DialogContent aria-busy={working} showCloseButton={false} className={`max-h-[90dvh] overflow-y-auto rounded-2xl p-5 sm:p-6 ${onContinue?"sm:max-w-2xl":"sm:max-w-5xl"}`} onInteractOutside={event=>event.preventDefault()}>
     <Button aria-label="Cerrar" variant="ghost" size="icon" className="absolute right-2 top-2 min-h-11 min-w-11" disabled={working} onClick={()=>void close()}><X size={20}/></Button>
-    <DialogHeader className="pr-6 text-left"><DialogTitle className="text-2xl font-extrabold text-[#172b52]">{preview?"Revisa la propuesta":"Conversa con Ayni"}</DialogTitle><DialogDescription>{preview?"Revisa el resultado antes de aplicarlo al proyecto.":creating?"Creamos otro proyecto para este tramo con tus ideas.":"Personalizamos este proyecto con tus ideas."}</DialogDescription></DialogHeader>
+    <DialogHeader className="pr-6 text-left"><DialogTitle className="text-2xl font-extrabold text-[#172b52]">{preview?"Revisa la propuesta":onContinue?"Antes de preparar el proyecto":"Conversa con Ayni"}</DialogTitle><DialogDescription>{preview?"Revisa el resultado antes de aplicarlo al proyecto.":creating?"Creamos otro proyecto para este tramo con tus ideas.":onContinue?"Revisa de qué tratará y qué necesitarás. Puedes contarme un ajuste antes de continuar.":"Personalizamos este proyecto con tus ideas."}</DialogDescription></DialogHeader>
     {modeActions?.(working||!!text.trim())}
     <div className={library&&!preview?'grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_220px]':''}><div className="min-w-0 space-y-4">
     <div className="flex items-start gap-3 rounded-xl bg-[#edf7fa] p-3"><ProjectPictogram project={row} className="size-14 shrink-0"/><div className="min-w-0"><h2 className="font-bold">{creating?`Se reemplazará: ${annualDisplayTitle(row.title)}`:`Proyecto ${index} · ${annualDisplayTitle(row.title)}`}</h2><p className="mt-1 text-sm text-[#47658b]">{date(row.planned_start_date)} – {date(row.planned_end_date)} · {row.duration_weeks} semanas</p><p className="mt-2 text-sm leading-relaxed">{creating?"Cuéntame tu nueva idea. Ocupará este mismo tramo; conservaremos el anterior en Biblioteca.":row.purpose}</p></div></div>
+    {onContinue&&!preview&&<section className="rounded-xl border border-[#bce3ec] bg-[#edf7fa] p-4" aria-label="Materiales antes de preparar"><h3 className="font-bold">Necesitarás</h3><ul className="mt-2 list-disc pl-5 text-sm">{row.materials.map(material=><li key={material}>{material}</li>)}</ul><p className="mt-3 text-sm">Al continuar, confirmas que contarás con estos materiales.</p>{!adjusting&&!saved?.preview&&<Button className="mt-3" disabled={!restored||working||!!text.trim()||!!chat?.pendingTurn} onClick={onContinue}>Está bien, elegir días y preparar<ArrowRight size={17}/></Button>}</section>}
     {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
     {futureOnly&&<p className="rounded-xl bg-[#edf7fa] p-3 text-sm">Ajustamos juntos los días futuros sin registros. Conservamos el propósito, las competencias, las fechas y todo lo trabajado.</p>}
     {preview?<>
@@ -83,11 +86,11 @@ export function AnnualProposalChangeDialog({row,index,names,hasConfirmedYear,onC
       <p className="flex items-start gap-2 text-sm text-[#47658b]"><Check className="mt-0.5 size-4 shrink-0"/>Conservamos las fechas y los demás proyectos.{hasConfirmedYear?" La versión confirmada permanece guardada.":""}</p>
       <footer className="sticky bottom-0 z-10 flex flex-wrap justify-end gap-2 border-t bg-white py-3"><Button variant="ghost" disabled={working} onClick={()=>void close()}>Cancelar</Button><Button variant="outline" disabled={working} onClick={()=>{setReview(false);setError("");}}>Seguir conversando</Button><AsyncButton busy={busy==="applying"} busyLabel="Aplicando…" disabled={working} onClick={()=>void apply()}>{futureOnly?"Aceptar ajuste y preparar días futuros":creating?"Usar este proyecto":"Aplicar cambio"}<ArrowRight size={17}/></AsyncButton></footer>
     </>:<>
-      <div ref={messageLog} role="log" aria-label="Conversación del proyecto" aria-live="polite" className="max-h-[36dvh] space-y-4 overflow-y-auto py-1 sm:max-h-72">{chat?.messages.map((message,i)=><AyniChatMessage key={i} role={message.role} text={message.text}/>)}{pending&&<AyniChatMessage role="teacher" text={pending}/>} {busy==="sending"&&<AyniTyping/>}</div>
+      <div ref={messageLog} role="log" aria-label="Conversación del proyecto" aria-live="polite" className="max-h-[36dvh] space-y-4 overflow-y-auto py-1 sm:max-h-72">{(onContinue&&!chat?.messages.some(message=>message.role==="teacher")?[]:chat?.messages)?.map((message,i)=><AyniChatMessage key={i} role={message.role} text={message.text}/>)}{pending&&<AyniChatMessage role="teacher" text={pending}/>} {busy==="sending"&&<AyniTyping/>}</div>
       {chat?.ready&&!chat.pendingTurn&&!working&&<p role="status" className="rounded-xl bg-[#e5f7f1] p-3 text-sm font-semibold text-[#126350]">Ya tengo lo necesario. {creating?"Puedes crear el nuevo proyecto o contarme otra idea.":"Puedes ver la propuesta actualizada o contarme otra idea."}</p>}
       {!!chat?.pendingTurn&&<Button variant="outline" disabled={working} onClick={()=>void send(true)}>Reintentar respuesta pendiente</Button>}
       <div className="flex flex-wrap gap-2">{(chat?.messages.some(m=>m.role==="teacher")?(chat.chips??[]).map(label=>({label,text:label,icon:MessageCircle})):suggestions.slice(0,3)).map(({label,text:request,icon:Icon})=><Button key={label} variant="outline" size="sm" className="min-h-11" disabled={working||!!chat?.pendingTurn} onClick={()=>setText(request)}><Icon size={15}/>{label}</Button>)}</div>
-      <div className="sticky bottom-0 z-10 space-y-3 border-t bg-white pt-3"><label htmlFor="proposal-change-message" className="sr-only">Mensaje para Ayni</label><div className="flex items-end gap-2"><div className="relative min-w-0 flex-1"><Textarea id="proposal-change-message" value={text} maxLength={1600} disabled={working||!!chat?.pendingTurn} onChange={event=>setText(event.target.value)} placeholder="Escribe o dicta tu mensaje…" className="min-h-20 pr-14"/><div className="absolute right-1 top-1"><DictationRecorder iconOnly autoTranscribe classroomScope purpose="group_summary" rawTranscript context="Decisiones para personalizar este proyecto" currentText={text} onTranscribed={value=>setText(value.slice(0,1600))} onBusyChange={setAudioBusy} disabled={!!busy||!!chat?.pendingTurn}/></div></div><Button disabled={working||!chat||!text.trim()||!!chat.pendingTurn} onClick={()=>void send()}>Enviar</Button></div>
+      <div className="sticky bottom-0 z-10 space-y-3 border-t bg-white pt-3"><label htmlFor="proposal-change-message" className="sr-only">Mensaje para Ayni</label><div className="flex items-end gap-2"><div className="relative min-w-0 flex-1"><Textarea id="proposal-change-message" value={text} maxLength={1600} disabled={working||!!chat?.pendingTurn} onChange={event=>setText(event.target.value)} placeholder="Escribe o dicta tu mensaje…" className="min-h-20 pr-14"/><div className="absolute right-1 top-1"><DictationRecorder iconOnly autoTranscribe classroomScope purpose="group_summary" rawTranscript context="Decisiones para personalizar este proyecto" currentText={text} onTranscribed={value=>setText(value.slice(0,1600))} onBusyChange={setAudioBusy} disabled={!!busy||!!chat?.pendingTurn}/></div></div><Button disabled={working||!chat||!text.trim()||!!chat.pendingTurn} onClick={()=>{setAdjusting(true);void send();}}>Enviar</Button></div>
         <footer className="flex flex-wrap justify-end gap-2"><Button variant="ghost" disabled={working} onClick={()=>void close()}>Cancelar</Button><AsyncButton busy={busy==="generating"} busyLabel="Preparando propuesta…" disabled={working||!chat?.id||!!chat.pendingTurn||!!text.trim()||!chat.messages.some(m=>m.role==="teacher")||creating&&!chat.ready} onClick={()=>void generate()}>{creating?'Crear el nuevo proyecto':'Ver propuesta actualizada'}<ArrowRight size={17}/></AsyncButton></footer></div>
     </>}
     </div>{library&&!preview&&<aside className="min-w-0 rounded-xl bg-[#f3f8fc] p-3"><fieldset disabled={working}>{library}</fieldset></aside>}</div>

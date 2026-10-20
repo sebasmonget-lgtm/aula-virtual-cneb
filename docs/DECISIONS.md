@@ -1391,3 +1391,17 @@ Usar la misma cuenta Supabase con un proyecto QA separado, según confirmación 
 Restaurar la plantilla Word anterior aportada: portada, bandas, tablas e ilustraciones. Encabezado puede limitarse a primera página si fuera necesario. Materiales de talleres se descargan como PDF A4 con datos del aula y logo opcional. Fichas oficiales solo con pertinencia comprobada; no atribuir origen MINEDU a tarjetas Ayni ni imponer fichas al juego corporal. Propuestas multiedad compatibles deben poder elegirse desde el aula.
 
 Hoy muestra actividad principal todo el día y taller como sugerencia; consultar no implica ejecutar. Desarrollar otra fecha requiere confirmación y conserva planificación y ejecución por separado, sin editar/regenerar una actividad confirmada. Asistencia: presente+tarde sobre días lectivos transcurridos; sin registro es pendiente, porcentaje provisional y no juicio pedagógico. No crear registros de evaluación desde una consulta de asistencia.
+
+## 2026-10-19 — Materiales aceptados al preparar el proyecto
+
+Decisión explícita de la persona usuaria: revisar los materiales ya incluidos en la propuesta antes de preparar el proyecto; el botón que confirma días y preparación acepta su disponibilidad, sin casilla adicional. Sustituye la confirmación separada de recursos pendientes documentada antes. La propuesta anual contiene los materiales principales; el Plan Maestro detalla su uso por actividad, sin inventar disponibilidad de recursos nuevos.
+
+El servidor registra la aceptación de recursos pendientes con docente, fecha y origen project_preparation. Retomar un borrador propio sin recibo registra project_resume, sin pedir otra casilla ni cambiar el texto de la propuesta. Consultar no confirma materiales. Se conservan permisos, revisión del calendario, protección del pasado y confirmación de un reintento con posible llamada repetida. No se reescriben proyectos confirmados ni artefactos históricos.
+
+## 2026-10-19 — Revisión breve antes de preparar y jornada flexible
+
+Preparar proyecto abre una revisión breve en el chat existente, con propósito y materiales guardados, entrada opcional y continuación sin IA si no se piden ajustes. No omitir texto pendiente ni una propuesta sin aplicar. Confirmar días inicia la preparación; no pedir otra casilla de materiales. Calendario conserva el día elegido y su proyecto como información lateral. Navegar entre guías no modifica la secuencia ni marca ejecución; el cierre sigue siendo manual, con opción de pasar a elegir taller. Observación libre visible junto al momento; almacenamiento y selección de competencias existentes. Fichas Ayni con texto PDF nativo y dibujos separados, encabezado sin marca prominente y lenguaje cotidiano; nombres oficiales del CNEB conservados.
+
+## 2026-10-19 — Material para imprimir separado de la guía de Hoy
+
+Decisión explícita posterior a la revisión de biblioteca: «Material para imprimir · PDF» contiene únicamente cuentos, fichas, tarjetas y otros recursos para los niños. La preparación, materiales, momentos, criterio y orientación docente permanecen en Hoy y en el Word existente. No añadir páginas docentes al PDF infantil. Si el taller no tiene recurso imprimible para la edad del aula, ocultar ese enlace y rechazar la descarga directa sin generar un PDF vacío. La disponibilidad de fichas oficiales respeta su edad y se toma del mismo manifiesto que valida el servidor. Esta decisión sustituye la descarga conjunta descrita en QA_TALLERES_BIBLIOTECA_COMPLETA_2026-10-19.md.

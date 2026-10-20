@@ -2,7 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import JSZip from "jszip";
 import sharp from "sharp";
-import { compactWordDocumentEnd, fillWordXml, removeParagraphsContaining, renderUnifiedWord, wordTemplateFields } from "./unified-word-template.mjs";
+import { compactWordDocumentEnd, fillWordXml, removeParagraphsContaining, renderUnifiedWord, reserveWordHeaderSpace, wordTemplateFields } from "./unified-word-template.mjs";
+
+test('el cuerpo reserva espacio para el encabezado sin tocar texto ni reducir márgenes mayores',()=>{
+ const xml='<w:body><w:p><w:r><w:t>Conclusión conservada.</w:t></w:r></w:p><w:sectPr><w:pgMar w:top="539" w:right="850" w:bottom="1134" w:left="850"/></w:sectPr></w:body>';
+ const safe=reserveWordHeaderSpace(xml);
+ assert.ok(safe.includes('Conclusión conservada.'));assert.match(safe,/w:top="1440" w:right="850" w:bottom="1134" w:left="850"/);
+ assert.equal(reserveWordHeaderSpace(safe),safe);
+ assert.equal(reserveWordHeaderSpace(xml.replace('w:top="539"','w:top="1700"')),xml.replace('w:top="539"','w:top="1700"'));
+});
 
 test("el final Word elimina títulos vacíos sin quitar contenido, campos ni secciones", () => {
   const end='<w:sectPr><w:pgSz w:w="12240"/></w:sectPr></w:body></w:document>';

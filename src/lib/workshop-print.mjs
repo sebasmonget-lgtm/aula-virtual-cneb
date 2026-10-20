@@ -4,8 +4,10 @@ import sharp from "sharp";
 import {PDFDocument,StandardFonts,rgb,PageSizes} from "pdf-lib";
 import {workshopCatalog} from "./workshop-catalog.mjs";
 import {workshopForAge} from "./workshop-ages.mjs";
+import {loadNativeWorkshopSource} from "./workshop-print-source.mjs";
+import {hasWorkshopPrintMaterial,curatedWorkshopSheets} from "./workshop-print-material.mjs";
 
-const navy=rgb(.09,.18,.32),teal=rgb(.03,.46,.55);
+const navy=rgb(.09,.18,.32);
 const printable=value=>Array.from(String(value??"").replace(/[\u0000-\u001f]/g,' ')).map(char=>
   /[\u0020-\u007e\u00a0-\u00ff“”‘’…•€]/u.test(char)?char:/[‐‑‒–—]/u.test(char)?'-':' '
 ).join('');
@@ -21,6 +23,16 @@ function lines(text,font,size,maxWidth){
 }
 function text(page,value,x,y,{font,size=11,width=490,color=navy,lineHeight=size*1.45}={}){
   for(const line of lines(value,font,size,width)){page.drawText(line.trim(),{x,y,size,font,color});y-=lineHeight;}return y;
+}
+
+export function workshopPrintHeaderLayout(context,{width,height,font,bold,hasLogo=false}){
+  const x=hasLogo?80:40,bodyWidth=width-x-108;
+  const institution=lines(context.institution_name,bold,11,bodyWidth);
+  const section=lines(`${context.section} · ${context.age} años`,font,10,bodyWidth);
+  const name=lines(context.student_name?`Nombre: ${context.student_name}`:"Nombre: ________________________________________",font,10,width-72);
+  const institutionY=height-45,sectionY=institutionY-Math.max(1,institution.length)*16;
+  const boxBottom=sectionY-Math.max(1,section.length)*14+3,nameY=boxBottom-19;
+  return {x,bodyWidth,institutionY,sectionY,boxBottom,nameY,contentTop:nameY-Math.max(1,name.length)*14-12};
 }
 
 export async function loadWorkshopPrintContext(db,{teacherId,studentId=null}){
@@ -50,67 +62,64 @@ export async function renderWorkshopPrint({context,workshopId=null,resourceId=nu
   const logoImage=logo?await pdf.embedPng(await sharp(logo).png().toBuffer()):null;
   const header=page=>{
     const {width:w,height:h}=page.getSize();
-    page.drawRectangle({x:28,y:h-72,width:w-56,height:44,color:rgb(.92,.97,.98)});
-    text(page,context.institution_name,logoImage?80:40,h-45,{font:bold,size:11,width:w-150});
-    text(page,`${context.section} · ${context.age} años`,logoImage?80:40,h-61,{font,size:10,width:w-150});
+    const layout=workshopPrintHeaderLayout(context,{width:w,height:h,font,bold,hasLogo:Boolean(logoImage)});
+    page.drawRectangle({x:28,y:layout.boxBottom,width:w-56,height:h-28-layout.boxBottom,color:rgb(.92,.97,.98)});
+    text(page,context.institution_name,layout.x,layout.institutionY,{font:bold,size:11,width:layout.bodyWidth,lineHeight:16});
+    text(page,`${context.section} · ${context.age} años`,layout.x,layout.sectionY,{font,size:10,width:layout.bodyWidth,lineHeight:14});
     if(logoImage)page.drawImage(logoImage,{x:37,y:h-64,width:34,height:34});
-    page.drawText("Ayni",{x:w-75,y:h-51,font:bold,size:12,color:teal});
-    text(page,context.student_name?`Nombre: ${context.student_name}`:"Nombre: ________________________________________",36,h-91,{font,size:10,width:w-72});
+    text(page,context.student_name?`Nombre: ${context.student_name}`:"Nombre: ________________________________________",36,layout.nameY,{font,size:10,width:w-72,lineHeight:14});
     page.drawLine({start:{x:36,y:30},end:{x:w-36,y:30},color:rgb(.7,.86,.85),thickness:1});
     text(page,`Ayni Aula · Material para acompañar el juego · ${pdf.getPageCount()}`,36,17,{font,size:8,width:w-72});
+    return layout.contentTop;
   };
   const appendSource=async bytes=>{
     if(bytes.subarray(0,4).toString()==='%PDF'){
       const source=await PDFDocument.load(bytes);
       for(const index of source.getPageIndices()){
-        const embedded=await pdf.embedPage(source.getPage(index)),page=pdf.addPage(embedded.width>embedded.height?[PageSizes.A4[1],PageSizes.A4[0]]:PageSizes.A4);header(page);
-        const {width,height}=page.getSize(),scale=Math.min((width-72)/embedded.width,(height-150)/embedded.height);
-        page.drawPage(embedded,{x:(width-embedded.width*scale)/2,y:38,width:embedded.width*scale,height:embedded.height*scale});
+        const embedded=await pdf.embedPage(source.getPage(index)),page=pdf.addPage(embedded.width>embedded.height?[PageSizes.A4[1],PageSizes.A4[0]]:PageSizes.A4);
+        const contentTop=header(page),{width}=page.getSize(),scale=Math.min((width-72)/embedded.width,(contentTop-38)/embedded.height);
+        page.drawPage(embedded,{x:(width-embedded.width*scale)/2,y:contentTop-embedded.height*scale,width:embedded.width*scale,height:embedded.height*scale});
       }
     }else{
-      const image=await pdf.embedPng(await sharp(bytes).png().toBuffer()),page=pdf.addPage(PageSizes.A4);header(page);
-      const scale=Math.min(523/image.width,690/image.height);page.drawImage(image,{x:(595.28-image.width*scale)/2,y:38,width:image.width*scale,height:image.height*scale});
+      const image=await pdf.embedPng(await sharp(bytes).png().toBuffer()),page=pdf.addPage(PageSizes.A4),contentTop=header(page);
+      const scale=Math.min(523/image.width,(contentTop-38)/image.height);page.drawImage(image,{x:(595.28-image.width*scale)/2,y:contentTop-image.height*scale,width:image.width*scale,height:image.height*scale});
     }
   };
-  if(legacyResource){await appendSource(await readFile(legacyResource.download.path));return Buffer.from(await pdf.save());}
+  const appendOriginal=async item=>{
+    const source=await loadNativeWorkshopSource(item.url.split('/').at(-1).replace(/\.png$/,''));
+    const image=await pdf.embedPng(source.image),page=pdf.addPage(PageSizes.A4),contentTop=header(page);
+    const scale=Math.min((page.getWidth()-72)/source.width,(contentTop-38)/source.height),x=(page.getWidth()-source.width*scale)/2,y=contentTop-source.height*scale;
+    page.drawImage(image,{x,y,width:source.width*scale,height:source.height*scale});
+    for(const row of source.rows)page.drawText(printable(row.text),{x:x+row.x*scale,y:contentTop-row.y*scale,size:row.size*scale,font:row.bold?bold:font,color:row.white?rgb(1,1,1):navy});
+  };
+  if(legacyResource){
+    // Keep the old authenticated download URL usable, with the same native,
+    // revised resource that new workshop selections receive.
+    if(legacyResource.id==='taller-05-psicomotricidad-rutas-que-inventamos-material')await appendOriginal({url:'/workshops/tarjetas-recorrido-motor.png'});
+    else await appendSource(await readFile(legacyResource.download.path));
+    return Buffer.from(await pdf.save());
+  }
   if(resource){
     if(!/^\/workshops\/[a-z0-9-]+\.png$/.test(resource.url))throw new TypeError("Abre este recurso desde su taller.");
-    await appendSource(await readFile(path.join(process.cwd(),'public',resource.url)));return Buffer.from(await pdf.save());
+    await appendOriginal(resource);return Buffer.from(await pdf.save());
   }
   if(!workshop)throw new TypeError("Selecciona un taller.");
+  // The teacher guide remains in Hoy and Word. This action prints only
+  // child-facing sheets, stories, cards and other resources for the experience.
+  if(!hasWorkshopPrintMaterial({resources:workshop.resources,workshopId:workshop.id,age:context.age}))
+    throw new TypeError("Este taller no necesita material para imprimir. Consulta la guía en Hoy.");
   const standalone=workshop.resources.filter(item=>/^\/workshops\/[a-z0-9-]+\.png$/.test(item.url));
-  for(const item of standalone)await appendSource(await readFile(path.join(process.cwd(),'public',item.url)));
+  for(const item of standalone)await appendOriginal(item);
   for(const item of workshop.resources.filter(item=>item.url.startsWith('/api/library/resources/'))){
     const {loadLibraryResources}=await import('../../scripts/library-resources.mjs');
     const original=(await loadLibraryResources()).find(row=>item.url===`/api/library/resources/${row.id}/download`&&row.age===context.age);
     if(!original)throw new TypeError("El material original del taller no está disponible.");
     await appendSource(await readFile(original.download.path));
   }
-  const curated=JSON.parse(await readFile(path.join(process.cwd(),'assets/workshop-resources/minedu/manifest.json'),'utf8'));
-  for(const sheet of curated.filter(item=>item.workshop_id===workshop.id&&item.age===context.age)){
+  for(const sheet of curatedWorkshopSheets(workshop.id,context.age)){
     const bytes=await readFile(path.join(process.cwd(),'assets/workshop-resources/minedu',sheet.filename));
     const {createHash}=await import('node:crypto');if(createHash('sha256').update(bytes).digest('hex')!==sheet.sha256)throw new Error("La ficha no coincide con el original verificado.");
     await appendSource(bytes);
-  }
-  // No unrelated worksheet is attached to fill a gap. A workshop without a
-  // matching child sheet receives practical, reusable teacher support cards.
-  if(!pdf.getPageCount()){
-    let page=pdf.addPage(PageSizes.A4);header(page);
-    let y=text(page,workshop.title,36,724,{font:bold,size:19,width:520});
-    y=text(page,"Tarjetas de acompañamiento · Para la docente",36,y-4,{font,size:10,color:teal,width:520})-18;
-    const imageId=({PSICO_MOTRICIDAD:'movement',COM_ARTE:'artistic_expression',COM_ORAL:'storytelling',COM_LECTURA:'book',COM_ESCRITURA:'writing',MAT_CANTIDAD:'numbers',MAT_FORMA:'shapes',CYT_INDAGA:'seed',PS_IDENTIDAD:'identity',PS_CONVIVE:'sharing'})[workshop.competency_id]??'book';
-    let picture=null;
-    try{picture=await pdf.embedPng(await sharp(await readFile(path.join(process.cwd(),'public/project-illustrations',imageId+'.webp'))).resize(240,240).png().toBuffer());}catch(error){if(error.code!=='ENOENT')throw error;}
-    for(const [index,key]of ['opening','development','closure'].entries()){
-      const body=workshop[key].children,cardHeight=Math.max(136,lines(body,font,12,365).length*18+54);
-      if(y-cardHeight<65){page=pdf.addPage(PageSizes.A4);header(page);y=724;}
-      page.drawRectangle({x:36,y:y-cardHeight,width:523,height:cardHeight,color:[rgb(.93,.97,.99),rgb(.93,.98,.95),rgb(.97,.94,.99)][index],borderWidth:.6,borderColor:rgb(.78,.87,.9)});
-      text(page,["Para comenzar","Durante el juego","Para compartir"][index],51,y-24,{font:bold,size:13,width:360});
-      text(page,body,51,y-49,{font,size:12,width:365});
-      if(picture)page.drawImage(picture,{x:439,y:y-cardHeight+30,width:90,height:90});
-      y-=cardHeight+14;
-    }
-    text(page,"Puedes recortar las tarjetas para tenerlas a mano. Acompaña el juego sin exigir una respuesta idéntica a todos.",36,y-3,{font,size:9,width:520});
   }
   return Buffer.from(await pdf.save());
 }

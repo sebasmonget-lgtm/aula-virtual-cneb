@@ -137,6 +137,11 @@ export function compactWordDocumentEnd(xml) {
   return body + xml.slice(sectionAt);
 }
 
+/** The retained coloured header occupies about 63 pt; reserve a real gap below it. */
+export function reserveWordHeaderSpace(xml) {
+  return xml.replace(/<w:pgMar\b[^>]*\/>/g,margin=>margin.replace(/w:top="(\d+)"/,(_value,top)=>`w:top="${Math.max(1440,Number(top))}"`));
+}
+
 /** A small, source-backed guide uses the unused space on a document cover. */
 export function insertCoverQuickView(xml, title, rows) {
   const breakParagraph = (xml.match(paragraphPattern) ?? []).find((part) => /<w:br\b[^>]*w:type="page"/.test(part));
@@ -259,7 +264,7 @@ export async function renderUnifiedWord({ templateUrl, values, logo = null, appe
   const archive = await JSZip.loadAsync(await readFile(templateUrl));
   let xml = await archive.file("word/document.xml")?.async("string");
   if (!xml) throw new Error("La plantilla no tiene contenido Word.");
-  xml = transform(xml);
+  xml = reserveWordHeaderSpace(transform(xml));
   xml = await insertLogo(archive, xml, logo);
   xml = await insertInlineImages(archive, xml, inlineImages);
   xml = fillWordXml(xml, { ...values, LOGO_COLEGIO: "" });

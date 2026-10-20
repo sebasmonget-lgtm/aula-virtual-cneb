@@ -41,9 +41,9 @@ export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, k
     throw new Error("Prepara primero el Word del proyecto confirmado.");
   const sourceHash = hash(JSON.stringify(document));
   if(expectedSourceHash && sourceHash!==expectedSourceHash)throw new VersionConflictError("El documento cambió durante la descarga. Prepara una descarga nueva; los archivos anteriores se conservan.");
-  const templateVersion = kind === "annual_plan" ? document.content?.journey_version === 2 ? "annual-journey-readable-v4" : document.content?.experience_context ? "annual-experience-v1" : document.document_context?.template_version ?? "annual-legacy-v1"
-    : kind === "experience" ? `${document.content?.document_template_version ?? "experience-legacy-v1"}-layout6`
-    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout9" : ""}-snapshot-${sourceHash.slice(0,16)}`;
+  const templateVersion = kind === "annual_plan" ? document.content?.journey_version === 2 ? "annual-journey-readable-v5" : document.document_context?.template_version === "annual-unified-v1" ? "annual-unified-v1-layout2" : document.content?.plan_format === "twelve_projects_flexible_weeks" ? "annual-flexible-layout2" : document.content?.experience_context ? "annual-experience-v1" : document.document_context?.template_version ?? "annual-legacy-v1"
+    : kind === "experience" ? `${document.content?.document_template_version ?? "experience-legacy-v1"}-layout7`
+    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout11" : kind === "diagnostic_summary" ? "-layout3" : ["family_report","period_closure"].includes(kind) ? "-layout2" : ""}-snapshot-${sourceHash.slice(0,16)}`;
   const row = await versionTransaction(db,`artifact:${kind}:${sourceId}`,async tx => {
     const current = (await tx.query(`select * from document_artifacts where source_kind=$1 and source_id=$2
       and source_version=$3 and artifact_version=1 and template_version=$4`,

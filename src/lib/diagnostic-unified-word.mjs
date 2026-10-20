@@ -1,5 +1,6 @@
 import path from "node:path";
 import { insertCoverQuickView, renderUnifiedWord, removeParagraphsContaining, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
+import { retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
 
 const templateUrl = path.join(process.cwd(), "assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx");
 const competencyFields = [
@@ -17,8 +18,8 @@ const dateLabel = (value) => /^\d{4}-\d{2}-\d{2}/.test(String(value ?? ""))
 const countLabel = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
 
-function paragraph(value, bold = false, bullet = false) {
-  return `<w:p><w:pPr><w:spacing w:before="${bold ? 145 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${bold ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${value}`)}</w:t></w:r></w:p>`;
+function paragraph(value, bold = false, bullet = false, keepNext = bold) {
+  return `<w:p><w:pPr><w:spacing w:before="${bold ? 145 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${keepNext ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${value}`)}</w:t></w:r></w:p>`;
 }
 
 function replaceSectionBody(xml, startText, endText, body) {
@@ -241,13 +242,13 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
       const decision = notes.length ? "Observar esta competencia en otras situaciones antes de ajustar las actividades." : "Mantenerla en observación antes de tomar una decisión específica.";
       return paragraph(name, true) + paragraph("Evidencias observadas", true) + evidence +
         (rest > 0 ? paragraph(`${rest} registros más disponibles en Ayni.`, false, true) : "") +
-        paragraph(`Lectura inicial: ${reading}`) + paragraph(`Decisión inicial: ${decision}`, true);
+        paragraph(`Lectura inicial: ${reading}`, false, false, true) + paragraph(`Decisión inicial: ${decision}`, true, false, false);
     }).join("");
   output = replaceSectionBody(output, "VI. ANÁLISIS POR COMPETENCIAS", "VII. PRIORIDADES Y DECISIONES PEDAGÓGICAS",
     paragraph("VI. ANÁLISIS POR COMPETENCIAS", true) + paragraph("Cada bloque muestra hechos registrados y una decisión inicial; no asigna un nivel de logro.") + competencies);
   const individual = followups.map((child) => [
     paragraph(child.name, true),
-    paragraph(`Registros y contexto: ${child.situation}`, false, true),
+    paragraph(`Registros y contexto: ${child.situation}`, false, true, true),
     paragraph(`Apoyo o siguiente paso: ${child.support}`, false, true),
   ].join("")).join("");
   output = replaceFromParagraphToTable(output, "Seguimientos individuales o apoyos específicos", "VIII. USO DE LA INFORMACIÓN",
@@ -255,6 +256,25 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
   output = replaceWordText(output, "Periodo de recojo", "Período previsto de recojo");
   output = replaceWordText(output, "Periodo diagnóstico", "Período previsto del diagnóstico");
   if (Number(context.school_year) !== 2026) output = removeParagraphsContaining(output, ["Orientaciones para el inicio del año escolar 2026"]);
+  // Preserve the original heading runs/icons, but use a native paragraph so
+  // Word can attach the heading to the next section across a page boundary.
+  output=output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,table=>{
+    const title=xmlText(table).trim();
+    const rows=[...table.matchAll(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g)];
+    if(rows.length>1&&/^[IVX]+\.\s/.test(xmlText(rows[0][0]).trim())){
+      let header=rows[0][0].replace(/<w:pPr>/g,'<w:pPr><w:keepNext/>');
+      header=header.includes('<w:trPr>')?header.replace('<w:trPr>','<w:trPr><w:tblHeader/><w:cantSplit/>'):header.replace(/(<w:tr(?:\s[^>]*)?>)/,'$1<w:trPr><w:tblHeader/><w:cantSplit/></w:trPr>');
+      return table.replace(rows[0][0],header);
+    }
+    if((table.match(/<w:tr(?:\s|>)/g)??[]).length!==1||title.length>180||! /^[IVX]+\.\s/.test(title))return table;
+    const runs=[...table.matchAll(/<w:r(?:\s[^>]*)?>[\s\S]*?<\/w:r>/g)].map(match=>match[0]).join('');
+    return `<w:p><w:pPr><w:keepNext/><w:spacing w:before="180" w:after="90"/></w:pPr>${runs}</w:p>`;
+  });
+  output=output.replace(/(<w:p><w:pPr><w:keepNext\/><w:spacing w:before="180" w:after="90"\/>[\s\S]*?<\/w:p>)((?:\s*<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>)+)/g,(whole,heading,tail)=>{
+    let remaining=tail;
+    while(true){const first=/^\s*(<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>)/.exec(remaining);if(!first||xmlText(first[1]).trim()||/<w:(?:drawing|pict|fldChar|sectPr)\b/.test(first[1]))break;remaining=remaining.slice(first[0].length);}
+    return heading+remaining;
+  });
   return output;
 }
 
@@ -266,6 +286,6 @@ export async function renderDiagnosticUnifiedWord(document, context, cards = [],
     ["Qué sabemos", clean(group.strengths).split(/(?<=[.!?])\s+/u)[0]],
     ["Qué falta observar", clean(group.needs).split(/(?<=[.!?])\s+/u)[0]],
   ].filter(([, value]) => value);
-  return renderUnifiedWord({ templateUrl, values, logo,
-    transform: (xml) => insertCoverQuickView(transformDiagnostic(xml, { ...context, competencyCards: cards }, snapshot, followups, values), "El diagnóstico en una mirada", overview) });
+  return renderUnifiedWord({ templateUrl, values, logo, compactTrailingSpace: true,
+    transform: (xml) => retainCoverPageBreak(insertCoverQuickView(transformDiagnostic(xml, { ...context, competencyCards: cards }, snapshot, followups, values), "El diagnóstico en una mirada", overview)) });
 }

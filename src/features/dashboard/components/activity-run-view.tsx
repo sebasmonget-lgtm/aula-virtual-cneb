@@ -14,12 +14,12 @@ import {ProjectPictogram} from './project-pictogram';
 
 type ActivityBlock = LocalDashboard["today"]["blocks"][number];
 
-export function ActivityRunView({ block, onBack, onEvidence, onFreeObservation, onComplete,onStepChange,preview=false,onStart,starting=false,actions }: {
+export function ActivityRunView({ block, onBack, onEvidence, onFreeObservation, onComplete,onStepChange,preview=false,onStart,starting=false,actions,navigation }: {
   block: ActivityBlock; evidenceRevision: number; onBack: () => void;
   onEvidence: (studentId?: string, criterionId?: string, momentId?: string) => void;
-  onFreeObservation?:()=>void;preview?:boolean;onStart?:()=>void;starting?:boolean;actions?:React.ReactNode;
+  onFreeObservation?:()=>void;preview?:boolean;onStart?:()=>void;starting?:boolean;actions?:React.ReactNode;navigation?:React.ReactNode;
   onStepChange: (stepIndex: number) => Promise<void>;
-  onComplete: (note?: string) => Promise<void>;
+  onComplete: (note?: string,chooseWorkshop?:boolean) => Promise<void>;
 }) {
   const [moment,setMoment]=useState(preview?0:block.current_step_index??0);
   const parts=block.pedagogical_blocks??[],current=parts[moment];
@@ -27,9 +27,9 @@ export function ActivityRunView({ block, onBack, onEvidence, onFreeObservation, 
   const [note, setNote] = useState(""), [error, setError] = useState("");
   const allowLeave=useUnsavedWork(Boolean(note.trim()),busy);
   async function advance(){if(busy||moment>=parts.length-1)return;setBusy(true);setError('');try{if(!preview&&moment+1>(block.current_step_index??0))await onStepChange(moment+1);setMoment(value=>value+1);}catch{setError('No pudimos guardar el avance. Inténtalo otra vez.');}finally{setBusy(false);}}
-  async function finish() {
+  async function finish(chooseWorkshop=false) {
     if (busy||preview||moment!==parts.length-1) return; setBusy(true); setError("");
-    try { await onComplete(note.trim() || undefined); }
+    try { await onComplete(note.trim() || undefined,chooseWorkshop); }
     catch { setError("No se pudo cerrar la actividad. Vuelve a intentarlo."); }
     finally { setBusy(false); }
   }
@@ -45,15 +45,16 @@ export function ActivityRunView({ block, onBack, onEvidence, onFreeObservation, 
       <div className="mt-3 flex flex-wrap gap-2">{actions}</div></div>
       <div className="hidden shrink-0 sm:block"><ProjectPictogram project={{title:block.experience_title??block.title,purpose:block.purpose??'',primary_competency_ids:block.criteria.map(item=>item.competency_v4_id??'')}} className="size-32"/></div>
     </header>
+    {navigation}
     <div className="grid gap-4 md:grid-cols-2">
       {block.activity_details?.teacher_preparation&&<section className="rounded-2xl border border-[#cce4f1] bg-[#edf7fa] p-5 shadow-[var(--ayni-panel-shadow)]"><h2 className="font-bold text-[#172b52]">Antes de empezar</h2><p className="mt-3 whitespace-pre-line leading-relaxed text-[#294d6d]">{block.activity_details.teacher_preparation}</p></section>}
-      <section className="rounded-2xl border border-[#f5dfb1] bg-[#fff8e7] p-5 shadow-[var(--ayni-panel-shadow)]"><h2 className="flex items-center gap-2 font-bold text-[#172b52]"><Package size={22}/>{block.materials_source==='project'?'Materiales del proyecto':'Materiales'}</h2>{!!block.materials.length&&<ul className="mt-3 flex flex-wrap gap-2">{block.materials.map((item,index)=><li key={index} className="rounded-lg bg-white px-3 py-2 text-sm text-[#614515]">{item}</li>)}</ul>}<div className="mt-4 flex flex-wrap items-center gap-3"><WorkshopResources resources={block.activity_details?.resources} workshopId={block.activity_details?.workshop_catalog?.id}/>{onFreeObservation&&<Button variant="outline" onClick={onFreeObservation}><PencilLine size={18}/>Observación libre</Button>}</div></section>
+      <section className="rounded-2xl border border-[#f5dfb1] bg-[#fff8e7] p-5 shadow-[var(--ayni-panel-shadow)]"><h2 className="flex items-center gap-2 font-bold text-[#172b52]"><Package size={22}/>{block.materials_source==='project'?'Materiales del proyecto':'Materiales'}</h2>{!!block.materials.length&&<ul className="mt-3 flex flex-wrap gap-2">{block.materials.map((item,index)=><li key={index} className="rounded-lg bg-white px-3 py-2 text-sm text-[#614515]">{item}</li>)}</ul>}<div className="mt-4 flex flex-wrap items-center gap-3"><WorkshopResources resources={block.activity_details?.resources} workshopId={block.activity_details?.workshop_catalog?.id} age={block.activity_details?.workshop_catalog?.age}/></div></section>
     </div>
-    {current?<><p className="text-sm font-semibold text-[#526b87]">Momento {moment+1} de {parts.length}</p><PedagogicalBlock key={current.id} block={current} onObserve={(criterionId,momentId)=>onEvidence(undefined,criterionId,momentId)}/><nav className="flex flex-wrap justify-between gap-3" aria-label="Momentos de la actividad"><Button variant="outline" disabled={moment===0||busy} onClick={()=>setMoment(value=>value-1)}><ArrowLeft size={18}/>Momento anterior</Button><Button disabled={moment===parts.length-1||busy} onClick={()=>void advance()}>Siguiente momento<ArrowRight size={18}/></Button></nav></>:<WorkflowFeedback tone="info">Esta actividad aún no tiene una guía registrada. Puedes consultar su documento.</WorkflowFeedback>}
+    {current?<><p className="text-sm font-semibold text-[#526b87]">Momento {moment+1} de {parts.length}</p><PedagogicalBlock key={current.id} block={current} headingActions={onFreeObservation?<Button className="min-h-11" onClick={onFreeObservation}><PencilLine size={18}/>Observación libre</Button>:undefined} onObserve={(criterionId,momentId)=>onEvidence(undefined,criterionId,momentId)}/><nav className="flex flex-wrap justify-between gap-3" aria-label="Momentos de la actividad"><Button variant="outline" disabled={moment===0||busy} onClick={()=>setMoment(value=>value-1)}><ArrowLeft size={18}/>Momento anterior</Button><Button disabled={moment===parts.length-1||busy} onClick={()=>void advance()}>Siguiente momento<ArrowRight size={18}/></Button></nav></>:<WorkflowFeedback tone="info">Esta actividad aún no tiene una guía registrada. Puedes consultar su documento.</WorkflowFeedback>}
     {error && <WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
     {!preview&&(closing ? <section className="space-y-3 rounded-2xl border bg-white p-5">
       <label className="block font-semibold">¿Quieres recordar algo? (opcional)<Textarea className="mt-2" maxLength={800} value={note} onChange={event => setNote(event.target.value)} placeholder="Por ejemplo: mañana retomaremos la comparación de las semillas." /></label>
-      <div className="flex flex-wrap gap-3"><AsyncButton busy={busy} busyLabel="Terminando…" onClick={() => void finish()}>Terminar actividad</AsyncButton><Button variant="outline" disabled={busy} onClick={() => { if(allowLeave()){setClosing(false);setNote("");} }}>Seguir con la actividad</Button></div>
+      <div className="flex flex-wrap gap-3"><AsyncButton busy={busy} busyLabel="Terminando…" onClick={() => void finish(!block.activity_details?.workshop_type)}>{block.activity_details?.workshop_type?"Terminar taller":"Terminar y elegir taller"}</AsyncButton>{!block.activity_details?.workshop_type&&<Button variant="outline" disabled={busy} onClick={()=>void finish()}>Solo terminar</Button>}<Button variant="outline" disabled={busy} onClick={() => { if(allowLeave()){setClosing(false);setNote("");} }}>Seguir con la actividad</Button></div>
     </section> : <div><Button className="min-h-12" disabled={!parts.length||moment!==parts.length-1||busy} onClick={() => setClosing(true)}><CheckCircle2 /> Terminar actividad</Button>{moment<parts.length-1&&<p className="mt-2 text-sm text-[#526b87]">Podrás terminar después de llegar al último momento.</p>}</div>)}
   </section>;
 }

@@ -103,8 +103,8 @@ test("la vista y el Word usan las doce propuestas y la etapa inicial sin placeho
   assert.match(xml, /Producto posible del proyecto/);
   assert.doesNotMatch(xml, /criterios de cada actividad|Producto o evidencia final/);
   assert.equal((xml.match(/PLANIFICACIÓN ANUAL/g) ?? []).length, 1);
-  assert.equal((xml.match(/<w:br w:type="page"\/>/g) ?? []).length, 12,
-    "las secciones llenas y el primer proyecto no deben añadir hojas vacías");
+  assert.equal((xml.match(/<w:br w:type="page"\/>/g) ?? []).length, 1,
+    "solo la portada impone salto; los proyectos históricos fluyen sin hojas de dos líneas");
   assert.doesNotMatch(await archive.file("word/header1.xml").async("string"), /PLANIFICACIÓN ANUAL/);
   assert.deepEqual(await sharp(await archive.file("word/media/image1.png").async("nodebuffer")).metadata().then(({ width, height }) => [width, height]), [320, 480]);
   assert.match(await archive.file("word/_rels/document.xml.rels").async("string"), /Id="rId8"[^>]*media\/image1.png/);

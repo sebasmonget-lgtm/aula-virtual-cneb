@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import JSZip from "jszip";
+import { retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
 import sharp from "sharp";
 import { buildFlexibleAnnualSchedule } from "./annual-plan-calendar.mjs";
 import { ANNUAL_PLAN_TEMPLATE_FORMAT } from "./annual-plan-contract.mjs";
@@ -217,7 +218,7 @@ export async function renderAnnualPlanFlexibleWord(document, competencyCards = [
     }
   }
   if (/\{\{[^{}]+\}\}/.test(xml)) throw new Error("La plantilla anual conserva campos sin completar.");
-  archive.file("word/document.xml", xml);
+  archive.file("word/document.xml", retainCoverPageBreak(xml));
   for (const part of Object.keys(archive.files).filter((name) => /^word\/(header|footer)\d+\.xml$/.test(name))) {
     let partXml = await archive.file(part).async("string");
     partXml = partXml.replace(/\{\{([^{}]+)\}\}/g, (_, key) => xmlEscape(values[key] ?? ""));

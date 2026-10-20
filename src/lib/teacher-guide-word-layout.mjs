@@ -50,3 +50,18 @@ export function retainCoverPageBreak(xml) {
     return paragraph.replace(/<w:br\b[^>]*w:type="page"\s*\/>/g, "");
   });
 }
+
+/** Short attached forms move as a unit instead of leaving a few rows alone. */
+export function keepShortTableTogether(table) {
+  const paragraphs = [...table.matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)];
+  const text = [...table.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(match=>match[1]).join("");
+  if ((table.match(/<w:tr(?:\s|>)/g)??[]).length > 6 || text.length > 1600) return table;
+  let index=0;
+  return table.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g,paragraph=>{
+    const keep = ++index < paragraphs.length;
+    const clean=paragraph.replace(/<w:keepNext(?:\s[^>]*)?\s*\/>/g,"");
+    if(!keep)return clean;
+    return clean.includes("<w:pPr>") ? clean.replace("<w:pPr>","<w:pPr><w:keepNext/>")
+      : clean.replace(/(<w:p(?:\s[^>]*)?>)/,"$1<w:pPr><w:keepNext/></w:pPr>");
+  });
+}

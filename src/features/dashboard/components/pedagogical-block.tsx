@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import type {ReactNode} from "react";
 import guide from "./activity-guide.module.css";
 import {readingSentences} from "@/src/lib/activity-reading-content.mjs";
 import {AnnualCompetencies} from "./annual-project-preview";
@@ -11,7 +12,7 @@ export type PedagogicalBlockData = { id: string; title: string; instruction: str
   expected_actions?: string; examples?: string[];
   observations?: { id: string; competency_id?: string; competency_name?: string | null; criterion: string; expected_evidence?: string | null }[] };
 
-export function PedagogicalBlock({ block, onObserve, compact = false, position }: { block: PedagogicalBlockData; onObserve?: (criterionId: string, momentId: string) => void; compact?: boolean; position?: number }) {
+export function PedagogicalBlock({ block, onObserve, compact = false, position, headingActions }: { block: PedagogicalBlockData; onObserve?: (criterionId: string, momentId: string) => void; compact?: boolean; position?: number;headingActions?:ReactNode }) {
   if (compact) return <article className="space-y-3 rounded-xl border border-[var(--ayni-panel-border)] bg-white p-4">
     <h3 className="text-lg font-bold text-[#172b52]">{position ? `${position}. ` : ""}{block.title}</h3>
     <section className="rounded-lg bg-[#e8f5fa] p-3 text-sm text-[#294d6d]"><h4 className="mb-1 flex items-center gap-2 font-bold text-[#07576c]"><Play aria-hidden="true" className="size-4"/>Qué hacer</h4><p className="whitespace-pre-line leading-relaxed">{block.instruction}</p>{block.expected_actions && <p className="mt-2 whitespace-pre-line">{block.expected_actions}</p>}</section>
@@ -25,7 +26,7 @@ export function PedagogicalBlock({ block, onObserve, compact = false, position }
     </section>)}
   </article>;
   return <article className={guide.moment}>
-    <h2>{position?`${position}. `:''}{block.title}</h2>
+    <div className="flex flex-wrap items-center justify-between gap-3"><h2>{position?`${position}. `:''}{block.title}</h2>{headingActions}</div>
     <div className={guide.columns}>
       <section className={guide.teacher}><h3><Lightbulb/>Qué hago ahora</h3><ol>{(readingSentences(block.instruction) as string[]).map((text,index)=><li key={index}><span>{index+1}</span><p>{text}</p></li>)}</ol></section>
       {block.expected_actions&&<section className={guide.children}><h3><Play/>Qué harán los niños</h3><div className={guide.childStage}><div>{(readingSentences(block.expected_actions) as string[]).map((text,index)=><p key={index}>{text}</p>)}</div><Image src="/project-illustrations/ideas.webp" alt="" width={88} height={88} unoptimized/></div></section>}

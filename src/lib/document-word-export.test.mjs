@@ -145,6 +145,18 @@ test("Word familiar identifica el período formal y conserva el contenido del in
   assert.doesNotMatch(xml,/Informe histórico sin período formal/);
 });
 
+test("informe y cierre conservan contenido confirmado, pendientes y fuente al mejorar la presentación",async()=>{
+  const family={...base('family_report',{introduction:'Un avance real.',sections:[{competency_id:'COM_ORAL',progress_summary:'Cuenta cómo construyó el puente.',examples:['Eligió una base ancha.'],support_or_conditions:['Con tiempo para explicar.'],next_steps:['Seguir conversando.'],family_suggestions:['Escuchar su explicación.'],insufficiency_note:'Falta observar en otro contexto.'}],closing_note:'Continuaremos acompañando.',family_agreements:'Conversar durante el paseo.'}),teacher_name:'Elena',age:5,period_label:'Bimestre 2'};
+  const closure={...base('period_closure',{period:{label:'Bimestre 2'},entries:[{student_name:'Ana Rojas',competency_id:'COM_ORAL',achievement_level:'B',conclusion_details:{conclusion_text:'Explica su propuesta.'},evidence:[{observed_on:'2026-06-10',observation_text:'Propuso ampliar la base.'}]}],pending_entries:[{student_name:'Luis Pérez',competency_id:'COM_ORAL',reason:'Información insuficiente'}]}),teacher_name:'Elena',age_years:5,period_start:'2026-05-18',period_end:'2026-07-24'};
+  for(const document of [family,closure]){
+    const original=structuredClone(document),xml=await xmlFor(document);
+    assert.deepEqual(document,original,'la exportación nunca reescribe la fuente');
+    assert.match(xml,/w:tbl/);assert.doesNotMatch(xml,/undefined|null|\{\{/);
+    if(document.kind==='family_report')for(const value of ['Cuenta cómo construyó el puente.','Eligió una base ancha.','Con tiempo para explicar.','Seguir conversando.','Escuchar su explicación.','Falta observar en otro contexto.','Conversar durante el paseo.'])assert.ok(xml.includes(value),value);
+    else {for(const value of ['Cierre de evaluación','Ana Rojas','Explica su propuesta.','2026-06-10','Propuso ampliar la base.','Luis Pérez','Información insuficiente','18/05/2026','24/07/2026'])assert.ok(xml.includes(value),value);assert.doesNotMatch(xml,/>C</);}
+  }
+});
+
 test("la descarga consulta de nuevo la propiedad docente y rechaza IDs ajenos", async () => {
   const db = new PGlite();
   try {

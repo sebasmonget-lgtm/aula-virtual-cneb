@@ -26,6 +26,11 @@ test("recursos inciertos requieren confirmación explícita para esa propuesta y
   const proposal={materials:["Macetas del patio, acceso por confirmar","Crayones"]},before=JSON.stringify(proposal);
   assert.throws(()=>resourceReadiness(proposal,false,"teacher"),/Confirma/);
   const receipt=resourceReadiness(proposal,true,"teacher");assertResourceReadiness(proposal,receipt);
+  const accepted=resourceReadiness(proposal,true,"teacher","project_preparation");
+  assertResourceReadiness(proposal,accepted);
+  assert.equal(accepted.confirmation_source,"project_preparation");
+  assert.equal(accepted.confirmed_by,"teacher");
+  assert.deepEqual(accepted.resources,["Macetas del patio, acceso por confirmar"]);
   assert.throws(()=>assertResourceReadiness({materials:["Huerto, acceso por confirmar"]},receipt),/Confirma/);
   assert.equal(resourceReadiness({materials:["Crayones"]},false,"teacher"),null);
   assert.equal(JSON.stringify(proposal),before);

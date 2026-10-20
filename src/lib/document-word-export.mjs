@@ -1,5 +1,5 @@
 import { renderAnnualJourneyWord } from "./annual-journey-word.mjs";
-import { AlignmentType, Document, Footer, HeadingLevel, ImageRun, PageNumber, Packer, Paragraph, TextRun } from "docx";
+import { AlignmentType, BorderStyle, Document, Footer, Header, HeadingLevel, ImageRun, PageNumber, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType } from "docx";
 import { buildAnnualPlanPresentation } from "./annual-plan-presentation.mjs";
 import { loadDiagnosticWordContext, loadSavedDocument } from "./document-library-service.mjs";
 import { renderAnnualPlanTemplateWord } from "./annual-plan-template-word.mjs";
@@ -22,7 +22,30 @@ const statusLabel = (status) => status === "active" || status === "confirmed" ? 
   status === "archived" ? "Versión anterior" : "Borrador por revisar";
 const typeLabel = (document) => ({ annual_plan: "Plan anual", diagnostic_summary: "Resumen diagnóstico del aula",
   experience: document.subtype === "project" ? "Proyecto" : "Unidad", activity: "Actividad",
-  family_report: "Informe a la familia" })[document.kind] ?? "Documento";
+  family_report: "Informe a la familia", period_closure: "Cierre de evaluación" })[document.kind] ?? "Documento";
+
+/** A compact identification block leaves room for the teacher's actual report. */
+function reportIdentification(document) {
+  const values = [
+    ["Institución educativa", document.institution_name ?? document.document_context?.institution_name],
+    ["Aula", document.classroom], ["Docente", document.teacher_name],
+    ["Edad", (document.age ?? document.age_years) ? `${document.age ?? document.age_years} años` : ""],
+    ["Año escolar", String(document.school_year ?? "")],
+    ["Período", [document.period_label ?? document.content?.period?.label ?? (document.kind === "family_report" ? "Informe histórico sin período formal" : ""),
+      [dateLabel(document.period_start),dateLabel(document.period_end)].filter(Boolean).join(" al ")].filter(Boolean).join(" · ")],
+  ].filter(([,value])=>clean(value));
+  const border = { style: BorderStyle.SINGLE, size: 4, color: "D1E2EA" };
+  return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, columnWidths: [4819,4819],
+    borders: {top:border,bottom:border,left:border,right:border,insideHorizontal:border,insideVertical:border},
+    rows: Array.from({length:Math.ceil(values.length/2)},(_,index)=>new TableRow({children:[0,1].map(offset=>{
+      const value=values[index*2+offset];
+      return new TableCell({width:{size:4819,type:WidthType.DXA},shading:{fill:index%2?"F0F8F2":"EDF6FB"},
+        margins:{top:100,bottom:100,left:160,right:160},children:[new Paragraph({spacing:{after:0,line:270},children:value?[
+          new TextRun({text:`${value[0]}: `,bold:true}),new TextRun(value[1]),
+        ]:[]})]});
+    })})),
+  });
+}
 
 /** The filename has no student name or teacher-controlled text. */
 export function wordFilenameFor(document) {
@@ -32,7 +55,7 @@ export function wordFilenameFor(document) {
 }
 
 function bodyParagraph(value) {
-  return new Paragraph({ text: value, style: "Normal", spacing: { after: 130, line: 300 }, widowControl: true });
+  return new Paragraph({ text: value, style: "Normal", spacing: { after: 100, line: 285 }, widowControl: true });
 }
 function heading(value, level = 1) {
   return new Paragraph({ text: value, heading: level === 1 ? HeadingLevel.HEADING_1 : HeadingLevel.HEADING_2,
@@ -152,23 +175,43 @@ function contentForActivity(document, names) {
 
 function contentForFamilyReport(document, names) {
   const value = document.content ?? {};
+  const field = (label, value) => {
+    const values = Array.isArray(value) ? lines(value) : clean(value).split(/\r?\n/).map(clean).filter(Boolean);
+    return values.map((text,index)=>new Paragraph({style:"Normal",spacing:{after:100,line:285},widowControl:true,
+      children:[...(index===0?[new TextRun({text:`${label}: `,bold:true,color:"086C7C"})]:[]),new TextRun(text)]}));
+  };
   const children = [
-    ...labelled("Período de evaluación", document.period_label || "Informe histórico sin período formal"),
-    ...labelled("Período", [dateLabel(document.period_start), dateLabel(document.period_end)].filter(Boolean).join(" al ")),
     ...section("En pocas palabras", value.introduction),
   ];
   for (const report of Array.isArray(value.sections) ? value.sections : []) {
     children.push(heading(names.get(clean(report?.competency_id)) ?? "Aprendizajes observados", 2),
       ...labelled("Valoración confirmada por la docente", document.achievement_levels?.find(row=>row.competency_v4_id===report.competency_id)?.achievement_level),
-      ...section("Lo que hemos visto", report?.progress_summary, 2),
-      ...section("Así lo vimos", report?.examples, 2),
-      ...section("Qué ayudó", report?.support_or_conditions, 2),
-      ...section("Qué haremos después", report?.next_steps, 2),
-      ...section("Ideas para casa", report?.family_suggestions, 2),
-      ...section("Seguimos observando", report?.insufficiency_note, 2));
+      ...field("Lo que hemos visto", report?.progress_summary),
+      ...field("Así lo vimos", report?.examples),
+      ...field("Qué ayudó", report?.support_or_conditions),
+      ...field("Qué haremos después", report?.next_steps),
+      ...field("Ideas para casa", report?.family_suggestions),
+      ...field("Seguimos observando", report?.insufficiency_note));
   }
   children.push(...section("Para seguir acompañando", value.closing_note));
   if (clean(value.family_agreements)) children.push(...section("Acuerdos con la familia", value.family_agreements));
+  return children;
+}
+
+function contentForPeriodClosure(document,names){
+  const entries=document.content.entries??[],pending=document.content.pending_entries??[];
+  const cell=children=>new TableCell({margins:{top:150,bottom:140,left:170,right:170},children});
+  const border={style:BorderStyle.SINGLE,size:4,color:'D1E2EA'};
+  const table=rows=>new Table({width:{size:100,type:WidthType.PERCENTAGE},borders:{top:border,bottom:border,left:border,right:border,insideHorizontal:border},rows});
+  const children=[bodyParagraph('Exportación del cierre confirmado. Conserva las valoraciones y conclusiones guardadas; no es una plantilla oficial adicional.')];
+  if(entries.length)children.push(table(entries.map(entry=>new TableRow({cantSplit:true,children:[cell([
+    new Paragraph({spacing:{after:90},children:[new TextRun({text:entry.student_name,bold:true,color:'086C7C',size:25})]}),
+    ...labelled('Competencia',names.get(entry.competency_id)??entry.competency_id),
+    ...labelled('Nivel confirmado',entry.achievement_level),
+    ...labelled('Conclusión confirmada',entry.conclusion_details?.conclusion_text??entry.conclusion_details?.conclusion??entry.conclusion_details?.text),
+    ...(entry.evidence?.length?[new Paragraph({spacing:{after:60},children:[new TextRun({text:'Evidencia del cierre',bold:true})]}),...entry.evidence.map(e=>bullet(`${e.observed_on}: ${e.observation_text??''}`))]:[]),
+  ])]}))));
+  if(pending.length)children.push(heading('Pendientes declarados en el cierre'),table(pending.map(entry=>new TableRow({cantSplit:true,children:[cell([bodyParagraph(`${entry.student_name} · ${names.get(entry.competency_id)??entry.competency_id}: ${entry.reason??entry.state}`)])]}))));
   return children;
 }
 
@@ -198,28 +241,23 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
   const detail = document.kind === "annual_plan" ? contentForAnnual(document, names) :
     document.kind === "diagnostic_summary" ? contentForDiagnostic(document) :
     document.kind === "experience" ? contentForExperience(document, names) :
-    document.kind === "activity" ? contentForActivity(document, names) : document.kind === "period_closure" ? [
-      bodyParagraph("Exportación del cierre confirmado. Conserva las valoraciones y conclusiones guardadas; no es una plantilla oficial adicional."),
-      ...labelled("Período", document.content.period?.label),
-      ...(document.content.entries ?? []).flatMap(entry => [heading(entry.student_name, 2),
-        ...labelled("Competencia", names.get(entry.competency_id) ?? entry.competency_id),
-        ...labelled("Nivel confirmado", entry.achievement_level),
-        ...section("Conclusión confirmada", entry.conclusion_details?.conclusion_text ?? entry.conclusion_details?.conclusion ?? entry.conclusion_details?.text),
-        ...section("Evidencia del cierre", (entry.evidence ?? []).map(e => `${e.observed_on}: ${e.observation_text ?? ""}`))]),
-      ...section("Pendientes declarados en el cierre", (document.content.pending_entries ?? []).map(entry => `${entry.student_name} · ${names.get(entry.competency_id) ?? entry.competency_id}: ${entry.reason ?? entry.state}`)),
-    ] : contentForFamilyReport(document, names);
+    document.kind === "activity" ? contentForActivity(document, names) : document.kind === "period_closure" ? contentForPeriodClosure(document,names) : contentForFamilyReport(document, names);
+  const polishedReport = ["family_report", "period_closure", "experience", "activity", "diagnostic_summary"].includes(document.kind);
+  const font = polishedReport ? "Poppins" : "Aptos";
+  const ink = polishedReport ? "173352" : "000000";
   const doc = new Document({
     title: clean(document.title), subject: typeLabel(document), creator: "Ayni Aula",
-    styles: { paragraphStyles: [{ id: "Normal", name: "Normal", run: { font: "Aptos", size: 22, color: "000000" },
+    styles: { paragraphStyles: [{ id: "Normal", name: "Normal", run: { font, size: 22, color: ink },
       paragraph: { spacing: { after: 120, line: 285 } } }], default: {
-      document: { run: { font: "Aptos", size: 22, color: "000000" }, paragraph: { spacing: { after: 120, line: 285 } } },
-      title: { run: { font: "Aptos Display", size: 34, bold: true, color: "000000" }, paragraph: { spacing: { after: 180 }, keepNext: true } },
-      heading1: { run: { font: "Aptos Display", size: 26, bold: true, color: "000000" }, paragraph: { spacing: { before: 280, after: 100 }, keepNext: true } },
-      heading2: { run: { font: "Aptos", size: 23, bold: true, color: "000000" }, paragraph: { spacing: { before: 220, after: 80 }, keepNext: true } },
-      listParagraph: { run: { font: "Aptos", size: 22, color: "000000" }, paragraph: { spacing: { after: 65, line: 285 } } },
+      document: { run: { font, size: 22, color: ink }, paragraph: { spacing: { after: 120, line: 285 } } },
+      title: { run: { font: polishedReport ? font : "Aptos Display", size: 34, bold: true, color: ink }, paragraph: { spacing: { after: 180 }, keepNext: true } },
+      heading1: { run: { font: polishedReport ? font : "Aptos Display", size: 26, bold: true, color: ink }, paragraph: { spacing: { before: 160, after: 70 }, keepNext: true,...(polishedReport?{shading:{fill:"E7F3F4"}}:{}) } },
+      heading2: { run: { font, size: 23, bold: true, color: polishedReport ? "086C7C" : ink }, paragraph: { spacing: { before: 140, after: 70 }, keepNext: true } },
+      listParagraph: { run: { font, size: 22, color: ink }, paragraph: { spacing: { after: 65, line: 285 } } },
     } },
     sections: [{
       properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } } },
+      ...(polishedReport ? { headers: { default: new Header({children:[new Paragraph({spacing:{after:90},border:{bottom:{style:BorderStyle.SINGLE,size:8,color:"B4DCD6"}},children:[new TextRun({text:"Ayni Aula",bold:true,color:"086C7C",size:21}),new TextRun({text:`   ·   ${typeLabel(document)}`,color:ink,size:18})]})]}) } } : {}),
       footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.RIGHT,
         children: [new TextRun({ text: "Ayni Aula  ·  Página ", size: 18, color: "444444" }), new TextRun({ children: [PageNumber.CURRENT], size: 18, color: "444444" })] })] }) },
       children: [
@@ -227,11 +265,10 @@ export async function renderSavedDocumentWord(document, competencyCards = [], { 
           transformation: { width: 96, height: 96 }, type: "png" })] })] : []),
         new Paragraph({ text: clean(document.title) || typeLabel(document), heading: HeadingLevel.TITLE, keepNext: true }),
         bodyParagraph(`${typeLabel(document)}  ·  ${statusLabel(document.status)}`),
-        ...labelled("Año escolar", String(document.school_year ?? "")),
+        ...(polishedReport ? [reportIdentification(document),new Paragraph({spacing:{after:70}})] : labelled("Año escolar", String(document.school_year ?? ""))),
         ...(Number(document.version) > 1 ? labelled("Versión", String(document.version)) : []),
-        ...labelled("Institución educativa", document.institution_name ?? document.document_context?.institution_name),
-        ...labelled("Aula", document.classroom),
-        ...(document.kind === "family_report" ? [...labelled("Edad",document.age ? `${document.age} años` : ""),...labelled("Docente",document.teacher_name),
+        ...(!polishedReport ? [...labelled("Institución educativa", document.institution_name ?? document.document_context?.institution_name),...labelled("Aula", document.classroom)] : []),
+        ...(document.kind === "family_report" ? [
           ...(studentPhoto?[new Paragraph({children:[new ImageRun({data:studentPhoto.data,type:studentPhoto.mimeType==="image/png"?"png":"jpg",transformation:{width:72,height:72}})]})]:[])] : []),
         ...detail,
       ],

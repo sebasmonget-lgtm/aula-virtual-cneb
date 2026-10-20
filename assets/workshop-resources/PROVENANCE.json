@@ -1,12 +1,13 @@
 {
   "author": "Ayni",
-  "version": "1.3.0",
+  "version": "1.5.0",
   "generator": "scripts/build-workshop-resources.mjs",
-  "method": "Original text, Ayni catalogue illustrations and deterministic SVG geometry rendered with sharp",
+  "method": "Original text and precise mathematical geometry; contextual Ayni art and optimized built-in imagegen story/action illustrations; SVG previews rendered with sharp; PDF text remains native",
   "sources": [],
   "files": [
     "tarjetas-cantidades",
     "tarjetas-formas",
+    "tarjetas-recorrido-motor",
     "registro-exploracion",
     "cuento-la-semilla",
     "tiras-de-mensajes",

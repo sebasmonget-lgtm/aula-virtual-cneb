@@ -58,7 +58,7 @@ export function WorkshopLibrary({classroomId,onBack,onAdded,onOpen}:{classroomId
         <header><h2>{selected.title}</h2><p>{selected.age} años · {selected.type} · {selected.duration_minutes} minutos</p><AnnualCompetencies ids={[selected.competency_id]} names={names}/></header>
         {selected.ages&&<p className={styles.hint}>Para {workshopAgeLabel(selected)}. Estás viendo la guía de {selected.age} años.</p>}
         <p className={styles.purpose}><Target size={22}/>{selected.purpose}</p>
-        <section className={styles.materials}><h3><Package size={21}/>Materiales</h3><ul>{selected.materials.map(m=><li key={m}>{m}</li>)}</ul><WorkshopResources resources={selected.resources} workshopId={selected.id}/></section>
+        <section className={styles.materials}><h3><Package size={21}/>Materiales</h3><ul>{selected.materials.map(m=><li key={m}>{m}</li>)}</ul><WorkshopResources resources={selected.resources} workshopId={selected.id} age={selected.age}/></section>
         <section className={styles.preparation}><h3>Antes de empezar</h3><p>{selected.preparation}</p></section>
         <div className={styles.moments}>{(['opening','development','closure'] as const).map((key,i)=><section key={key}><h3>{['Inicio','Desarrollo','Cierre'][i]}</h3><h4>Qué hago ahora</h4><p>{selected[key].teacher}</p><h4>Qué harán los niños</h4><p>{selected[key].children}</p></section>)}</div>
         <section className={styles.observe}><h3>Qué observar</h3><p>{selected.criterion}</p><h4>Evidencia que puedes registrar</h4><p>{selected.evidence}</p></section>

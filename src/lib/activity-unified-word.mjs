@@ -5,7 +5,7 @@ import path from "node:path";
 import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 import { activityReadingStages } from "./activity-reading-content.mjs";
-import { guidePanel, guideText, guideParagraph, guideDetails, retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
+import { guidePanel, guideText, guideParagraph, guideDetails, keepShortTableTogether, retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
 
 const oldTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx");
 const workshopTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-con-taller-v1.docx");
@@ -148,6 +148,10 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
   output=replaceWordText(output,"III. REFERENTES CURRICULARES","IV. REFERENTES CURRICULARES");
   output=replaceWordText(output,"VI. REGISTRO DE OBSERVACIONES","V. REGISTRO DE OBSERVACIONES");
   output=replaceWordText(output,"VI. CUADERNO DE CAMPO","V. CUADERNO DE CAMPO");
+  const numerals=["V","VI","VII"];
+  output=replaceWordText(output,"VII. SÍNTESIS Y REFLEXIÓN DOCENTE",`${numerals[evidence.length?1:0]}. SÍNTESIS Y REFLEXIÓN DOCENTE`);
+  output=replaceWordText(output,"VIII. TALLER",`${numerals[(evidence.length?1:0)+(closure?1:0)]}. TALLER`);
+  if(withWorkshop)output=output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,table=>table.includes("{{TALLER_PROPOSITO}}")?keepShortTableTogether(table):table);
   return output;
 }
 

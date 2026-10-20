@@ -64,8 +64,8 @@ test('HTTP real: dependents conserva la disponibilidad confirmada y Master alcan
     const result=await master.json();assert.equal(master.status,422);assert.equal(result.provider_reason,'insufficient_quota',JSON.stringify(result));assert.equal(calls,1);
     const reloaded=(await(await fetch(`${instance.base}/api/project-flow/${project}`,{headers})).json()).experience;
     assert.deepEqual(reloaded.details.resource_readiness,receipt);assert.equal(reloaded.details.project_master,undefined,'No se simula una generación completada');
-    // A historical failure cannot recreate a lost teacher decision silently.
-    // Exercise the recovery UI contract through the actual protected routes.
+    // Resuming the selected draft accepts its resources without another checkbox.
+    // GET remains read-only; the authenticated POST records that acceptance.
     await stop(instance.child);instance=null;db=new PGlite(dataDir);
     const job=randomUUID();
     await db.query("update learning_experiences set details=details-'resource_readiness' where id=$1 and status='draft'",[project]);
@@ -73,13 +73,14 @@ test('HTTP real: dependents conserva la disponibilidad confirmada y Master alcan
       values($1,$2,$3,'project',$4,1,'lost-receipt-fixture','failed',$5::jsonb)`,[job,teacher,classroom.classroomId,annual,JSON.stringify({stage:'master',project_id:project,proposal_id:proposal,error:'No pudimos completar lo pendiente.'})]);
     await db.close();db=null;instance=await start(dataDir,teacher,providerUrl);headers.origin=instance.base;
     const review=await(await fetch(`${instance.base}/api/preparation/${job}`,{headers})).json();
-    assert.deepEqual(review.required_resources,receipt.resources);
-    const unconfirmed=await fetch(`${instance.base}/api/preparation/${job}/retry`,{method:'POST',headers,body:'{}'});
-    assert.equal(unconfirmed.status,422);assert.equal(calls,1,'No se repite IA antes de confirmar el material');
-    const retry=await fetch(`${instance.base}/api/preparation/${job}/retry`,{method:'POST',headers,body:JSON.stringify({resourcesConfirmed:true})});
+    assert.equal(review.required_resources,undefined);
+    const beforeRetry=(await(await fetch(`${instance.base}/api/project-flow/${project}`,{headers})).json()).experience;
+    assert.equal(beforeRetry.details.resource_readiness,undefined,'Consultar no confirma materiales');
+    const retry=await fetch(`${instance.base}/api/preparation/${job}/retry`,{method:'POST',headers,body:'{}'});
     assert.equal(retry.status,202,await retry.clone().text());
     const recovered=(await(await fetch(`${instance.base}/api/project-flow/${project}`,{headers})).json()).experience;
     assert.equal(recovered.details.resource_readiness.confirmed_by,teacher);
+    assert.equal(recovered.details.resource_readiness.confirmation_source,'project_resume');
     assert.deepEqual(recovered.details.resource_readiness.resources,receipt.resources);
   }finally{
     if(db)await db.close();await stop(instance?.child);await new Promise(resolve=>provider.close(resolve));
