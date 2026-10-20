@@ -31,12 +31,12 @@ async function xmlForWithCards(document, competencyCards = cards) {
 }
 const xmlFor = xmlForWithCards;
 
-test('Word familiar muestra barras y cantidades de asistencia sin cambiar el informe ni mezclar tardanzas',async()=>{
+test('Word familiar muestra gráfica circular y cantidades editables sin cambiar el informe ni mezclar tardanzas',async()=>{
  const document=base('family_report',{introduction:'Compartimos sus aprendizajes.',sections:[]}),before=structuredClone(document);
  const attendance={total:10,present:6,late:1,absent:1,excused:1,pending:1,as_of:'2026-12-18'};
  const bytes=await renderSavedDocumentWord(document,cards,{attendance}),zip=await JSZip.loadAsync(bytes),xml=await zip.file('word/document.xml').async('string');
- for(const text of ['Asistencia del bimestre','Asistió 7 de 10 días de clase.','Presente','Llegó tarde','Faltó','Falta justificada','Sin registro','1 día sin registrar','18/12/2026'])assert.ok(xml.includes(text),text);
- for(const fill of ['14745c','a36009','b43746','326e9e','62758a'])assert.match(xml,new RegExp(`w:fill="${fill}"`));
+ for(const text of ['Asistencia del bimestre','Asistió 7 de 10 días de clase.','Gráfica circular de asistencia','Asistencia','Tardanzas','Faltas','Total: 10 días de clase','66.7 %','11.1 %','22.2 %','1 falta justificada','1 día sin registrar','18/12/2026'])assert.ok(xml.includes(text),text);
+ assert.ok(Object.keys(zip.files).some(name=>name.startsWith('word/media/')));
  assert.equal((xml.match(/Asistencia del bimestre/g)??[]).length,1);assert.deepEqual(document,before);assert.deepEqual(attendance,{total:10,present:6,late:1,absent:1,excused:1,pending:1,as_of:'2026-12-18'});
 });
 
@@ -79,7 +79,7 @@ test('Word familiar usa viñetas reales, notas docentes con color y foto en el b
  const extent=cells[1].match(/<wp:extent cx="(\d+)" cy="(\d+)"/);assert.ok(extent);assert.equal(Number(extent[1])/Number(extent[2]),2,'La foto conserva su proporción');
  const parts=await Promise.all(Object.keys(zip.files).filter(name=>/^word\/(document|header\d+)\.xml$/.test(name)).map(name=>zip.file(name).async('string')));
  const drawings=parts.join('').match(/<wp:docPr\b[^>]*>/g)??[];
- assert.equal(drawings.length,6,'Foto, cuatro competencias y logo');
+ assert.equal(drawings.length,8,'Foto, gráfica circular, decoración, cuatro competencias y logo');
  assert.equal(new Set(drawings.map(tag=>tag.match(/\bid="([^"]+)"/)[1])).size,drawings.length,'Cada imagen tiene un ID único en Word');
  for(const tag of drawings)assert.match(tag,/\bname="[^"]+"/,'El nombre requerido evita que Word repare el archivo');
  assert.match(await zip.file('docProps/core.xml').async('string'),/family-report-readable-v2/);

@@ -4,14 +4,24 @@ export function familyAttendanceChart(attendance) {
   const { total, present, late, absent, excused, pending } = attendance;
   if (![total, present, late, absent, excused, pending].every(value => Number.isInteger(value) && value >= 0) ||
       present + late + absent + excused + pending !== total) throw new TypeError('Resumen de asistencia incompleto.');
+  const recorded=total-pending;
   const rows = [
-    { key: 'present', label: 'Presente', count: present, color: '#14745c' },
-    { key: 'late', label: 'Llegó tarde', count: late, color: '#a36009' },
-    { key: 'absent', label: 'Faltó', count: absent, color: '#b43746' },
-    ...(excused ? [{ key: 'excused', label: 'Falta justificada', count: excused, color: '#326e9e' }] : []),
-    ...(pending ? [{ key: 'pending', label: 'Sin registro', count: pending, color: '#62758a' }] : []),
-  ].map(row => ({ ...row, width: total ? row.count / total * 100 : 0 }));
-  return { rows, total, attended: present + late, asOf: attendance.as_of,
+    { key: 'present', label: 'Asistencia', count: present, color: '#21835C' },
+    { key: 'late', label: 'Tardanzas', count: late, color: '#C18B08' },
+    { key: 'absent', label: 'Faltas', count: absent+excused, color: '#C9434F' },
+  ].map(row => ({ ...row, width: recorded ? row.count / recorded * 100 : 0 }));
+  // Largest remainder keeps displayed percentages at exactly 100%, also for thirds.
+  const tenths=rows.map(row=>Math.floor(row.width*10));
+  if(recorded){const order=rows.map((row,i)=>({i,remainder:row.width*10-tenths[i]})).sort((a,b)=>b.remainder-a.remainder||a.i-b.i),remaining=1000-tenths.reduce((sum,n)=>sum+n,0);for(let i=0;i<remaining;i++)tenths[order[i].i]++;}
+  const format=new Intl.NumberFormat('es-PE',{maximumFractionDigits:1});
+  const resultRows=rows.map((row,i)=>({...row,percentage:tenths[i]/10,percentageLabel:recorded?`${format.format(tenths[i]/10)} %`:'—'}));
+  return { rows:resultRows, total, recorded, pending, excused, attended: present + late, asOf: attendance.as_of,
     summary: !total ? 'Aún no hay días de clase en este período.' : pending === total ? 'Aún no hay asistencia registrada.' : `Asistió ${present + late} de ${total} días de clase.`,
-    note: pending ? `${pending} ${pending === 1 ? 'día sin registrar' : 'días sin registrar'}. Las tardanzas se cuentan aparte.` : 'Las tardanzas se cuentan aparte.' };
+    note: [pending?`${pending} ${pending===1?'día sin registrar':'días sin registrar'}. Porcentajes sobre ${recorded} días registrados.`:'Las tardanzas se muestran por separado.',excused?`${excused} ${excused===1?'falta justificada incluida':'faltas justificadas incluidas'}.`:''].filter(Boolean).join(' ') };
+}
+
+export function familyAttendanceDonutSvg(chart){
+  const radius=72,circumference=2*Math.PI*radius;let offset=0;
+  const circles=chart.rows.filter(row=>row.count).map(row=>{const length=row.width/100*circumference;const circle=`<circle cx="100" cy="100" r="${radius}" fill="none" stroke="${row.color}" stroke-width="28" stroke-dasharray="${length} ${circumference}" stroke-dashoffset="${-offset}"/>`;offset+=length;return circle;}).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 200 200"><circle cx="100" cy="100" r="72" fill="none" stroke="#E7EDF3" stroke-width="28"/><g transform="rotate(-90 100 100)">${circles}</g><text x="100" y="101" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="32" font-weight="700" fill="#173352">${chart.recorded}</text><text x="100" y="123" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="10" fill="#456078">${chart.pending?'días registrados':'días de clase'}</text></svg>`;
 }

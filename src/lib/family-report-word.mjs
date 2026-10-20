@@ -5,7 +5,7 @@ import { AlignmentType, BorderStyle, Document, Footer, Header, HeadingLevel, Ima
 import { competencyVisual } from './competency-visuals.mjs';
 import { competencyLabels } from './competency-labels.mjs';
 import { familyReportSectionForReader } from './family-report-presentation.mjs';
-import { familyAttendanceChart } from './family-attendance-presentation.mjs';
+import { familyAttendanceChart, familyAttendanceDonutSvg } from './family-attendance-presentation.mjs';
 
 const INK='173352',MUTED='456078',BORDER='D1E2EA',WIDTH=9914;
 const levels={AD:{label:'Destacado',ink:'185E91',fill:'E6F2FF'},A:{label:'Esperado',ink:'12634E',fill:'DEF5E9'},B:{label:'En proceso',ink:'88520B',fill:'FFF2D5'},C:{label:'En inicio',ink:'A52C35',fill:'FFEDEF'}};
@@ -25,25 +25,22 @@ const label=(value,keepNext=false)=>new Paragraph({children:[text(value,{bold:tr
 const bullets=values=>list(values).map(value=>new Paragraph({children:[text(value)],numbering:{reference:'family-bullets',level:0},spacing:{after:50,line:250},widowControl:true}));
 const group=(title,values)=>list(values).length?[label(title),...bullets(values)]:[];
 
-function attendanceBlock(attendance){
+async function attendanceBlock(attendance){
   const chart=familyAttendanceChart(attendance);
   if(!chart)return [label('Asistencia del bimestre'),paragraph('Sin información de asistencia para este informe.')];
-  const result=[label('Asistencia del bimestre',true),paragraph(chart.summary,{keepNext:chart.total>0})];
-  if(chart.total){
-    const barWidth=6714;
-    const rows=chart.rows.map(row=>{
-      const filled=Math.round(row.width/100*barWidth);
-      const widths=[...(filled?[filled]:[]),...(filled<barWidth?[barWidth-filled]:[])];
-      const bar=new Table({width:{size:barWidth,type:WidthType.DXA},columnWidths:widths,layout:TableLayoutType.FIXED,borders:noBorders,
-        rows:[new TableRow({cantSplit:true,children:widths.map((width,index)=>cell([new Paragraph({spacing:{after:0,line:130},children:[text('',{size:1})]})],width,{margins:{top:0,bottom:0,left:0,right:0},shading:{fill:filled&&index===0?row.color.slice(1):'E7EDF3'}}))})]});
-      return new TableRow({cantSplit:true,children:[cell([paragraph(row.label,{spacing:{after:0,line:225},children:[text(row.label,{size:18})]})],2200,{margins:{top:40,bottom:40,left:0,right:100}}),
-        cell([bar],barWidth,{verticalAlign:VerticalAlign.CENTER,margins:{top:70,bottom:70,left:0,right:0}}),
-        cell([paragraph(String(row.count),{alignment:AlignmentType.RIGHT,spacing:{after:0,line:225},children:[text(String(row.count),{size:18,bold:true})]})],1000,{margins:{top:40,bottom:40,left:100,right:0}})]});
-    });
-    result.push(table(rows,[2200,barWidth,1000],{borders:noBorders}));
-  }
-  result.push(paragraph(`${chart.note}${chart.asOf?` Corte: ${date(chart.asOf)}.`:''}`,{children:[text(`${chart.note}${chart.asOf?` Corte: ${date(chart.asOf)}.`:''}`,{size:16,color:MUTED})]}),space());
-  return result;
+  const data=await sharp(Buffer.from(familyAttendanceDonutSvg(chart))).png().toBuffer();
+  const image=new ImageRun({data,type:'png',transformation:{width:184,height:184},altText:{id:'1001',name:'Gráfica circular de asistencia',title:'Distribución de asistencia',description:chart.rows.map(row=>`${row.label}: ${row.count} días, ${row.percentageLabel}`).join('; ')}});
+  const legend=chart.rows.flatMap(row=>[
+    paragraph(row.label,{spacing:{before:95,after:20,line:250},children:[text(row.label,{bold:true,size:21})]}),
+    paragraph(`${row.count} días · ${row.percentageLabel}`,{spacing:{after:100,line:250},children:[text(`${row.count} ${row.count===1?'día':'días'}`,{size:21}),text(`   ${row.percentageLabel}`,{size:24,bold:true,color:row.key==='late'?'805707':row.color.slice(1)})]}),
+  ]);
+  legend.push(paragraph(`Total: ${chart.total} días de clase`,{spacing:{before:120,after:40,line:250},children:[text(`Total: ${chart.total} días de clase`,{bold:true,size:21})]}));
+  const note=`${chart.note}${chart.asOf?` Corte: ${date(chart.asOf)}.`:''}`;
+  return [table([
+    new TableRow({cantSplit:true,children:[cell([label('Asistencia del bimestre'),paragraph(chart.summary)],WIDTH,{columnSpan:2,shading:{fill:'FFF7E5'},margins:{top:170,bottom:50,left:260,right:260}})]}),
+    new TableRow({cantSplit:true,children:[cell([new Paragraph({alignment:AlignmentType.CENTER,children:[image],spacing:{after:0}})],4000,{shading:{fill:'FFFCF5'},verticalAlign:VerticalAlign.CENTER,margins:{top:80,bottom:80,left:160,right:160}}),cell(legend,WIDTH-4000,{shading:{fill:'FFFCF5'},verticalAlign:VerticalAlign.CENTER,margins:{top:40,bottom:40,left:350,right:200}})]}),
+    new TableRow({cantSplit:true,children:[cell([paragraph(note,{spacing:{after:0,line:225},children:[text(note,{size:16,color:MUTED})]})],WIDTH,{columnSpan:2,shading:{fill:'FFFCF5'},margins:{top:50,bottom:170,left:260,right:260}})]}),
+  ],[4000,WIDTH-4000]),space()];
 }
 
 async function portrait(photo){
@@ -88,21 +85,23 @@ async function competencyBlock(section,names,achievementLevels,index){
 export async function renderFamilyReportWord(document,competencyCards=[],{logo=null,studentPhoto=null,attendance=null}={}){
   const value=document.content??{},names=new Map(competencyCards.map(card=>[card.id,card.name??card.official_name]));
   const photo=await portrait(studentPhoto),student=clean(document.title).replace(/^Informe a la familia de\s+/i,'');
+  const coverWave=new Paragraph({spacing:{after:0,line:20},children:[new ImageRun({data:await readFile(path.join(process.cwd(),'public/evaluation/family-cover-wave.png')),type:'png',transformation:{width:794,height:208},altText:{id:'1002',name:'Decoración de la carátula',description:'Ondas de la plantilla Ayni'},floating:{horizontalPosition:{relative:'page',align:'center'},verticalPosition:{relative:'page',align:'bottom'},behindDocument:true,wrap:{type:'none'}}})]});
   const period=clean(document.period_label)||'Informe histórico sin período formal',dates=[date(document.period_start),date(document.period_end)].filter(Boolean).join(' al ');
   const identification=[
-    paragraph('Informe a la familia',{heading:HeadingLevel.TITLE,spacing:{after:80,line:300},children:[text('Informe a la familia',{size:34,bold:true})]}),
-    paragraph(student,{keepNext:true,spacing:{after:90,line:300},children:[text(student,{size:29,bold:true})]}),
-    paragraph([document.institution_name,document.classroom,(document.age??document.age_years)?`${document.age??document.age_years} años`:''].filter(Boolean).join(' · '),{spacing:{after:45,line:245}}),
-    paragraph([period,dates].filter(Boolean).join(' · '),{spacing:{after:45,line:245}}),
-    ...(clean(document.teacher_name)?[paragraph(`Docente: ${document.teacher_name}`,{spacing:{after:0,line:245},children:[text(`Docente: ${document.teacher_name}`,{size:18,color:MUTED})]})]:[]),
+    paragraph('Informe a la familia',{heading:HeadingLevel.TITLE,spacing:{after:150,line:360},children:[text('Informe a la familia',{size:38,bold:true})]}),
+    paragraph(student,{keepNext:true,spacing:{after:130,line:320},children:[text(student,{size:32,bold:true})]}),
+    paragraph(clean(document.institution_name),{spacing:{after:0,line:245},children:[text(clean(document.institution_name),{size:20,color:MUTED})]}),
     ...(document.status==='draft'?[paragraph('Borrador por revisar',{children:[text('Borrador por revisar',{bold:true,color:'88520B',size:18})]})]:[]),
   ];
   const headerWidth=photo?WIDTH-2300:WIDTH;
-  const intro=table([new TableRow({cantSplit:true,children:[cell(identification,headerWidth,{margins:{top:100,bottom:100,left:0,right:180}}),...(photo?[cell([new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:0},children:[photo]})],2300,{verticalAlign:VerticalAlign.CENTER})]:[])]})],photo?[headerWidth,2300]:[WIDTH],{borders:noBorders});
+  const intro=table([new TableRow({cantSplit:true,children:[cell(identification,headerWidth,{shading:{fill:'EDF5FA'},verticalAlign:VerticalAlign.CENTER,margins:{top:300,bottom:300,left:260,right:180}}),...(photo?[cell([new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:0},children:[photo]})],2300,{shading:{fill:'EDF5FA'},verticalAlign:VerticalAlign.CENTER,margins:{top:220,bottom:220,left:120,right:120}})]:[])]})],photo?[headerWidth,2300]:[WIDTH],{borders:noBorders});
+  const info=(title,value)=>cell([label(title),paragraph(value,{spacing:{after:0,line:250}})],WIDTH/2,{margins:{top:140,bottom:140,left:260,right:260}});
+  const details=table([new TableRow({cantSplit:true,children:[info('Aula',[document.classroom,(document.age??document.age_years)?`${document.age??document.age_years} años`:''].filter(Boolean).join(' · ')),info('Período',period)]}),new TableRow({cantSplit:true,children:[info('Fechas',dates),info('Docente',clean(document.teacher_name))]})],[WIDTH/2,WIDTH/2]);
   const blocks=[];
-  if(clean(value.introduction))blocks.push(label('En pocas palabras',true),paragraph(value.introduction));
-  blocks.push(...attendanceBlock(attendance));
-  blocks.push(new Paragraph({spacing:{after:150,line:230},children:[text('Valoración confirmada por la docente  ',{size:16,bold:true,color:MUTED}),...Object.entries(levels).flatMap(([grade,theme],index)=>[text(`${index?'   ·   ':''}${grade} ${theme.label}`,{size:16,color:theme.ink})])]}));
+  blocks.push(details,space());
+  if(clean(value.introduction))blocks.push(table([new TableRow({cantSplit:true,children:[cell([label('En pocas palabras'),paragraph(value.introduction,{spacing:{after:0,line:265}})],WIDTH,{shading:{fill:'F1F9F5'},margins:{top:170,bottom:170,left:260,right:260}})]})]),space());
+  blocks.push(...await attendanceBlock(attendance));
+  blocks.push(label('Valoración confirmada por la docente'),table([new TableRow({cantSplit:true,children:Object.entries(levels).map(([grade,theme])=>cell([paragraph(`${grade} · ${theme.label}`,{spacing:{after:0,line:235},children:[text(`${grade} · ${theme.label}`,{size:17,bold:true,color:theme.ink})]})],WIDTH/4,{shading:{fill:theme.fill},margins:{top:120,bottom:120,left:140,right:100}}))})],[WIDTH/4,WIDTH/4,WIDTH/4,WIDTH/4]),space());
   for(const [index,section] of (Array.isArray(value.sections)?value.sections:[]).entries()){
     blocks.push(new Paragraph({pageBreakBefore:true,spacing:{before:0,after:0,line:20},children:[text('',{size:2})]}));
     blocks.push(await competencyBlock(section,names,document.achievement_levels??[],index),space());
@@ -117,6 +116,6 @@ export async function renderFamilyReportWord(document,competencyCards=[],{logo=n
     sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1000,right:996,bottom:1000,left:996,header:450,footer:430}}},
       headers:{default:new Header({children:[new Paragraph({spacing:{after:55},children:[...(logo?[new ImageRun({data:logo,type:'png',transformation:{width:22,height:22},altText:{id:'1000',name:'Institución educativa'}}),text('  ')]:[]),text(clean(document.institution_name)||'Informe a la familia',{size:16,bold:true}),text(`   ·   ${document.school_year??''}`,{size:16,color:MUTED})]}),rule,space()]})},
       footers:{default:new Footer({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[text(`${document.classroom??''}  ·  ${period}  ·  Página `,{size:15,color:MUTED}),new TextRun({children:[PageNumber.CURRENT],font:'Poppins',size:15,color:MUTED})]})]})},
-      children:[intro,space(),...blocks]}]});
+      children:[coverWave,intro,space(),...blocks]}]});
   return Packer.toBuffer(doc);
 }
