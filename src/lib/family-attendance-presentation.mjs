@@ -1,3 +1,4 @@
+import {attendanceCenterPaths} from './family-attendance-glyphs.mjs';
 /** Mutually exclusive day counts. Late attendance is never counted twice. */
 export function familyAttendanceChart(attendance) {
   if (!attendance) return null;
@@ -22,5 +23,5 @@ export function familyAttendanceChart(attendance) {
 export function familyAttendanceDonutSvg(chart){
   const radius=72,circumference=2*Math.PI*radius;let offset=0;
   const circles=chart.rows.filter(row=>row.count).map(row=>{const length=row.width/100*circumference;const circle=`<circle cx="100" cy="100" r="${radius}" fill="none" stroke="${row.color}" stroke-width="28" stroke-dasharray="${length} ${circumference}" stroke-dashoffset="${-offset}"/>`;offset+=length;return circle;}).join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 200 200"><circle cx="100" cy="100" r="72" fill="none" stroke="#E7EDF3" stroke-width="28"/><g transform="rotate(-90 100 100)">${circles}</g><text x="100" y="101" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="32" font-weight="700" fill="#173352">${chart.recorded}</text><text x="100" y="123" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="10" fill="#456078">${chart.pending?'días registrados':'días de clase'}</text></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 200 200"><circle cx="100" cy="100" r="72" fill="none" stroke="#E7EDF3" stroke-width="28"/><g transform="rotate(-90 100 100)">${circles}</g>${attendanceCenterPaths(chart.recorded,chart.pending)}</svg>`;
 }

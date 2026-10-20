@@ -6,6 +6,8 @@ Síntoma: Word local correcto y 500 al descargar el nuevo Preview; el alias QA s
 
 La revisión también evita redistribuir porcentajes para forzar suma cien: dos cantidades iguales deben mostrar el mismo porcentaje, con aclaración breve del redondeo cuando haga falta. Pruebas de tercios y combinaciones, recibos de Preview en QA_CARATULA_CIRCULAR_2026-10-20.md. No datos pedagógicos modificados.
 
+La descarga posterior fue 200, pero la inspección del Word renderizado detectó cuadrados en el centro del círculo: el rasterizador de cloud no tenía los glifos usados por SVG text. Se restaura el alias anterior mientras se corrige. Los diez dígitos y dos leyendas fijas se dibujan como contornos Poppins con su licencia OFL conservada; no dependen de fuentes instaladas ni de un servicio externo. Días y porcentajes siguen como texto nativo en Word. Regresión exige SVG sin text/font-family y revisión visual del documento descargado, además de comprobar HTTP 200.
+
 ## 2026-10-20 — Faltaba la gráfica de asistencia en el informe familiar
 
 Síntoma: los informes y sus Word mostraban conclusiones y notas sin el resumen gráfico de asistencia acordado. Causa: los lectores familiares no consumían el resumen existente del calendario/asistencia. Solución: mismo cálculo autorizado por aula y bimestre en pantalla y descarga, filtrado al alumno; barras nativas en Word y barras con texto en la interfaz. Fecha de corte visible, tardanza separada, sin registro explícito. No nuevas llamadas a IA ni escrituras pedagógicas.

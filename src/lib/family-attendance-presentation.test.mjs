@@ -3,7 +3,7 @@ import {familyAttendanceChart,familyAttendanceDonutSvg} from './family-attendanc
 test('círculo familiar conserva días excluyentes, colores y porcentajes que suman cien',()=>{
  const counts={total:43,present:37,late:3,absent:3,excused:0,pending:0,as_of:'2026-12-18'},before=structuredClone(counts),chart=familyAttendanceChart(counts);
  assert.equal(chart.attended,40);assert.deepEqual(chart.rows.map(r=>[r.label,r.count,r.percentageLabel]),[['Asistencia',37,'86 %'],['Tardanzas',3,'7 %'],['Faltas',3,'7 %']]);assert.equal(chart.total,43);assert.deepEqual(counts,before);
- const svg=familyAttendanceDonutSvg(chart);for(const color of ['#21835C','#C18B08','#C9434F'])assert.ok(svg.includes(color));assert.match(svg,/>43<\/text>/);assert.doesNotMatch(svg,/NaN|Infinity/);
+ const svg=familyAttendanceDonutSvg(chart);for(const color of ['#21835C','#C18B08','#C9434F'])assert.ok(svg.includes(color));assert.match(svg,/data-total="43"/);assert.doesNotMatch(svg,/<text|font-family|NaN|Infinity/);
 });
 test('justificada pertenece a faltas y los pendientes se indican fuera del círculo',()=>{
  const chart=familyAttendanceChart({total:10,present:6,late:1,absent:1,excused:1,pending:1});assert.equal(chart.recorded,9);assert.deepEqual(chart.rows.map(r=>r.count),[6,1,2]);assert.match(chart.note,/1 día sin registrar/);assert.match(chart.note,/9 días registrados/);assert.match(chart.note,/1 falta justificada/);assert.equal(chart.rows.reduce((sum,r)=>sum+r.percentage,0),100);

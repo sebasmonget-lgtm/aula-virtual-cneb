@@ -6,4 +6,6 @@ Modelo común de lectura: cantidades excluyentes, faltas justificadas incluidas 
 
 Se mantienen carátula independiente y una hoja por competencia. Cabecera con foto, datos en cuadrícula, resumen breve, asistencia y leyenda de notas, reutilizando tonos de Ayni. No reescritura del contenido pedagógico. Rollback del código o del alias anterior conserva todas las versiones y datos.
 
+Empaquetado: adorno en assets/templates, incluido en el trace servidor. El centro del SVG usa contornos de diez dígitos y dos leyendas fijas Poppins, generados una vez con build-attendance-glyphs.py y licencia OFL conservada. No consultas de fuentes durante la descarga. Un HTTP 200 por sí solo no aprueba la presentación: la prueba real detectó glifos ausentes en el primer Preview, por lo que se restauró el alias previo antes de corregirlos.
+
 Recibos privados: `.local/qa-caratula-circular-20261020`. Pruebas de redondeo, cantidades, pendientes, justificada, círculo y Word; regresiones de documentos/propiedad. Antes de declarar publicada la entrega deben constar typecheck/lint/build, inspección renderizada, smoke de Preview, comparación de datos y release.json con SHA/alias. No afirmar cobertura total de Ayni ni calidad de generaciones futuras.
