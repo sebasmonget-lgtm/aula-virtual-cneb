@@ -79,7 +79,11 @@ export function PeriodBatchPanel({classroomId,periodId,kind,students,competencie
   const pages=Math.max(1,Math.ceil(visible.length/10)),currentPage=Math.min(page,pages),pageItems=visible.slice((currentPage-1)*10,currentPage*10);
   function turnPage(next:number){setPage(next);conclusionPanel.current?.scrollIntoView({block:'start',behavior:'auto'});}
   const key=(item:Item)=>`${item.student_id}:${item.competency_id??"family"}`;
-  const edit=(item:Item,field:"conclusion_text"|"introduction"|"closing_note"|"family_agreements",text:string)=>setItems(current=>current.map(row=>key(row)===key(item)?{...row,proposal:{...row.proposal,[field]:text}}:row));
+  const edit=(item:Item,field:"conclusion_text"|"introduction"|"closing_note"|"family_agreements",text:string)=>setItems(current=>current.map(row=>{
+    if(key(row)!==key(item))return row;
+    const proposal={...row.proposal,[field]:text},original=job?.items.find(saved=>key(saved)===key(row));
+    return {...row,proposal,...(kind==='conclusions'?{saved_id:JSON.stringify(proposal)===JSON.stringify(original?.proposal)?original?.saved_id:undefined}:{})};
+  }));
   const familyStudents=Array.from(new Set([...students.map(person=>person.id),...items.map(item=>item.student_id)])).map(id=>({id}));
   const selectedPerson=familyStudents.find(person=>person.id===familyStudent)??familyStudents[0];
   const selectedItem=items.find(item=>item.student_id===selectedPerson?.id);
