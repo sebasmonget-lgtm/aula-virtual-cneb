@@ -77,7 +77,7 @@ export async function confirmOrdinaryAttribution(db, teacherId, observationId, {
     const previous = await latest(tx, observationId);
     if ((previous?.version ?? 0) !== expectedVersion) throw new VersionConflictError("La revisión cambió; recarga la observación.", previous?.version ?? 0);
     if (observation.source_revision !== (await ownedObservation(tx, teacherId, observationId)).source_revision)
-      throw new VersionConflictError("La observación cambió; recarga antes de confirmar.");
+      throw new VersionConflictError("La observación cambió; recarga antes de guardar.");
     const attribution = (await tx.query(`insert into ordinary_observation_attributions
       (id,observation_id,version,state,source,candidate_competency_ids,confirmed_competency_ids,
        confirmed_criterion_ids,raw_revision,provenance,created_by)

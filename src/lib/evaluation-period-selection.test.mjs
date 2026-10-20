@@ -23,3 +23,13 @@ test("antes/después del año, límites y ausencia de períodos no inventan fech
   assert.equal(selectEvaluationPeriod([], "2026-10-11"), null);
   assert.equal(periods[0].id, "b1");
 });
+
+test("cada bimestre se abre en sus fechas de inicio y cierre; cambiarlo sigue permitido", () => {
+  for(const period of periods){
+    assert.equal(selectEvaluationPeriod(periods,period.starts_on).id,period.id);
+    assert.equal(selectEvaluationPeriod(periods,period.ends_on).id,period.id);
+  }
+  assert.equal(selectEvaluationPeriod(periods,'2026-12-18').id,'b4');
+  assert.equal(selectEvaluationPeriod(periods,'2026-12-18','b1').id,'b1');
+  assert.equal(selectEvaluationPeriod(periods,'2026-12-18').id,'b4');
+});

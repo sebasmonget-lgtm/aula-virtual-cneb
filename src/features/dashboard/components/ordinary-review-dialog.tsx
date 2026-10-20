@@ -84,7 +84,7 @@ export function OrdinaryReviewDialog({ students, onClose,initialObservationId }:
       if (!response.ok) throw new Error(data.error ?? "No se pudo guardar la revisión.");
       await loadQueue();
       if (kind === "suggest") await openRow(detail.observation.id);
-      else { setDetail(null); setMessage(kind === "unclassified" ? "Observación dejada sin clasificar." : "Atribución confirmada por ti."); }
+      else { setDetail(null); setMessage(kind === "unclassified" ? "Observación dejada sin clasificar." : "Competencias guardadas."); }
     } catch (error) { setMessage(error instanceof Error ? error.message : "No se pudo completar la acción."); }
     finally { setBusy(false); }
   }
@@ -98,10 +98,10 @@ export function OrdinaryReviewDialog({ students, onClose,initialObservationId }:
   return <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
     <DialogContent className="flex max-h-[90dvh] flex-col overflow-hidden rounded-2xl p-0 sm:max-w-2xl">
       <DialogHeader className="shrink-0 border-b px-6 py-5"><DialogTitle>Revisar observaciones</DialogTitle>
-        <DialogDescription>Las propuestas de Ayni no se confirman solas. El texto original y el alumno no cambian.</DialogDescription></DialogHeader>
+        <DialogDescription>Consulta lo guardado o cambia sus competencias.</DialogDescription></DialogHeader>
       <div className="min-h-0 space-y-4 overflow-y-auto px-6 py-4">
-        {!detail ? <><p className="font-semibold">Pendientes: {rows.length}</p>
-          {rows.length === 0 ? <p>No hay observaciones pendientes de revisión.</p> : rows.map(row =>
+        {!detail ? <><p className="font-semibold">Competencias por elegir: {rows.length}</p>
+          {rows.length === 0 ? <p>No hay competencias por elegir.</p> : rows.map(row =>
             <button key={row.id} type="button" onClick={() => void openRow(row.id)}
               className="block min-h-14 w-full rounded-xl border bg-white p-3 text-left hover:border-[#087d96]">
               <span className="block font-semibold">{name(row.student_id)}</span>
@@ -145,13 +145,13 @@ export function OrdinaryReviewDialog({ students, onClose,initialObservationId }:
         {message && <WorkflowFeedback tone={detail ? "error" : "success"}>{message}</WorkflowFeedback>}
       </div>
       <DialogFooter className="shrink-0 flex-wrap border-t px-6 py-4">
-        {detail ? <><Button variant="outline" disabled={busy} onClick={() => setDetail(null)}>Volver a la cola</Button>
+        {detail ? <><Button variant="outline" disabled={busy} onClick={() => setDetail(null)}>Volver a observaciones</Button>
           {(!["confirmed", "unclassified"].includes(detail.latest?.state ?? "") ||
             detail.latest?.raw_revision !== detail.observation.source_revision) &&
             <AsyncButton variant="outline" busy={busy} busyLabel="Consultando…" onClick={() => void act("suggest")}>Reintentar Ayni</AsyncButton>}
           <Button variant="outline" disabled={busy} onClick={() => void act("unclassified")}>Dejar sin clasificar</Button>
           <AsyncButton busy={busy} busyLabel="Guardando…" disabled={!selectedIds.length}
-            onClick={() => void act("confirm")}>Confirmar selección</AsyncButton></> : <Button onClick={onClose}>Cerrar</Button>}
+            onClick={() => void act("confirm")}>Guardar competencias</AsyncButton></> : <Button onClick={onClose}>Cerrar</Button>}
       </DialogFooter>
     </DialogContent>
   </Dialog>;

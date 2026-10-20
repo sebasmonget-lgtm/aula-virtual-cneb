@@ -14,7 +14,7 @@ async function api<T>(path:string,body?:unknown):Promise<T>{
   const response=await apiFetch(localDatabaseApiUrl+path,{method:body===undefined?'GET':'POST',cache:'no-store',...(body===undefined?{}:{headers:{'content-type':'application/json'},body:JSON.stringify(body)})});
   const value=await apiJson<T&{message?:string;error?:string}>(response);if(!response.ok)throw Error(value.message??value.error??'No pudimos consultar la preparación. Vuelve a consultar el avance.');return value;
 }
-export function PeriodAnalysisPreparation({classroomId,periodId,today,endsOn,eligibleCount,closed,onChanged,children}:{classroomId:string;periodId:string;today:string;endsOn:string;eligibleCount:number;closed:boolean;onChanged:()=>Promise<void>;children:ReactNode}){
+export function PeriodAnalysisPreparation({classroomId,periodId,periodLabel,today,endsOn,eligibleCount,closed,onChanged,children}:{classroomId:string;periodId:string;periodLabel:string;today:string;endsOn:string;eligibleCount:number;closed:boolean;onChanged:()=>Promise<void>;children:ReactNode}){
   const [job,setJob]=useState<Job|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[review,setReview]=useState(false);
   const [confirmEarly,setConfirmEarly]=useState(false),[seconds,setSeconds]=useState(5);
   const delivered=useRef('');
@@ -57,21 +57,20 @@ export function PeriodAnalysisPreparation({classroomId,periodId,today,endsOn,eli
   if(review)return <>{error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}{children}</>;
   const running=job&&['queued','running'].includes(job.status),stale=job?.status==='stale';
   return <section aria-label="Preparar evaluación del bimestre" className="space-y-4 rounded-2xl border bg-white p-4 sm:p-6">
-    <div className="flex items-start gap-3"><Sparkles aria-hidden="true" className="mt-1 size-6 shrink-0 text-[#087d96]"/><div><h2 className="text-xl font-bold">Preparemos la evaluación</h2><p className="mt-2 max-w-prose text-sm leading-relaxed text-[#345372]">Ayni revisa las observaciones escritas de cada niño y competencia. Prepara un párrafo breve sobre sus avances y lo que falta observar. La nota la eliges y confirmas tú.</p></div></div>
-    <p className="text-sm text-[#526b87]">Se conservan los análisis vigentes y tus textos. Volver a esta pantalla no inicia otra generación. Las fotos no se envían a IA.</p>
+    <div className="flex items-start gap-3"><Sparkles aria-hidden="true" className="mt-1 size-6 shrink-0 text-[#087d96]"/><div><h2 className="text-xl font-bold">Preparemos la evaluación</h2><p className="mt-2 max-w-prose text-sm leading-relaxed text-[#345372]">Ayni resume lo observado. Tú eliges la nota.</p></div></div>
     {loading?<LoadingState label="Consultando los análisis guardados…"/>:<>
-      {job&&!stale&&<div className="space-y-2" aria-live="polite"><p className="text-sm font-semibold tabular-nums">{job.completed} de {job.total} análisis guardados</p><Progress aria-label="Análisis guardados" value={job.total?100*job.completed/job.total:0}/>{running&&<LoadingState label="Ayni está preparando los siguientes análisis. Puedes salir y volver para continuar."/>}</div>}
+      {job&&!stale&&<div className="space-y-2" aria-live="polite"><p className="text-sm font-semibold tabular-nums">{job.completed} de {job.total} análisis guardados</p><Progress aria-label="Análisis guardados" value={job.total?100*job.completed/job.total:0}/>{running&&<LoadingState label="Preparando análisis. Puedes salir y volver."/>}</div>}
       {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
       {job?.error&&<WorkflowFeedback tone="info">{job.error}</WorkflowFeedback>}
-      {!eligibleCount&&<p className="text-sm text-[#526b87]">Todavía no hay observaciones para analizar. Puedes revisar las competencias y seguir observando.</p>}
+      {!eligibleCount&&<p className="text-sm text-[#526b87]">No hay observaciones para analizar en {periodLabel}. Puedes elegir otro bimestre arriba.</p>}
       <div className="flex flex-wrap gap-3">
-        {!running&&(!job||stale)&&<AsyncButton busy={busy} busyLabel="Preparando…" disabled={closed||!eligibleCount} onClick={()=>{if(evaluationNeedsEarlyWarning(today,endsOn)){setSeconds(5);setConfirmEarly(true);}else void prepare();}}>{stale?'Actualizar análisis pendientes':'Preparar evaluación del bimestre'}</AsyncButton>}
+        {!running&&(!job||stale)&&<AsyncButton busy={busy} busyLabel="Preparando…" disabled={closed||!eligibleCount} onClick={()=>{if(evaluationNeedsEarlyWarning(today,endsOn)){setSeconds(5);setConfirmEarly(true);}else void prepare();}}>{stale?'Actualizar análisis':'Preparar análisis'}</AsyncButton>}
         {job&&(['paused','uncertain'].includes(job.status)||Boolean(error))&&<AsyncButton variant="outline" busy={busy} busyLabel="Consultando…" disabled={closed} onClick={()=>void resume()}>Retomar análisis pendientes</AsyncButton>}
-        <Button variant="outline" disabled={busy||Boolean(running)} onClick={()=>setReview(true)}>Revisar evidencias sin generar análisis</Button>
+        <Button variant="outline" disabled={busy||Boolean(running)} onClick={()=>setReview(true)}>Ver observaciones</Button>
       </div>
     </>}
     <AlertDialog open={confirmEarly} onOpenChange={setConfirmEarly}><AlertDialogContent>
-      <AlertDialogHeader><AlertDialogTitle>El bimestre aún no termina</AlertDialogTitle><AlertDialogDescription>Todavía puedes recoger nuevas observaciones. Si continúas, Ayni preparará los análisis con lo registrado hasta ahora; las notas seguirán pendientes de tu decisión.</AlertDialogDescription></AlertDialogHeader>
+      <AlertDialogHeader><AlertDialogTitle>El bimestre aún no termina</AlertDialogTitle><AlertDialogDescription>¿Preparar los análisis con lo observado hasta hoy?</AlertDialogDescription></AlertDialogHeader>
       <AlertDialogFooter><AlertDialogCancel variant="default" autoFocus>Cancelar y volver</AlertDialogCancel><AlertDialogAction variant="outline" disabled={seconds>0} onClick={()=>void prepare()}>{seconds>0?`Continuar de todos modos (${seconds} s)`:'Continuar de todos modos'}</AlertDialogAction></AlertDialogFooter>
     </AlertDialogContent></AlertDialog>
   </section>;

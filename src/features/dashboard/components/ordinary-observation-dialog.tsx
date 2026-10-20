@@ -80,14 +80,14 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
     const data=await response.json() as {competency_ids?:string[];error?:string};if(!response.ok)throw Error(data.error??'Puedes elegir una competencia manualmente.');
     setFreeIds((data.competency_ids??[]).slice(0,2));setFreeDecision(true);setFreeSuggested(true);
   }catch(cause){setFreeError(cause instanceof Error?cause.message:'No pudimos obtener la sugerencia. Puedes guardar tu observación.');}finally{setSuggesting(false);}}
-  async function confirmFree(observation:SavedObservation,ids=freeIds){
+  async function saveCompetencies(observation:SavedObservation,ids=freeIds){
     const historyResponse=await apiFetch(`${localDatabaseApiUrl}/api/ordinary-observations/${observation.id}/attributions`,{cache:'no-store'});
     const history=await historyResponse.json() as {latest?:{version:number;state:string;raw_revision:number;confirmed_competency_ids:string[]};error?:string};if(!historyResponse.ok)throw Error(history.error??'No pudimos revisar las competencias.');
     if(history.latest?.raw_revision===observation.source_revision&&['confirmed','unclassified'].includes(history.latest.state)&&JSON.stringify([...history.latest.confirmed_competency_ids].sort())===JSON.stringify([...ids].sort())){setFreePending(false);return;}
     const response=await apiFetch(`${localDatabaseApiUrl}/api/ordinary-observations/${observation.id}/attributions`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({expectedVersion:history.latest?.version??0,competencyIds:ids,criterionIds:[],reason:'Decisión docente al guardar la observación libre'})});
-    const data=await response.json() as {error?:string};if(!response.ok)throw Error(data.error??'No pudimos confirmar las competencias.');setFreePending(false);
+    const data=await response.json() as {error?:string};if(!response.ok)throw Error(data.error??'No pudimos guardar las competencias.');setFreePending(false);
   }
-  async function retryFree(){if(!saved||blocked)return;setSaving(true);setMessage('');try{await confirmFree(saved);setFeedbackTone('success');setMessage('Competencias confirmadas.');}catch{setFeedbackTone('error');setMessage('Tu observación está guardada. Falta confirmar sus competencias; puedes volver a intentarlo.');}finally{setSaving(false);}}
+  async function retryFree(){if(!saved||blocked)return;setSaving(true);setMessage('');try{await saveCompetencies(saved);setFeedbackTone('success');setMessage('Competencias guardadas.');}catch{setFeedbackTone('error');setMessage('Observación guardada. Reintenta guardar las competencias.');}finally{setSaving(false);}}
   async function save(text = rawText, fromDictation = false) {
     if (!studentId || (!text.trim() && !photo) || saving || (recordingBusy && !fromDictation) || preparingPhoto) return;
     const useFreeDecision=freeDecision&&(!freeSuggested||text===rawText);
@@ -104,7 +104,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
       if (!response.ok) throw new Error(data.error || "No se pudo guardar la observación.");
       setRawText(text);
       setSaved(data.observation);
-      if(!guided&&useFreeDecision){setFreePending(true);try{await confirmFree(data.observation);}catch{setFeedbackTone("error");setMessage("Tu observación está guardada. Falta confirmar sus competencias; puedes volver a intentarlo.");return;}}
+      if(!guided&&useFreeDecision){setFreePending(true);try{await saveCompetencies(data.observation);}catch{setFeedbackTone("error");setMessage("Observación guardada. Reintenta guardar las competencias.");return;}}
       setCoverageRevision(value=>value+1);
       setFeedbackTone("success"); setMessage("Observación guardada para el niño seleccionado.");
     } catch (error) { setFeedbackTone("error"); setMessage(error instanceof Error ? error.message : "No se pudo guardar. Tu texto sigue aquí; vuelve a intentarlo."); }
@@ -125,7 +125,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
       setFreeDecision(false);setFreePending(false);
       setEditMode(false); setReason("");setCoverageRevision(value=>value+1);
       setFeedbackTone("success");
-      setMessage(action === "void" ? "Observación anulada; el original queda en el historial." : "Corrección guardada; el original permanece intacto. Revisa y confirma sus competencias para usar esta versión en Evaluar.");
+      setMessage(action === "void" ? "Observación anulada; el original queda en el historial." : "Corrección guardada. Revisa sus competencias para usarla en Evaluar.");
     } catch (error) { setFeedbackTone("error"); setMessage(error instanceof Error ? error.message : "No se pudo revisar."); }
     finally { setSaving(false); }
   }
@@ -174,7 +174,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
             <option value="">Todavía no elijo un criterio</option>
             {activity.criteria.map((item) => <option key={item.id} value={item.id}>{item.criterion_text}</option>)}
           </select>
-          {criterionId && <p className="mt-1 text-xs text-muted-foreground">El criterio elegido por ti quedará confirmado para esta observación.</p>}
+          {criterionId && <p className="mt-1 text-xs text-muted-foreground">El criterio se guarda con la observación.</p>}
         </div>}
         {history && <section className="rounded-xl border bg-[#f6f9fd] p-3">
           <h3 className="font-semibold">Observaciones guardadas</h3>
@@ -193,12 +193,12 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
               placeholder="Cuenta qué hizo o dijo, con un ejemplo concreto." /></div>
           {studentId && <DictationRecorder key={studentId} iconOnly autoTranscribe studentId={studentId} purpose="raw_observation" rawTranscript context={guided?activity?.title??'Observación guiada':'Observación libre'} currentText={rawText} disabled={saving||suggesting} onBusyChange={setRecordingBusy} onTranscribed={async(text,saveNow)=>{updateRaw(text);if(saveNow)await save(text,true);}}/>}
           <div className="rounded-xl bg-[#edf7ff] p-4"><MediaAttachmentInput key={studentId} studentId={studentId} context={guided?activity?.title??'Observación guiada':'Observación libre'} media={photo} onMedia={setPhoto} onTranscribed={()=>{}} onBusyChange={setPreparingPhoto} disabled={!studentId||saving||recordingBusy||suggesting} photoOnly buttonInputs/></div>
-          {!guided&&<section className="space-y-3 rounded-xl border border-[var(--ayni-panel-border)] bg-[#f6faff] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-bold">Competencias relacionadas (opcional)</h3><Button variant="outline" disabled={blocked||!studentId||!rawText.trim()} onClick={()=>void suggestFree()}><Sparkles size={18}/>{suggesting?'Buscando sugerencia…':'Ayni sugiere'}</Button></div><p className="text-sm text-[#526b87]">Elige hasta dos competencias. Revisa la sugerencia antes de guardar. La foto no se analiza.</p>{freeSuggested&&<p role="status" className="text-sm text-[#25624e]">{freeIds.length?'Sugerencia lista. Puedes cambiarla o quitarla; la confirmarás al guardar.':'No hay una competencia clara. Puedes guardar sin elegir una.'}</p>}{freeError&&<p role="status" className="text-sm">{freeError}</p>}<ObservationCompetencyPicker items={freeItems} selected={freeIds} onChange={ids=>{setFreeIds(ids);setFreeDecision(true);setFreeSuggested(false);}} disabled={blocked||!studentId} compact/><Button variant="ghost" disabled={blocked||!studentId} onClick={()=>{setFreeIds([]);setFreeDecision(true);setFreeSuggested(false);}}>Dejar sin competencia</Button></section>}
+          {!guided&&<section className="space-y-3 rounded-xl border border-[var(--ayni-panel-border)] bg-[#f6faff] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><h3 className="font-bold">Competencias relacionadas (opcional)</h3><Button variant="outline" disabled={blocked||!studentId||!rawText.trim()} onClick={()=>void suggestFree()}><Sparkles size={18}/>{suggesting?'Buscando sugerencia…':'Ayni sugiere'}</Button></div><p className="text-sm text-[#526b87]">Elige hasta dos competencias. Revisa la sugerencia antes de guardar. La foto no se analiza.</p>{freeSuggested&&<p role="status" className="text-sm text-[#25624e]">{freeIds.length?'Puedes cambiar la sugerencia antes de guardar.':'No hay una competencia clara. Puedes guardar sin elegir una.'}</p>}{freeError&&<p role="status" className="text-sm">{freeError}</p>}<ObservationCompetencyPicker items={freeItems} selected={freeIds} onChange={ids=>{setFreeIds(ids);setFreeDecision(true);setFreeSuggested(false);}} disabled={blocked||!studentId} compact/><Button variant="ghost" disabled={blocked||!studentId} onClick={()=>{setFreeIds([]);setFreeDecision(true);setFreeSuggested(false);}}>Dejar sin competencia</Button></section>}
 
         </> : <section className="rounded-xl border bg-[#f6f9fd] p-4">
           <p className="font-semibold">{student?.name} · {saved.status === "voided" ? "Anulada" : saved.status === "corrected" ? "Corregida" : "Guardada"}</p>
           <p className="mt-2 whitespace-pre-wrap text-sm">{currentObservationText(saved) || "Foto sin texto"}</p>
-          {!guided&&freePending&&<Button className="mt-3" disabled={blocked} onClick={()=>void retryFree()}>Confirmar competencias elegidas</Button>}{!guided&&freeDecision&&!freePending&&<div className="mt-3"><AnnualCompetencies ids={freeIds} names={new Map(freeItems.map(item=>[item.id,item.name]))}/><p className="text-xs text-[#526b87]">{freeIds.length?'Competencias confirmadas por ti.':'Guardada sin competencia.'}</p></div>}{(!guided||saved.status==='corrected')&&saved.status!=='voided'&&<Button variant="outline" className="mt-3 whitespace-normal" onClick={()=>setReview(true)}>Revisar o cambiar competencias</Button>}
+          {!guided&&freePending&&<Button className="mt-3" disabled={blocked} onClick={()=>void retryFree()}>Reintentar guardar competencias</Button>}{!guided&&freeDecision&&!freePending&&<div className="mt-3"><AnnualCompetencies ids={freeIds} names={new Map(freeItems.map(item=>[item.id,item.name]))}/><p className="text-xs text-[#526b87]">{freeIds.length?'Competencias guardadas.':'Guardada sin competencia.'}</p></div>}{(!guided||saved.status==='corrected')&&saved.status!=='voided'&&<Button variant="outline" className="mt-3 whitespace-normal" onClick={()=>setReview(true)}>Revisar o cambiar competencias</Button>}
           {saved.corrected_text != null && <details className="mt-3 text-sm"><summary className="min-h-11 cursor-pointer py-2">Ver texto original</summary><p className="whitespace-pre-wrap">{saved.raw_text ?? "Foto sin texto"}</p></details>}
           <p className="mt-2 text-xs text-muted-foreground">El texto original y el alumno asociado no se modifican por una corrección.</p>
           {saved.status !== "voided" && !editMode && <Button type="button" variant="outline" className="mt-3" onClick={() => { setCorrectedText(currentObservationText(saved)); setEditMode(true); }}>Corregir o anular</Button>}
@@ -219,7 +219,7 @@ export function OrdinaryObservationDialog({ students, activity, onClose }: {
           onClick={() => void loadHistory()}>Ver observaciones</AsyncButton>}
         {saved ? <Button variant="outline" disabled={blocked} onClick={startAnother}>Registrar otra</Button> :
           <AsyncButton busy={saving} busyLabel="Guardando..." disabled={!studentId || (!rawText.trim() && !photo) || recordingBusy || preparingPhoto || suggesting}
-            onClick={() => void save()}>{!guided&&freeDecision?freeIds.length?"Guardar y confirmar competencias":"Guardar sin competencia":"Guardar observación"}</AsyncButton>}
+            onClick={() => void save()}>Guardar observación</AsyncButton>}
       </DialogFooter>
     </DialogContent>
   </Dialog>;
