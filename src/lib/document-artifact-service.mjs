@@ -43,7 +43,7 @@ export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, k
   if(expectedSourceHash && sourceHash!==expectedSourceHash)throw new VersionConflictError("El documento cambió durante la descarga. Prepara una descarga nueva; los archivos anteriores se conservan.");
   const templateVersion = kind === "annual_plan" ? document.content?.journey_version === 2 ? "annual-journey-readable-v4" : document.content?.experience_context ? "annual-experience-v1" : document.document_context?.template_version ?? "annual-legacy-v1"
     : kind === "experience" ? `${document.content?.document_template_version ?? "experience-legacy-v1"}-layout6`
-    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout8" : ""}-snapshot-${sourceHash.slice(0,16)}`;
+    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout9" : ""}-snapshot-${sourceHash.slice(0,16)}`;
   const row = await versionTransaction(db,`artifact:${kind}:${sourceId}`,async tx => {
     const current = (await tx.query(`select * from document_artifacts where source_kind=$1 and source_id=$2
       and source_version=$3 and artifact_version=1 and template_version=$4`,

@@ -25,7 +25,7 @@ La plantilla aportada por el usuario coincide byte a byte con `assets/templates/
 | Otra fecha en Hoy | Se consultó el 3/11 desde Calendario y se confirmó su desarrollo el 2/11; ejecución separada, fecha prevista conservada y sin edición pedagógica. | PASS UI local y regresiones de ejecución |
 | Antes de empezar/materiales | Columnas equivalentes para actividad y taller; materiales como etiquetas y observación libre accesible. Corrección adicional conserva los materiales literales guardados también al iniciar. | PASS UI escritorio/móvil + servicio |
 | Word actividad/proyecto | Portada original restaurada; tablas de guía, acciones/mediación en columnas, criterio/evidencia en su momento y referencias legibles. Revisiones nuevas de artefactos conservan descargas históricas. | PASS contenido y render Word; ver límites visuales |
-| Word anual | Portada/papelería originales, tabla de quince proyectos, títulos con formato explícito y fuentes canónicas una vez. Regresión XML impide cortar dentro de la tabla original y producir un DOCX inválido. Calendario antes del anexo de fuentes evita una página final casi vacía. | PASS estructura/render; documento sigue siendo extenso por sus fuentes |
+| Word anual | Portada/papelería originales, tabla de quince proyectos, títulos con formato explícito y fuentes canónicas una vez. Regresión XML impide cortar dentro de la tabla original y producir un DOCX inválido. Calendario integrado antes del anexo de fuentes. Los registros extensos todavía pueden terminar en una página con poco texto; no se recortan para ajustar una muestra. | PASS estructura/render; documento sigue siendo extenso por sus fuentes |
 | Excel | Hoja Resumen con conteos reales, Consolidado con franjas suaves, niveles confirmados, encabezado y nombre fijos, impresión A4 horizontal y autofiltro. Datos y esquema del detalle conservados. | PASS servicio e importación/render de ambas hojas |
 
 ## Errores relevantes y prevención
@@ -64,3 +64,9 @@ Revertir el commit de esta ronda y volver a apuntar únicamente el alias QA al d
 - git diff --check: PASS.
 
 La generación cloud completa de macetas no forma parte de estos resultados. SHA, alias y smoke se verifican por separado tras el commit, conservando Producción.
+
+## Comprobación de la descarga real y ajuste posterior
+
+La Preview del commit c8dbd26 pasó 38 comprobaciones de smoke, cinco controles de rutas nuevas (401 sin sesión, 200 con cuenta QA), tres descargas Word y comparación de igualdad de los registros históricos originales. Se verificó además el mismo trabajo afectado: devuelve una confirmación de material pendiente, sin llamar a IA. Producción conservó deployment y SHA.
+
+Word local abrió los tres DOCX descargados de esa Preview (anual 50 páginas, proyecto 10, actividad 5). La revisión individual de las cinco páginas de la actividad encontró una sección final sin registros que dejaba una página casi vacía. Ajuste de causa general: cuando no hay observaciones, el aviso va junto al propósito y se omite únicamente la sección vacía; con observaciones reales se conservan tabla, fecha, alumno y criterio. Una sección posterior de taller/reflexión tampoco se pierde. Revisión de actividad layout9 conserva el artefacto layout8. Misma actividad guardada: 5→4 páginas, inspeccionadas, sin modificar su contenido pedagógico. 25 regresiones focales PASS, solapadas con las anteriores. No se declara ausencia universal de páginas cortas por contenido legítimo.

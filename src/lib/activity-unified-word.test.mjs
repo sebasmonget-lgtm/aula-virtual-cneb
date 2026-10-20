@@ -47,8 +47,10 @@ test("la actividad distingue qué observar de las observaciones registradas", as
     assert.deepEqual(await archive.file(name).async("nodebuffer"), await source.file(name).async("nodebuffer"), `Preserva ${name}`);
   assert.doesNotMatch(xml, /¿QUÉ\?|¿CÓMO\?|¿PARA QUÉ\?/);
   assert.doesNotMatch(xml, /\{\{/);
-  assert.match(xml, /V\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
+  assert.doesNotMatch(xml, /V\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
   assert.match(xml, /Aún no hay observaciones registradas/);
+  assert.equal((xml.match(/Aún no hay observaciones registradas/g)??[]).length,1);
+  assert.ok(xml.indexOf('Aún no hay observaciones registradas')<xml.indexOf('III. SECUENCIA DE LA ACTIVIDAD'),'El aviso no crea una sección final vacía');
   assert.doesNotMatch(xml, /Nombre del estudiante/);
   const integratedDocument={...document,experience_details:{activity_route:[{...route,competency_ids:['PS_CONVIVE','COM_ORAL']}]},active_criterion:{...document.active_criterion,observation_focus:['Acordar turnos']}};
   const integratedZip=await JSZip.loadAsync(await renderActivityUnifiedWord(integratedDocument,cards));
@@ -63,7 +65,7 @@ test("la actividad distingue qué observar de las observaciones registradas", as
     mediation: "Inicio: Ofrece dos cajas.\nDesarrollo: Pregunta: ¿Qué ayuda a sostenerla?\nCierre: Recupera la prueba que hicieron." } };
   const phasedZip = await JSZip.loadAsync(await renderActivityUnifiedWord(phasedDocument,cards));
   const phasedXml = await phasedZip.file('word/document.xml').async('string');
-  const sequence = phasedXml.slice(phasedXml.indexOf('III. SECUENCIA DE LA ACTIVIDAD'),phasedXml.indexOf('V. REGISTRO DE OBSERVACIONES'));
+  const sequence = phasedXml.slice(phasedXml.indexOf('III. SECUENCIA DE LA ACTIVIDAD'),phasedXml.indexOf('IV. REFERENTES CURRICULARES'));
   assert.match(sequence,/INICIO[\s\S]*Eligen una caja[\s\S]*Ofrece dos cajas[\s\S]*DESARROLLO[\s\S]*Prueban cómo apoyarla[\s\S]*CIERRE[\s\S]*Señalan lo que cambió/);
   assert.doesNotMatch(sequence,/Inicio:|Desarrollo:|Cierre:|Preguntas para conversar/);
   assert.equal((sequence.match(/¿Qué ayuda a sostenerla\?/g)??[]).length,1);
@@ -91,12 +93,17 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   const freeXml=await freeZip.file("word/document.xml").async("string"),freeTable=[...freeXml.matchAll(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g)].find(match=>match[0].includes("Nombre del estudiante"))?.[0];
   assert.match(freeTable,/Sin criterio asociado/);assert.doesNotMatch(freeTable,/Acordar turnos/);
   assert.match(completedXml, /El grupo propuso nuevos turnos/);
+  const closureWithoutEvidence=await JSZip.loadAsync(await renderActivityUnifiedWord({...document,teacher_closure_note:'Mañana ofreceré un espacio más amplio.'},cards));
+  const closureXml=await closureWithoutEvidence.file('word/document.xml').async('string');
+  assert.match(closureXml,/Mañana ofreceré un espacio más amplio\./,'Una reflexión guardada se conserva aunque no haya observaciones individuales');
+  assert.doesNotMatch(closureXml,/V\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
   assert.doesNotMatch(completedXml, /VIII\. TALLER|\{\{/);
   const withWorkshop = { ...document, content: { ...document.content, document_template_version: "activity-with-workshop-v1" },
     workshop: { content: { workshop_type: "Arte", purpose: "Explorar formas", opening: "Mirar", development: "Crear", closure: "Compartir", materials: ["papel"] } } };
   const workshopWord = await JSZip.loadAsync(await renderActivityUnifiedWord(withWorkshop, cards));
   const workshopXml = await workshopWord.file("word/document.xml").async("string");
-  assert.match(workshopXml, /V\. CUADERNO DE CAMPO/);
+  assert.doesNotMatch(workshopXml, /V\. CUADERNO DE CAMPO/);
+  assert.match(workshopXml, /TALLER/,'La sección opcional posterior se conserva');
   assert.match(workshopXml, /Aún no hay observaciones registradas/);
   assert.doesNotMatch(workshopXml, /\{\{/);
 });

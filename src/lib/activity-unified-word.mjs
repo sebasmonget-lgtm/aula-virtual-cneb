@@ -91,7 +91,8 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
   let output = xml;
   output = replaceSectionBody(output, "III. REFERENTES CURRICULARES", "IV. MOMENTOS FIJOS", curriculum);
   output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, row => ["SEDE_COLEGIO","UGEL"].some(key => !values[key] && xmlText(row).includes("{{"+key+"}}")) ? "" : row);
-  output = replaceSectionBody(output, "II. PROPÓSITO DE APRENDIZAJE", "III. REFERENTES CURRICULARES", guide.purpose);
+  output = replaceSectionBody(output, "II. PROPÓSITO DE APRENDIZAJE", "III. REFERENTES CURRICULARES", guide.purpose +
+    (!evidence.length ? guideParagraph("Aún no hay observaciones registradas. Puedes registrarlas desde Hoy.", { size: 20, color: "526B87" }) : ""));
   output = replaceSectionBody(output, "V. SECUENCIA DE LA ACTIVIDAD", withWorkshop ? "VI. CUADERNO DE CAMPO" : "VI. REGISTRO DE OBSERVACIONES", guide.sequence);
   if (!evidence.length) {
     output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,
@@ -139,12 +140,8 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
   output = retainCoverPageBreak(output);
   // No empty form or isolated heading when there are no field records yet.
   if (!evidence.length) {
-    const start = [...output.matchAll(paragraphPattern)].find(match => xmlText(match[0]).includes(withWorkshop ? "VI. CUADERNO DE CAMPO" : "VI. REGISTRO DE OBSERVACIONES"));
-    const next = start && [...output.matchAll(paragraphPattern)].find(match => match.index > start.index);
-    if (start && next) output = output.slice(0, start.index) +
-      guideParagraph(withWorkshop ? "V. CUADERNO DE CAMPO" : "V. REGISTRO DE OBSERVACIONES Y EVIDENCIAS", { bold: true, size: 22, keepNext: true }) +
-      guideParagraph("Aún no hay observaciones registradas. Regístralas en Hoy para que aparezcan aquí.", { size: 20 }) +
-      output.slice(next.index + next[0].length);
+    output = removeSection(output, withWorkshop ? "VI. CUADERNO DE CAMPO" : "VI. REGISTRO DE OBSERVACIONES",
+      closure ? "VII. SÍNTESIS Y REFLEXIÓN DOCENTE" : withWorkshop ? "VIII. TALLER" : undefined);
   }
   output=replaceWordText(output,"Capacidad(es) pertinente(s)","Capacidades de referencia");
   output=replaceWordText(output,"V. SECUENCIA DE LA ACTIVIDAD","III. SECUENCIA DE LA ACTIVIDAD");
