@@ -42,7 +42,7 @@ export function PeriodBatchPanel({classroomId,periodId,kind,students,competencie
   useEffect(()=>{let active=true;api<{job:Job|null}>(`/api/period-evaluations/batches?${query}`).then(data=>{if(active)adopt(data.job);}).catch(cause=>{if(active)setError(cause.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[query]);
   useEffect(()=>{if(!confirmIncomplete)return;const deadline=Date.now()+5000;const timer=window.setInterval(()=>setSeconds(evaluationConfirmationSeconds(deadline)),200);return()=>window.clearInterval(timer);},[confirmIncomplete]);
   function requestPrepare(target?:Item,editing=false){setExpanded(true);if(kind==='conclusions'&&pendingValuations>0&&!editing){setPendingTarget(target);setSeconds(5);setConfirmIncomplete(true);}else void prepare(target,editing,editing);}
-  async function prepare(target?:Item,editing=false,acknowledgeIncomplete=false){if(!allowLeave())return;setConfirmIncomplete(false);setBusy(true);setError("");try{const next=await api<Job>("/api/period-evaluations/batches",{...scope,kind,acknowledgeIncomplete,...(!target?{refresh:true}:{}),...(target?{studentId:target.student_id,competencyId:target.competency_id,...(editing?{edit:true}:{regenerate:true})}:{})});adopt(next);if(target&&editing)setOpen(`${target.student_id}:${target.competency_id??"family"}`);}catch(cause){setError((cause as Error).message);}finally{setBusy(false);}}
+  async function prepare(target?:Item,editing=false,acknowledgeIncomplete=false){if(!allowLeave())return;setConfirmIncomplete(false);setBusy(true);setError("");try{const next=await api<Job>("/api/period-evaluations/batches",{...scope,kind,acknowledgeIncomplete,...(!target?{refresh:true}:{}),...(target?{studentId:target.student_id,competencyId:target.competency_id,...(editing?{edit:true}:{regenerate:true})}:{})});adopt(next);if(target){setFilter('all');setPage(1);}if(target&&editing)setOpen(`${target.student_id}:${target.competency_id??"family"}`);}catch(cause){setError((cause as Error).message);}finally{setBusy(false);}}
   // Requests advance bounded parallel groups; transport errors are reconciled with GET.
   useEffect(()=>{
     if(!job||job.status!=="queued"||busy||disabled)return;
@@ -76,7 +76,8 @@ export function PeriodBatchPanel({classroomId,periodId,kind,students,competencie
   }
   const itemState=(item:Item)=>item.saved_id?'saved':item.review_reason?'review':'ready';
   const studentOrder=new Map(students.map((student,index)=>[student.id,index])),competencyOrder=new Map(competencies.map((competency,index)=>[competency.id,index]));
-  const visible=items.filter(item=>filter==="all"||itemState(item)===filter).sort((a,b)=>(studentOrder.get(a.student_id)??students.length)-(studentOrder.get(b.student_id)??students.length)||(competencyOrder.get(a.competency_id??'')??competencies.length)-(competencyOrder.get(b.competency_id??'')??competencies.length));
+  // Keep the open editor mounted when a saved text becomes an unsaved revision.
+  const visible=items.filter(item=>filter==="all"||itemState(item)===filter||filter==='saved'&&open===`${item.student_id}:${item.competency_id??'family'}`).sort((a,b)=>(studentOrder.get(a.student_id)??students.length)-(studentOrder.get(b.student_id)??students.length)||(competencyOrder.get(a.competency_id??'')??competencies.length)-(competencyOrder.get(b.competency_id??'')??competencies.length));
   const pages=Math.max(1,Math.ceil(visible.length/10)),currentPage=Math.min(page,pages),pageItems=visible.slice((currentPage-1)*10,currentPage*10);
   function turnPage(next:number){setPage(next);conclusionPanel.current?.scrollIntoView({block:'start',behavior:'auto'});}
   const key=(item:Item)=>`${item.student_id}:${item.competency_id??"family"}`;
