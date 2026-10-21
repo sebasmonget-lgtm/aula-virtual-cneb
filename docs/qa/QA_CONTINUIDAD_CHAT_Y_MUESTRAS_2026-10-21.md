@@ -18,7 +18,7 @@ Primer código de navegación `408a81a` publicado solo en QA: 66 comprobaciones 
 
 ## Muestras y mejora pedagógica general
 
-Seis creaciones máximas alcanzadas: diagnóstico, proyecto maestro, actividad inicial, informe familiar, primera respuesta del chat actualizado y actividad revisada. Diagnóstico recuperado en copia local tras 210,328 s sin consultas y con la base cerrada; una creación, una consulta al volver y nota docente conservada. Once lecturas válidas. Proyecto de dos semanas y diez actividades en 197,689 s; primera actividad 11,826 s, redacción familiar 13,158 s y actividad revisada 15,277 s aproximadamente, con tiempos exactos en recibos. No se regenera el plan anual aprobado.
+Seis creaciones máximas alcanzadas: diagnóstico, proyecto maestro, actividad inicial, informe familiar, primera respuesta del chat actualizado y actividad revisada. Diagnóstico recuperado en copia local tras 210,328 s sin consultas y con la base cerrada; una creación, una consulta al volver y nota docente conservada. Once lecturas válidas. Proyecto de dos semanas y diez actividades en 197,689 s; primera actividad 11,826 s, redacción familiar 13,158 s y actividad revisada 15,930 s (traza: 15,551 s), con tiempos exactos en recibos. No se regenera el plan anual aprobado.
 
 La primera actividad añadía «la prueba aún no se realiza», aunque el mapa solo pedía recoger anticipaciones antes de organizar una comparación. Ajuste general en el generador diario: no introducir prohibiciones ausentes del mapa y permitir un primer intento después de anticipar, con recursos/condiciones autorizados, sin adelantar la comparación sistemática ni cambiar el criterio. La nueva muestra conserva el propósito, criterio, referencias oficiales y momentos observacionales; recoge la anticipación y permite probar una posición. No es una nueva regla normativa del MINEDU que obligue a experimentar cada día: es una mejora didáctica situada, coherente con exploración y planificación flexible del Programa de Inicial (pp.36–37 y185–190).
 
@@ -30,8 +30,21 @@ Ensayo cloud de lectura: doce peticiones, tres simultáneas, misma cuenta; media
 
 Después de abrir el chat: 64 tablas pedagógicas sin cambios, año y diagnósticos intactos, conversaciones anteriores conservadas y una conversación nueva que arrastra los dos mensajes docentes. Una nueva llamada Luna, US$0,0041053. Total ronda US$0,2257692 estimados por seis creaciones; cero costos nuevos desconocidos. Los siete intentos históricos sin precio siguen separados. Dos fallos del harness ocurrieron después de producir salidas válidas (selección de estado del informe y columna de medición); se corrigieron sin repetir esas generaciones. No son cuatro fallos de Ayni ni llamadas extra.
 
-Pendiente al escribir: gates/publicación del ajuste de instrucción diario, inspección final de Word y cierre de entrega. El viewport móvil solicitado al navegador no cambió sus píxeles; no se declara una nueva comprobación móvil real.
+El ajuste diario se publicó primero en e247ab0 (66 checks PASS). La inspección final detectó el detalle de paginación documentado abajo. El control de tamaño del navegador no tuvo efecto inmediato; al recargar se comprobó una vista estrecha del chat. El recorrido móvil completo sigue pendiente.
 
 ### Ajuste final de presentación
 
 La inspección visual encontró un título de criterio dividido entre páginas en la actividad. Causa: fila de observación divisible; solución acotada al Word de actividad: mantener cada bloque de observación unido y los referentes cortos con su título. Los demás consumidores del layout conservan su comportamiento por defecto. Sin cambios en texto, decisiones ni plantillas gráficas. Muestra final de actividad: cinco páginas legibles, sin el título cortado; nuevo total de muestras: 36 páginas. Rollback: revertir únicamente el ajuste de paginación. Las pruebas Word existentes y gates se repetirán desde commit limpio antes de publicar el ajuste.
+
+
+## Cierre verificado
+
+Código final `67369618289a7ecb3a7efb34f61426a53f600def`, deployment `dpl_FgC4fZFXqSdH3mEqvD1maR55DZaG`, Preview `https://ayni-aula-staging-59gogaffv-ayni4.vercel.app`, alias QA habitual, región gru1. 66 comprobaciones Preview/alias PASS, fuentes y consumo sin cambios durante smoke; Producción sigue en dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf. Commit limpio y sincronizado utilizado para publicar.
+
+Gates finales desde checkout limpio: typecheck 4,544 s, lint 28,723 s y build canónico 15,617 s PASS; 28 pruebas Word PASS. Las 114 regresiones verificaron la navegación/servicios antes de los dos ajustes finales; las 24 de actividad verificaron el prompt; hay pruebas compartidas y no se suman como únicas. Una invocación directa errónea de Next/Turbopack falló por el enlace node_modules del worktree: el proyecto utiliza scripts/run-framework.mjs (vinext), cuyo build pasó. Se conserva esa incidencia de control en tiempos, sin modificar el framework ni atribuirla a fallo funcional de Ayni.
+
+Se inspeccionaron 36 páginas nuevas: diagnóstico 14, proyecto 13, actividad 5 e informe 4. Reporte de dos páginas revisado. El plan anual de cuarenta páginas se incluye byte idéntico al ya auditado, sin regeneración ni nueva afirmación de revisión completa. Las salidas son borradores aislados, sin confirmar ni enviar a familias. Las proyecciones de descarga usan los renderers canónicos: diagnóstico unificado y bloques pedagógicos de actividad; se corrigió el arnés de exportación antes de entregar, sin cambiar esas plantillas ni datos en línea.
+
+La recarga final conservó el chat actual, sus dos decisiones docentes y el año previo; 64 tablas, diagnósticos, archivos y conversaciones anteriores intactos. La captura 014a documenta el chat en vista estrecha; 013a/013b quedan históricas y excluidas del montaje. No hay video montado ni comprobación completa móvil. No se afirma capacidad de generaciones masivas.
+
+Techo final: seis creaciones reales, US$0,2257692 estimados nuevos, cero costos nuevos desconocidos. Acumulado conocido US$1,37547862 por 102 llamadas; siete intentos históricos sin precio separados. No hubo nuevas fotos/audio enviados a IA. Entrega: outputs/Ayni-chat-y-muestras-2026-10-21 y ZIP homónimo, con seis Word, captura, tiempos, costos, hashes y alcance. Ver recibos privados en .local/continuidad-chat-muestras-20261021. No se toca el trabajo paralelo de Mirai.

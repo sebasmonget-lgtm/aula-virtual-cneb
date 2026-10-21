@@ -1561,3 +1561,8 @@ El editor principal y el anterior comparten el mismo control recuperable. Recibi
 ## 2026-10-21 — Continuar directamente al chat sin editor de síntesis
 
 Por aclaración explícita posterior se retira DiagnosticBriefReview de los dos recorridos y se elimina su acceso. El enlace histórico mode=summary conduce al chat. Captura ofrece «Continuar con Ayni» como principal; la matriz de observaciones queda como consulta opcional. La intención de conversación se transmite también cuando ya existe un año guardado. Abrirlo no sustituye, confirma ni regenera ese año. Las entrevistas y observaciones llegan mediante el snapshot canónico, sin aprobar una síntesis IA intermedia. Servicios diagnósticos recuperables, historial y exportaciones permanecen en backend; no se borran versiones ni propuestas. Esta decisión sustituye la presentación del editor descrita en la entrada anterior, conservando sus protecciones de datos y consumo. Ver QA_CONTINUIDAD_CHAT_Y_MUESTRAS_2026-10-21.md.
+
+
+### Indagación y paginación de actividades
+
+El generador diario no debe añadir prohibiciones de explorar ausentes del mapa: puede recoger la anticipación y permitir un primer intento con recursos autorizados, sin adelantar la comparación sistemática ni cambiar el criterio. No se convierte en obligación de experimentar cada día. Instrucción validada con segunda muestra; modelos y validadores conservados. En Word de actividad, criterios cortos y referentes mantienen sus títulos unidos; los otros consumidores del layout conservan el comportamiento por defecto. Publicación QA 6736961, 66 checks PASS; Producción intacta.
