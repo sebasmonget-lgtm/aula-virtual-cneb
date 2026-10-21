@@ -162,7 +162,10 @@ test("el provider no contiene modelos fijos, logs, PDFs ni llamadas externas fue
   const source = await readFile(new URL("./openai-provider.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(source, /gpt-5\.6|console\.|\.pdf|fetch\(/i);
   assert.match(source, /client\.responses\.create/);
-  assert.match(source, /OPENAI_API_KEY/);
+  assert.match(source, /resolveTextConnection/);
+  const connection = await readFile(new URL("./ai-text-connection.mjs", import.meta.url), "utf8");
+  assert.match(connection, /OPENAI_API_KEY/);
+  assert.doesNotMatch(connection, /NEXT_PUBLIC_|console\.|fetch\(/);
 });
 
 

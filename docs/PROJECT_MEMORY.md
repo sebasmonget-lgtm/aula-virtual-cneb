@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-20 — API temporal de QA para Sol, conservando Luna y dictado
+
+Por petición expresa se habilita un gateway de texto opcional con tres variables servidor AYNI_TEXT_API_PROFILE, AYNI_TEXT_API_BASE_URL y AYNI_TEXT_API_KEY. El perfil mirai admite exclusivamente https://api.miraiapi.com/v1 y exige clave propia; solo Sol/Astra usan ese destino. Luna conserva modelo, endpoint y clave existentes; audio continúa independiente. Sin modificar política curricular, schemas, razonamiento ni permisos. Rollback: quitar las tres variables y volver a desplegar; el endpoint no debe cambiarse con la clave del proveedor anterior.
+
+El servicio compatible respondió con modelo gpt-6.1-sol y JSON estricto, incluido background completado. Esto verifica compatibilidad, no autenticidad del modelo subyacente. Responses devolvió usage cero mientras el portal descontó cuota; consumo de gateway se registra sin precio, nunca gratuito, y el saldo del portal es la referencia. No se aplican tarifas oficiales a un paquete con multiplicadores propios. Clave cifrada con DPAPI fuera del repositorio; credenciales excluidas de recibos. Comprobaciones sintéticas, sin enviar datos de alumnos. Publicación y límites en docs/qa/QA_API_MIRAI_2026-10-20.md.
+
 ## 2026-10-20 — Cumpleaños y control de español publicados en QA
 
 Solicitud expresa de commit/subida atendida. `a9e9fdd` y `58a44df6313d5a222c86c624907b881f68573b84` subidos a la rama QA; Preview `dpl_418kZFSTvnYMSYVAExnfZtDuyQdM` en gru1 y alias habitual actualizado al SHA `58a44df`, con árbol limpio al desplegar. 38 smoke checks PASS, español aceptado/inglés rechazado con voces sintéticas en Preview y alias, cumpleaños correctos, logo privado intacto. Fuentes pedagógicas y cantidades conservadas: diez niños/once imágenes. Cuatro filas de consumo de controles esperadas; histórico intacto. Producción `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf` sin cambio.

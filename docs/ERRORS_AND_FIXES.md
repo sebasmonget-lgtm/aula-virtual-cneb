@@ -1,5 +1,9 @@
 # Errores y soluciones
 
+## 2026-10-20 — Gateway informa uso cero pese a descontar cuota
+
+Síntoma: Responses de Mirai devuelve JSON válido pero input/output/total cero; el panel muestra consumo. Causa: metadatos de uso del gateway no representan su cuota. Solución: conexión explícita solo para Sol/Astra, metadatos nulos cuando el total es cero y registro sin tarifa oficial. No interpretar cero como llamada gratuita. Pruebas cubren selección de credenciales, endpoint HTTPS fijado, conservación de Luna y uso desconocido; comprobación real con contenido sintético. No se declara autenticidad ni contabilidad equivalente a OpenAI. Rollback y publicación: docs/qa/QA_API_MIRAI_2026-10-20.md.
+
 ## 2026-10-20 — Transcripción extranjera aceptada en dictado español
 
 Síntoma: dos 503 genéricos; al reintentar la misma grabación de entrevista, respuesta rusa guardada como borrador aunque la persona usuaria había leído opciones en español. El parámetro `language: es` del modelo anterior era una indicación, sin comprobación del idioma del resultado. El borrador incorrecto se limpió por UI y no se confirmó la entrevista.

@@ -1,5 +1,11 @@
 # Decisiones de arquitectura
 
+## 2026-10-20 — API temporal de QA para Sol, conservando Luna y dictado
+
+Por petición expresa se habilita un gateway de texto opcional con tres variables servidor AYNI_TEXT_API_PROFILE, AYNI_TEXT_API_BASE_URL y AYNI_TEXT_API_KEY. El perfil mirai admite exclusivamente https://api.miraiapi.com/v1 y exige clave propia; solo Sol/Astra usan ese destino. Luna conserva modelo, endpoint y clave existentes; audio continúa independiente. Sin modificar política curricular, schemas, razonamiento ni permisos. Rollback: quitar las tres variables y volver a desplegar; el endpoint no debe cambiarse con la clave del proveedor anterior.
+
+El servicio compatible respondió con modelo gpt-6.1-sol y JSON estricto, incluido background completado. Esto verifica compatibilidad, no autenticidad del modelo subyacente. Responses devolvió usage cero mientras el portal descontó cuota; consumo de gateway se registra sin precio, nunca gratuito, y el saldo del portal es la referencia. No se aplican tarifas oficiales a un paquete con multiplicadores propios. Clave cifrada con DPAPI fuera del repositorio; credenciales excluidas de recibos. Comprobaciones sintéticas, sin enviar datos de alumnos. Publicación y límites en docs/qa/QA_API_MIRAI_2026-10-20.md.
+
 ## 2026-10-20 — Validar español antes de aceptar un dictado
 
 Por petición expresa, todos los dictados requieren español detectado y texto español antes de devolver un éxito al cliente. `gpt-transcribe` aporta metadatos `languages`, solicitados con `[es]`; sustituye exclusivamente el tier de transcripción. Idioma distinto, mixto o incierto no se traduce ni reescribe para fingir una respuesta válida. La entrevista y RAW conservan el texto aceptado; permanece la edición de observación ya existente. Una llamada por intento, sin clasificador adicional; sin fallback que elimine la validación. Los errores tienen códigos fijos sin audio/transcripción en logs; una respuesta rechazada no llega al autoguardado. Tarifa nueva por duración sin recalcular consumo histórico. Ver `docs/qa/QA_DICTADO_ESPANOL_2026-10-20.md`.

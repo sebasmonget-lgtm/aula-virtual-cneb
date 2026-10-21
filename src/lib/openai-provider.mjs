@@ -1,3 +1,4 @@
+import { resolveTextConnection } from "./ai-text-connection.mjs";
 import { beginAIQATrace, endAIQATrace } from "./ai-qa-trace.mjs";
 import OpenAI from "openai";
 import { AIProvider } from "./ai-provider.mjs";
@@ -50,10 +51,12 @@ function classifyError(error) {
 }
 
 export class OpenAIProvider extends AIProvider {
-  constructor({ apiKey = process.env.OPENAI_API_KEY, client = null, timeoutMs = 30_000, model = null,
+  constructor({ apiKey, baseURL, client = null, timeoutMs = 30_000, model = null,
     background = false, resumeResponseId = null, onResponseStarted = async () => {} } = {}) {
     super({ id: "openai", model: null });
     this.apiKey = apiKey;
+    this.baseURL = baseURL;
+    this.customConnection = false;
     this.client = client;
     this.timeoutMs = timeoutMs;
     this.configuredModel = model;
@@ -62,9 +65,13 @@ export class OpenAIProvider extends AIProvider {
     this.onResponseStarted = onResponseStarted;
   }
 
-  getClient() {
-    if (!this.apiKey) throw new OpenAIProviderError("api_key_missing");
-    return this.client ?? new OpenAI({ apiKey: this.apiKey, timeout: this.timeoutMs, maxRetries: 0 });
+  getClient(model = this.configuredModel) {
+    const connection = this.apiKey !== undefined
+      ? { apiKey: this.apiKey, baseURL: this.baseURL, custom: Boolean(this.baseURL) }
+      : resolveTextConnection(process.env, model);
+    this.customConnection = connection.custom;
+    if (!connection.apiKey) throw new OpenAIProviderError("api_key_missing");
+    return this.client ?? new OpenAI({ apiKey: connection.apiKey, baseURL: connection.baseURL, timeout: this.timeoutMs, maxRetries: 0 });
   }
 
   async generate(request) {
@@ -75,7 +82,7 @@ export class OpenAIProvider extends AIProvider {
     if (this.configuredModel && this.configuredModel !== plan.model) {
       throw new OpenAIProviderError("model_mismatch", { execution_plan_model: plan.model });
     }
-    const client = this.getClient();
+    const client = this.getClient(plan.model);
     let response;
     let providerDurationMs = 0;
     let trace;
@@ -122,10 +129,11 @@ export class OpenAIProvider extends AIProvider {
         cause_name: error?.cause?.name ?? null,
       });
     }
+    const measuredUsage = this.customConnection ? {} : response.usage;
     await recordAiUsage({ provider: "openai", workflow: request.workflow ?? "generation", model: response.model ?? plan.model,
-      inputTokens: response.usage?.input_tokens, cachedInputTokens: response.usage?.input_tokens_details?.cached_tokens ?? 0,
-      cacheWriteTokens: response.usage?.input_tokens_details?.cache_write_tokens ?? 0,
-      outputTokens: response.usage?.output_tokens });
+      inputTokens: measuredUsage?.input_tokens, cachedInputTokens: measuredUsage?.input_tokens_details?.cached_tokens ?? 0,
+      cacheWriteTokens: measuredUsage?.input_tokens_details?.cache_write_tokens ?? 0,
+      outputTokens: measuredUsage?.output_tokens });
     try {
     if (response.status === "incomplete" || response.incomplete_details) {
       throw new OpenAIProviderError("response_incomplete");
@@ -150,7 +158,7 @@ export class OpenAIProvider extends AIProvider {
         model: actualModel,
         response_id: response._request_id ?? response.id ?? null,
         duration_ms: providerDurationMs,
-        usage: normalizeUsage(response.usage),
+        usage: normalizeUsage(this.customConnection && !response.usage?.total_tokens ? {} : response.usage),
       },
     };
     await endAIQATrace(trace, result);
