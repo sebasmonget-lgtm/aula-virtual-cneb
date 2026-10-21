@@ -43,6 +43,7 @@ test("job background: recargar y consultar temprano no crea otra generación ni 
         db,teacherId:user,readJson:async()=>body,send:(_r,status,data)=>{result={status,data};},annualPlanningContext:async()=>context,annualDocumentContext:()=>({teacher_name:"QA"}),
         createProvider:(_plan,options)=>({generate:async request=>{
           assert.equal(options.background,true);
+          assert.equal(options.timeoutMs,180000,'un gateway que responde sincrónicamente conserva el plazo del plan completo');
           if(!options.resumeResponseId){creates++;await options.onResponseStarted("resp_private_fixture");throw Object.assign(new Error("pending"),{reason:"response_pending"});}
           retrieves++;assert.equal(options.resumeResponseId,"resp_private_fixture");
           if(failRetrieve){failRetrieve=false;throw Object.assign(new Error('temporary'),{reason:'timeout'});}

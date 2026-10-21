@@ -33,3 +33,5 @@ Primera entrega: commit `0e4d2e67e39644840eac0312b44b27eb98fdf95a`, GitHub sincr
 La corrección de orden requiere un segundo commit y la misma secuencia de staging/smoke antes del alias. Recibos de la primera entrega en `.local/guided-release-20261020/`; verificación nominal fuera de Git en `outputs/ayni-recorrido-20261020/verificacion-50-observaciones.json`. No incluir datos nominales, fotografías o credenciales en el repositorio.
 
 Rollback de la corrección: volver al deployment anterior sin modificar observaciones ni historial. Preferir mantener la grilla estable; la versión previa puede mover objetivos durante la captura seguida. No tocar el archivo concurrente `ai-execution-router-v4.mjs` ni publicar su modificación sin terminar.
+
+Segunda entrega completada: commit 78423c6, Preview dpl_9LfvdBe1Zjfg59BbUfmFTpVJZttv en gru1 y alias QA actualizado. Cuarenta y cuatro smoke PASS y treinta y una pruebas combinadas PASS en checkout limpio. Cincuenta registros activos, trece archivos, huellas y ledger conservados durante publicación; Producción intacta. Capturas 006c y 006d pertenecen a esta entrega publicada.

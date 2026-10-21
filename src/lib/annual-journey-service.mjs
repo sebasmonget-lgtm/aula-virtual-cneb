@@ -101,7 +101,9 @@ export async function generateAnnualJourney({ context, snapshot, curriculum, cal
     const routing = resolvePlan({ workflow, task: "generation" });
     const begin = Date.now();
     const background = backgroundExecution && workflow === "annual_plan" && slots.length !== 12;
-    const response = await createProvider(routing, { timeoutMs: background ? 30000 : 180000,
+    // Some compatible gateways finish the response synchronously even when
+    // background was requested. Keep the annual budget for that first call.
+    const response = await createProvider(routing, { timeoutMs: 180000,
       background, resumeResponseId: state.provider_responses?.[index], onResponseStarted: async responseId => {
         state.provider_responses ??= {}; state.provider_responses[index] = responseId; await persist(state.stage);
       } }).generate(buildProviderRequest(workflow,
