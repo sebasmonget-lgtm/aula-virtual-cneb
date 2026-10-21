@@ -1537,3 +1537,7 @@ Una oportunidad curricular del proyecto puede corresponder a una alternativa den
 # 2026-10-21 — Criterio principal estable en todos los lectores
 
 La competencia principal es la declarada en la actividad, no la primera fila devuelta por SQL. Orden explícito al guardar y compatibilidad de lectura sin migrar registros. Cada criterio conserva su propia evidencia; alternativas no fuerzan evaluar todas las competencias a cada niño. Etiquetas comprensibles solo para prosa de planificación; citas y observaciones originales intactas. Ver QA_ACTIVIDAD_CRITERIOS_Y_RECORRIDO_2026-10-21.md.
+
+## 2026-10-21 — Alcance verificable de las iteraciones pedagógicas
+
+El límite de seis intentos se aplica a cada documento/generación individual e incluye fallos y reparaciones; no obliga a seis ni se comparte entre todos los alumnos. Recuperar resultados y maquetar no son llamadas nuevas. Se registran intentos sin precio conocido aparte del subtotal, nunca como consumo cero. Una copia local para revisar una secuencia completa debe declarar sus ajustes de fuentes y no acreditar ejecución remota. No completar valoraciones para eludir el bloqueo de cierre anual. Conservar pendientes explícitos; una muestra de plantilla no equivale a un cierre confirmado. Resultado: QA_CIERRE_AUDITORIA_PEDAGOGICA_2026-10-21.md.
