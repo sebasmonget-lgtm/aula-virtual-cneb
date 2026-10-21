@@ -1251,6 +1251,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         }
         else if(request.method==='GET'&&parts.length===6&&parts[3]==='group-review'&&parts[5]==='suggestion'){
           result=await readDiagnosticGeneration(db,teacherId,parts[4]);
+          if(['queued','processing'].includes(result.status))response.scheduleDiagnostic?.();
         }
         else if (request.method === "PUT" && parts.length === 5 && parts[3] === "group-review") result = await saveDiagnosticGroupReview(db, teacherId, parts[4], (await readJson(request)).details);
         else if (request.method === "POST" && parts.length === 6 && parts[3] === "group-review" && parts[5] === "confirm") result = await confirmDiagnosticGroupReview(db, teacherId, parts[4]);

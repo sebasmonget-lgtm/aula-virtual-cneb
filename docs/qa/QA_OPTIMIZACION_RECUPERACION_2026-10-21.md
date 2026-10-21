@@ -30,6 +30,8 @@ La ruta síncrona sigue compatible; no puede sobrescribir un trabajo recuperable
 
 La pantalla puede consultar el avance y aplicar la propuesta solo por decisión de la profesora; no reemplaza texto mientras escribe ni confirma automáticamente. Se conserva el borrador y el diagnóstico confirmado. Un resultado con fuentes cambiadas no se presenta como vigente. El consumo de una respuesta background se identifica por docente, flujo e ID mediante hash: recuperarla dos veces no inserta dos eventos.
 
+La consulta de un trabajo ya solicitado también puede reactivar su dispatcher si se perdió una continuación. La lease global impide ejecutar varios drains por las consultas simultáneas; no se inicia una creación por leer un borrador sin trabajo. En el primer staging, los controles de acceso devolvieron 401/404 correctamente; se corrigió la expectativa del smoke (un confirmado no editable se oculta con 404, no 422). El alias QA no se movió durante esa comprobación.
+
 `AYNI_PREPARATION_CONCURRENCY` permite 1–6; por defecto sigue en 2. `AYNI_PREPARATION_PER_TEACHER_CONCURRENCY` conserva 2 por defecto y permite reservar lugares al subir el límite global deliberadamente. Configuración inválida vuelve al valor conservador. No se han cambiado variables cloud. Esto no representa un límite global para todas las llamadas de IA: el diagnóstico tiene su propia cola de dos y la evaluación por lotes mantiene sus políticas existentes.
 
 Los lotes de evaluación e informes ya reutilizan resultados actuales, comparten contexto y retoman lo pendiente. Se conservaron sus servicios; las pruebas comprueban guardado parcial, fallo de contexto, timeout y fuentes nuevas sin repetir resultados correctos.
