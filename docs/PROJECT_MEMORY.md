@@ -1,5 +1,9 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-20 — Logo corregido en la última versión QA
+
+Entrega de producto `fabda4b4e3507163bb515102a231102f57afd7c5`, hijo de `9bc5b26` y subido a la misma rama, con árbol limpio al publicar. Preview `dpl_7XdPSs2PuS6qShZ1Gf4uzquYH1wM` en gru1 y alias QA actualizado tras smoke; 32 comprobaciones PASS, huellas de datos iguales y Producción `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf` intacta. 53 regresiones conservan informes/carátula/asistencia recientes; typecheck/lint/Vinext/Next PASS. Perfil QA recargado: logo PNG visible, 384×384, ruta relativa y mismo archivo privado. Primera captura corregida en `outputs/ayni-recorrido-20261020/capturas/001-configura-tu-aula.jpg`, secuencia actualizada. No añadir niños ni generar el diagnóstico todavía. Recibo: `.local/logo-release-20261020/release.json`; detalle: `docs/qa/QA_LOGO_Y_CAPTURAS_2026-10-20.md`. Cierre documental posterior sin cambio al producto publicado.
+
 ## 2026-10-20 — Recorrido desde cero, logo y capturas
 
 Tras el reinicio de la cuenta QA expresamente autorizado sin respaldos, se aprueba la primera página y se configura un aula de cinco años con datos de ejemplo de apariencia natural y un logo PNG cargado por UI; no usar etiquetas de prueba en los campos. No se añaden niños ni se genera el diagnóstico todavía. El logo queda guardado, pero el tablero devuelve una URL localhost en Vercel. Corrección local compartida para alta y relectura: ruta relativa con Auth Supabase y origen absoluto para API local. Once regresiones HTTP/servicios, lint, typecheck y builds Vinext/Next PASS. Sin migración ni publicación de esta corrección.

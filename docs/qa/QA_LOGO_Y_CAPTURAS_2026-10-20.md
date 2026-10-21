@@ -1,6 +1,6 @@
 # Logo del colegio y capturas del recorrido
 
-Fecha: 20 de octubre de 2026. Corrección local validada; publicación QA pendiente de solicitud expresa.
+Fecha: 20 de octubre de 2026. Corrección publicada y verificada exclusivamente en QA; entrega de producto `fabda4b` sobre `9bc5b26`.
 
 ## Hallazgo y alcance
 
@@ -17,7 +17,7 @@ La autorización sigue en servidor por ID de logo y propietario. No se convierte
 - Lint, `tsc --noEmit`, build Vinext y build Next webpack PASS. `git diff --check` PASS. Advertencias de dependencias/tamaño en Vinext no impiden el build.
 - En QA se completaron exclusivamente los datos del colegio/aula y se cargó un logo por UI. Cero alumnos añadidos, observaciones, IA de Ayni o documentos generados en este recorrido nuevo.
 
-No se ha publicado esta corrección. Después de una publicación autorizada: reabrir Configura tu aula, comprobar dimensiones naturales positivas de la imagen y captura visual; recargar y repetir. Mantener el mismo archivo y los datos existentes. No declarar que el enlace QA está corregido antes de esa comprobación.
+Al terminar la validación local todavía no se había publicado la corrección. La entrega posterior y la comprobación efectiva se registran debajo. Se conserva el mismo archivo, sin volver a subirlo.
 
 ### Comprobación de los últimos cambios antes de la entrega
 
@@ -31,6 +31,12 @@ Rollback: revertir únicamente el origen del logo y sus comprobaciones añadidas
 
 La persona usuaria solicita conservar capturas de cada paso revisado para montar después un video rápido. No se ha creado un video ni se ha publicado material.
 
-Destino ignorado por Git: `outputs/ayni-recorrido-20261020/`. `secuencia.json` conserva orden, título, descripción, estado e imagen de cada escena. `capturas/002-anade-a-tus-ninos.jpg` muestra el paso de matrícula vacío. La configuración queda pendiente de una toma con el logo corregido en QA. `hallazgos/001-configuracion-logo-roto.jpg` se conserva como evidencia y se excluye del montaje promocional.
+Destino ignorado por Git: `outputs/ayni-recorrido-20261020/`. `secuencia.json` conserva orden, título, descripción, estado e imagen de cada escena. `capturas/001-configura-tu-aula.jpg` muestra los datos y el logo ya visible en QA; `capturas/002-anade-a-tus-ninos.jpg` muestra la matrícula vacía. También se guardan encuadres del viewport. `hallazgos/001-configuracion-logo-roto.jpg` se conserva como evidencia y se excluye del montaje promocional.
 
 Mantener los originales completos y usar las pantallas realmente recorridas. El control del reloj QA puede retirarse del encuadre durante la edición del video; no ocultarlo modificando el DOM para fingir otro entorno. No añadir niños ni avanzar el diagnóstico automáticamente para completar las escenas. Los siguientes pasos se incorporan conforme se revisen con la persona usuaria.
+
+## Entrega efectiva
+
+Commit de producto `fabda4b4e3507163bb515102a231102f57afd7c5`, hijo directo de `9bc5b26`, subido a la misma rama. Árbol limpio al publicar y remoto sincronizado. Preview `dpl_7XdPSs2PuS6qShZ1Gf4uzquYH1wM`, región gru1, con la base QA separada; smoke antes de mover el alias y después: 32 comprobaciones PASS. El alias `https://ayni-aula-qa-20261019.vercel.app/` apunta a ese despliegue y al SHA exacto. Producción conserva `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf`, fuente `9a0920230350cd6b9050f35683a1f35d459e78c7`.
+
+Las huellas de los datos propios y las cantidades coinciden antes/después. El mismo logo devuelve PNG privado de 168.871 bytes; sin sesión 401, ID desconocido 404. Tras recargar el perfil en el navegador, la imagen usa `/api/assets/:id`, completa y con dimensiones naturales 384×384. Inspección visual confirma las iniciales JB visibles; toma completa guardada y escena 1 actualizada. Cero alumnos añadidos, documentos generados o llamadas pagadas de IA en la entrega. Recibos privados en `.local/logo-release-20261020/`. Este cierre documental posterior no cambia el código publicado.
