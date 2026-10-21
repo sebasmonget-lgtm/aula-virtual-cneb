@@ -85,6 +85,7 @@ export type DiagnosticWorkspace = {
   entries: { id: string; student_id: string; competency_id: string; teacher_confirmed: boolean; teacher_interpretation: string | null }[];
   observations: { id: string; student_id: string; competency_id: string; reference_id: string; status: string; note: string | null }[];
   experiences: {
+    required_resource?: "digital_creation";
     id: string; title: string; explanation: string; pedagogical_blocks?: import("../features/dashboard/components/pedagogical-block").PedagogicalBlockData[]; teacher_instructions: string; age_support?: string | null; examples: string[]; catalog_version: string; catalog_status: string;
     competencies: { id: string; name: string }[];
     aspects: { id: string; competency_id: string; competency_name: string; area_name: string; label: string; prompt: string; examples: string[]; age_reference: string; moment_title?: string; teacher_steps?: string[]; look_for?: string }[];
@@ -345,7 +346,7 @@ export async function saveDiagnosticExperienceObservation(input: {
   return payload.workspace;
 }
 
-export async function saveCompactGuidedObservation(input: {studentId:string;experienceId:string;aspectId:string;observationText:string;clientRequestId:string;media?:PrivateMediaUpload}) {
+export async function saveCompactGuidedObservation(input: {studentId:string;experienceId:string;aspectId:string;observationText:string;observedAt?:string;clientRequestId:string;media?:PrivateMediaUpload}) {
   const response=await apiFetch(`${apiUrl}/api/diagnostics/experience-observations`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({...input,observationStatus:"observed_without_judgment",compact:true})});
   const payload=await apiJson<{error?:string;observation?:DiagnosticWorkspace["experience_observations"][number]}>(response);
   if(!response.ok||!payload.observation)throw new Error(payload.error??"No se pudo guardar la observación. Tu texto y foto siguen aquí.");

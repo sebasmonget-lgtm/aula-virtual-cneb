@@ -22,10 +22,16 @@ test("guardado guiado idempotente conserva foto privada, criterio y hechos sin e
     await importStudentsForTeacher(db,teacher,[{firstName:"Ana",lastName:"Prueba"}]);
     const workspace=await loadDiagnosticExperienceWorkspace(db,teacher),experience=workspace.experiences[0],studentId=workspace.students[0].id;
     const input={studentId,experienceId:experience.id,aspectId:experience.aspects[0].id,observationStatus:"observed_without_judgment",observationText:"Eligió bloques y dijo que haría una casa.",clientRequestId:"cccccccc-cccc-4ccc-8ccc-cccccccccccc",mediaPath:`student-evidence/${teacher}/${studentId}/dddddddd-dddd-4ddd-8ddd-dddddddddddd.jpg`,mediaMimeType:"image/jpeg",mediaSha256:"a".repeat(64)};
+    input.observedAt='2026-03-18';
     const first=await recordDiagnosticExperienceObservation(db,teacher,input),retry=await recordDiagnosticExperienceObservation(db,teacher,input);
+    assert.equal(new Date(first.observation.observed_at).toISOString(),'2026-03-18T17:00:00.000Z');
+    await assert.rejects(recordDiagnosticExperienceObservation(db,teacher,{...input,observedAt:'2026-03-19'}),{reason:'request_conflict'});
+    for(const observedAt of ['2026-02-30','2026-13-01','18/03/2026','',123])
+      await assert.rejects(recordDiagnosticExperienceObservation(db,teacher,{...input,observedAt}),{reason:'invalid_date'});
     assert.equal(first.id,retry.id);assert.equal(retry.replayed,true);assert.equal(first.competencyId,experience.aspects[0].competency_id);assert.equal(first.observation.observation_status,"observed_without_judgment");
     assert.equal((await loadDiagnosticExperienceWorkspace(db,teacher)).experience_observations.length,1);assert.equal(first.observation.has_media,true);assert.equal(first.observation.media_path,undefined);
     const history=await loadDiagnosticAssessmentWorkspace(db,teacher);
+    assert.equal(new Date(history.observations.find(row=>row.id===first.id).observed_at).toISOString(),'2026-03-18T17:00:00.000Z');
     assert.equal(history.observations.find(row=>row.id===first.id).has_media,true);
     assert.equal(history.observations.find(row=>row.id===first.id).media_path,undefined);
     const revised=await reviseGuidedObservation(db,teacher,first.id,{expectedText:input.observationText,observationText:'Eligió bloques y explicó cómo haría una casa con dos puertas.'});
@@ -65,7 +71,7 @@ test('las nuevas oportunidades transversales guardan el hecho, criterio y versi�
       ['create_a_digital_message','TRANS_TIC','Con acompañamiento encuadró su construcción y pulsó el botón para fotografiarla.']]){
       const experience=initial.experiences.find(row=>row.id===experienceId);
       const result=await recordDiagnosticExperienceObservation(db,teacher,{studentId,experienceId,aspectId:experience.aspects[0].id,observationStatus:'observed_without_judgment',observationText:text});
-      assert.equal(result.competencyId,competencyId);assert.equal(result.observation.catalog_version,'diagnostic-v4.6');
+      assert.equal(result.competencyId,competencyId);assert.equal(result.observation.catalog_version,'diagnostic-v4.7');
       assert.equal(result.observation.aspect_prompt_snapshot,experience.aspects[0].prompt);assert.equal(result.observation.observation_text,text);
     }
     const reopened=await loadDiagnosticExperienceWorkspace(db,teacher);assert.equal(reopened.experience_observations.length,2);
@@ -78,7 +84,7 @@ test("guías por edad usan tarjetas v4 y solo muestran competencias especiales a
   for (const age of [3, 4, 5]) {
     const experiences = buildDiagnosticExperienceCatalog(kb, { age });
     assert.equal(experiences.length, age===5?7:5);
-    assert.equal(experiences[0].catalog_version, "diagnostic-v4.6");
+    assert.equal(experiences[0].catalog_version, "diagnostic-v4.7");
     assert.match(experiences[0].teacher_instructions, /Prepara dos o tres opciones sencillas/);
     assert.ok(experiences.every((item) => item.aspects.length >= 2 && item.aspects.length <= 4));
     if (age === 3) assert.equal(experiences.find((item) => item.id === "stories_and_marks").aspects.length, 2);

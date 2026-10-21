@@ -158,6 +158,11 @@
 .dialogStudents .studentPhoto { width: 64px; height: 64px; border-radius: 50%; }
 .dialogStudents small { color: #5479aa; }
 .dialogLabel span { font-weight: 400; color: #597cad; }
+.guidedDate { display: grid; gap: 8px; font-size: 14px; font-weight: 700; }
+.guidedDate input { width: 180px; max-width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--input); border-radius: 9px; background: var(--ayni-field-bg); color: var(--foreground); font: inherit; }
+.guidedDate input:focus-visible { outline: 2px solid #0075d8; outline-offset: 3px; }
+.digitalAvailability { display: flex; align-items: center; gap: 10px; min-height: 44px; margin-bottom: 8px; font-size: 14px; color: #234b63; }
+.digitalAvailability input { width: 18px; height: 18px; flex-shrink: 0; accent-color: #087d96; }
 .autoCompetency { border-radius: 10px; background: #e8f5ff; padding: 12px; }
 .autoCompetency h3 { font-weight: 700; font-size: 14px; }
 .autoCompetency p { display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 13px; }

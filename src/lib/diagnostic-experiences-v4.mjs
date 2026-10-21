@@ -92,9 +92,13 @@ export async function recordDiagnosticExperienceObservation(db, teacherId, input
   if (!classroom) throw new DiagnosticExperienceError("no_classroom", "No hay un aula activa.");
   const status = input?.observationStatus;
   const note = input?.observationText;
-  if (!["demonstrated", "with_support", "not_yet_demonstrated", "insufficient_information", "observed_without_judgment"].includes(status)) throw new DiagnosticExperienceError("invalid_status", "Selecciona una marca observacional válida.");
+  if (!["demonstrated", "with_support", "not_yet_demonstrated", "insufficient_information", "observed_without_judgment"].includes(status)) throw new DiagnosticExperienceError("invalid_status", "Selecciona una opción de observación válida.");
   if (note != null && (typeof note !== "string" || note.trim().length > 4000)) throw new DiagnosticExperienceError("invalid_note", "La observación no puede superar 4000 caracteres.");
   if (status === "observed_without_judgment" && !note?.trim()) throw new DiagnosticExperienceError("missing_note", "Escribe qué hizo o dijo el niño.");
+  const observedDate = input.observedAt ?? null;
+  if (observedDate !== null && (typeof observedDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(observedDate)
+    || !Number.isFinite(Date.parse(observedDate)) || new Date(observedDate).toISOString().slice(0,10) !== observedDate))
+    throw new DiagnosticExperienceError('invalid_date', 'Elige una fecha válida.');
   const student = (await db.query(`select id from students where id = $1 and classroom_id = $2 and status = 'active'`,
     [input?.studentId, classroom.id])).rows[0];
   if (!student) throw new DiagnosticExperienceError("invalid_student", "El niño no pertenece al aula activa.");
@@ -112,7 +116,8 @@ export async function recordDiagnosticExperienceObservation(db, teacherId, input
   return versionTransaction(db,`guided-observation:${id}`,async tx=>{
   const old=(await tx.query('select * from diagnostic_experience_observations where id=$1',[id])).rows[0];
   if(old){
-    if(old.created_by!==teacherId || old.classroom_id!==classroom.id || old.student_id!==student.id || old.experience_id!==experience.id || old.aspect_id!==aspect.id || old.observation_status!==status || old.observation_text!==(note?.trim()||null) || (old.media_sha256??null)!==(input.mediaSha256??null)) throw new DiagnosticExperienceError("request_conflict", "La solicitud ya corresponde a otro registro. Revisa lo guardado antes de cambiarla.");
+    if(old.created_by!==teacherId || old.classroom_id!==classroom.id || old.student_id!==student.id || old.experience_id!==experience.id || old.aspect_id!==aspect.id || old.observation_status!==status || old.observation_text!==(note?.trim()||null) || (old.media_sha256??null)!==(input.mediaSha256??null)
+      || observedDate !== null && new Intl.DateTimeFormat('en-CA',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(old.observed_at)) !== observedDate) throw new DiagnosticExperienceError("request_conflict", "La solicitud ya corresponde a otro registro. Revisa lo guardado antes de cambiarla.");
     if(!(await tx.query(`select 1 from diagnostic_experience_observations o where o.id=$1 and ${guidedObservationActive('o')}`,[id])).rows.length)
       throw new DiagnosticExperienceError('request_conflict','Esta observación fue eliminada del recorrido.');
     return {id,studentId:student.id,competencyId:aspect.competency_id,replayed:true,observation:{...old,has_media:Boolean(old.media_path),media_path:undefined,media_sha256:undefined}};
@@ -123,7 +128,7 @@ export async function recordDiagnosticExperienceObservation(db, teacherId, input
      experience_title_snapshot, aspect_prompt_snapshot,media_path,media_mime_type,media_sha256,observed_at)
     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,coalesce($16::timestamptz,now())) returning *`,
   [id, classroom.id, student.id, experience.id, aspect.id, aspect.competency_id,
-    status, note?.trim() || null, teacherId, experience.catalog_version, experience.title, aspect.prompt,input.mediaPath??null,input.mediaMimeType??null,input.mediaSha256??null,simulatedObservationInstant()])).rows[0];
+    status, note?.trim() || null, teacherId, experience.catalog_version, experience.title, aspect.prompt,input.mediaPath??null,input.mediaMimeType??null,input.mediaSha256??null,observedDate ? `${observedDate}T12:00:00-05:00` : simulatedObservationInstant()])).rows[0];
   return { id, studentId: student.id, competencyId: aspect.competency_id,observation:{...row,has_media:Boolean(row.media_path),media_path:undefined,media_sha256:undefined} };
   });
 }

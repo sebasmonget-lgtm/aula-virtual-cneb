@@ -1,5 +1,5 @@
 {
-  "version": "diagnostic-v4.6",
+  "version": "diagnostic-v4.7",
   "status": "reviewed",
   "experiences": [
     {
@@ -174,7 +174,7 @@
           "prompt": "Usa movimientos o materiales para mostrar lo que imagina.",
           "examples": [
             "Mueve una tela en el aire y dice «es el viento que empuja mi barco».",
-            "Señala las marcas de su papel y explica «aquí iba saltando»."
+            "Señala las líneas que dibujó en su papel y explica «aquí iba saltando»."
           ],
           "patternIndex": 0,
           "moment_title": "Compartimos lo que imaginamos",
@@ -463,8 +463,8 @@
           "label": "Escribe a su manera un mensaje sobre el cuento.",
           "prompt": "Escribe a su manera un mensaje sobre el cuento para alguien.",
           "examples": [
-            "Dice «les voy a contar que el cuento da risa» y hace marcas para escribir su mensaje.",
-            "Escribe con letras o marcas propias una invitación y explica a qué grupo quiere entregarla."
+            "Dice «les voy a contar que el cuento da risa» y escribe su mensaje a su manera.",
+            "Escribe a su manera una invitación y explica a qué grupo quiere entregarla."
           ],
           "patternIndex": 0,
           "moment_title": "Dejamos un mensaje sobre el cuento",
@@ -480,8 +480,8 @@
           "label": "Explica lo que quiso escribir antes de compartirlo.",
           "prompt": "Relee a su manera el mensaje y comenta si dice lo que quería comunicar.",
           "examples": [
-            "Señala sus marcas y dice «aquí escribí que vengan a escuchar el cuento».",
-            "Al volver a leer su mensaje, añade una marca y comenta «faltaba decir a quién invitamos»."
+            "Señala lo que escribió y dice «aquí escribí que vengan a escuchar el cuento».",
+            "Al volver a leer su mensaje, añade algo a su escrito y comenta «faltaba decir a quién invitamos»."
           ],
           "patternIndex": 0,
           "moment_title": "Leemos nuestro mensaje antes de compartirlo",
@@ -507,7 +507,7 @@
       "active": true,
       "age_support": {
         "3": "Con 3 años, los momentos se centran en mirar, escuchar y contar. Un dibujo puede ser expresión libre; no se asigna a escritura.",
-        "4": "Con 4 años, ofrece la escritura del mensaje como una elección y escucha qué quieren comunicar con sus marcas.",
+        "4": "Con 4 años, ofrece la escritura del mensaje como una elección y escucha qué quieren comunicar con lo que escriben.",
         "5": "Con 5 años, invita a pensar para quién escriben y a revisar con ayuda si el mensaje dice lo que querían."
       },
       "teacher_instructions_by_age": {

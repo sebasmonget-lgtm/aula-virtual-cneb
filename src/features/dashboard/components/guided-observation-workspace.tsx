@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea";
 import { saveCompactGuidedObservation, type DiagnosticWorkspace, type PrivateMediaUpload } from "@/src/lib/local-database";
 import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
+import { limaToday } from "@/src/lib/display-date";
 import { DictationRecorder } from "./dictation-recorder";
 import { MediaAttachmentInput } from "./media-attachment-input";
 import { StudentPhoto } from "./student-photo";
@@ -17,8 +18,9 @@ import { guidedExperienceIllustrations, guidedObservationLookFor, guidedStudents
 import styles from "./interviews-workspace.module.css";
 
 type Experience=DiagnosticWorkspace["experiences"][number];
-export function GuidedObservationWorkspace({experience,students,coverage,onChooseAnother,onSaved}: {
+export function GuidedObservationWorkspace({experience,students,coverage,initialDate,onChooseAnother,onSaved}: {
   experience:Experience;students:DiagnosticWorkspace["students"];coverage:Record<string,number>|null;onChooseAnother:()=>void;
+  initialDate?:string;
   onSaved:(record:DiagnosticWorkspace["experience_observations"][number])=>void;
 }) {
   const moments=(experience.pedagogical_blocks??[]).flatMap(block=>(block.observations??[]).flatMap(moment=>{
@@ -29,6 +31,7 @@ export function GuidedObservationWorkspace({experience,students,coverage,onChoos
   const [query,setQuery]=useState("");
   const [position,setPosition]=useState(0),[open,setOpen]=useState(false),[studentId,setStudentId]=useState("");
   const [note,setNote]=useState(""),[media,setMedia]=useState<PrivateMediaUpload|null>(null);
+  const [date,setDate]=useState(()=>initialDate??limaToday());
   const [busy,setBusy]=useState(false),[audioBusy,setAudioBusy]=useState(false),[photoBusy,setPhotoBusy]=useState(false),[error,setError]=useState("");
   const request=useRef(""),lock=useRef(false);
   const {confirmation,confirm}=useSaveConfirmation();
@@ -42,9 +45,9 @@ export function GuidedObservationWorkspace({experience,students,coverage,onChoos
   const steps=criterion?.teacher_steps;
   function close(){if(!allowLeave())return;setOpen(false);setNote("");setMedia(null);setError("");request.current="";}
   async function save(another=false){
-    if(!criterion||!studentId||!note.trim()||disabled||lock.current)return;
+    if(!criterion||!studentId||!note.trim()||!date||disabled||lock.current)return;
     lock.current=true;setBusy(true);setError("");request.current ||= crypto.randomUUID();
-    try{const record=await saveCompactGuidedObservation({studentId,experienceId:experience.id,aspectId:criterion.id,observationText:note,media:media??undefined,clientRequestId:request.current});onSaved(record);setNote("");setMedia(null);request.current="";confirm("¡Observación guardada!","El registro quedó asociado al niño y al criterio de esta experiencia.");if(!another)setOpen(false);else setStudentId("");}
+    try{const record=await saveCompactGuidedObservation({studentId,experienceId:experience.id,aspectId:criterion.id,observationText:note,observedAt:date,media:media??undefined,clientRequestId:request.current});onSaved(record);setNote("");setMedia(null);request.current="";confirm("¡Observación guardada!","El registro quedó asociado al niño y al criterio de esta experiencia.");if(!another)setOpen(false);else setStudentId("");}
     catch(cause){setError(cause instanceof Error?cause.message:"No se pudo guardar. El texto y la foto siguen aquí.");}
     finally{lock.current=false;setBusy(false);}
   }
@@ -60,12 +63,13 @@ export function GuidedObservationWorkspace({experience,students,coverage,onChoos
       <DialogHeader><DialogTitle>Registrar observación</DialogTitle><DialogDescription>Registra lo que hizo o dijo el niño. Todas las competencias provienen del criterio de esta experiencia.</DialogDescription></DialogHeader>
       <div className={styles.dialogContext}><p><List/><span><small>Experiencia</small><strong>{experience.title}</strong></span></p><p><Target/><span><small>Criterio de observación</small><strong>{criterion?.prompt}</strong></span></p><p><Heart/><span><small>Competencia</small><strong>{criterion?.competency_name}</strong></span></p></div>
       <fieldset disabled={disabled} className={styles.dialogStudents}><legend>1. Selecciona al niño o niña que estás observando</legend><label className={styles.studentSearch}>Buscar niño o niña<input type="search" value={query} onChange={event=>setQuery(event.target.value)} placeholder="Escribe un nombre…"/></label><div>{choices.map(({student})=><button type="button" key={student.id} data-coverage={counts(student.id)===0?"none":counts(student.id)===1?"few":"recorded"} aria-pressed={studentId===student.id} onClick={()=>{if(student.id===studentId||disabled)return;setStudentId(student.id);request.current="";setError("");}}><StudentPhoto id={student.id} name={student.name} className={styles.studentPhoto}/><strong>{student.name}</strong><small>{`${counts(student.id)} obs.`}</small>{studentId===student.id&&<Check size={19} aria-hidden="true"/>}</button>)}</div>{!choices.length&&<p>No encontramos niños con ese nombre.</p>}</fieldset>
-      <p className={styles.info}><Info size={18}/>Te mostramos cuántos registros tiene cada niño en esta competencia, incluyendo observaciones libres y otras experiencias. Los colores indican cantidad de registros, no nivel de aprendizaje.</p>
+      <p className={styles.info}><Info size={18}/>Los números y colores muestran la cantidad de registros, no el nivel de aprendizaje.</p>
+      <label className={styles.guidedDate}>Fecha de observación<input type="date" value={date} disabled={disabled} required onInput={event=>{setDate(event.currentTarget.value);request.current="";}} onChange={event=>{setDate(event.target.value);request.current="";}}/></label>
       <label htmlFor="guided-observation-note" className={styles.dialogLabel}>2. Lo que observé</label><div className={styles.noteRow}><Textarea id="guided-observation-note" value={note} maxLength={4000} disabled={disabled} onChange={event=>setNote(event.target.value)} placeholder="Cuenta lo que hizo o dijo, con un ejemplo concreto."/><DictationRecorder key={`${studentId}:${criterion?.id}`} iconOnly autoTranscribe rawTranscript purpose="raw_observation" studentId={studentId} context={`${experience.title}: ${criterion?.prompt}`} currentText={note} disabled={busy||photoBusy||!studentId} onBusyChange={setAudioBusy} onTranscribed={setNote}/></div><small className={styles.counter}>{note.length}/4000</small>
       <div><h3 className={styles.dialogLabel}>3. Evidencia <span>(opcional)</span></h3><MediaAttachmentInput photoOnly buttonInputs rawTranscript studentId={studentId} context={criterion?.prompt??""} media={media} onMedia={setMedia} onTranscribed={setNote} disabled={busy||audioBusy||!studentId} onBusyChange={setPhotoBusy}/></div>
       <div className={styles.autoCompetency}><h3>Competencia vinculada automáticamente</h3><p><Heart size={18}/>{criterion?.competency_name}</p><small>Esta competencia se vincula por el criterio de esta experiencia.</small></div>
       {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
-      <div className={styles.dialogActions}><AsyncButton variant="outline" busy={busy} busyLabel="Guardando…" disabled={disabled||!studentId||!note.trim()} onClick={()=>void save(true)}>Guardar y registrar otro</AsyncButton><AsyncButton className={styles.primary} busy={busy} busyLabel="Guardando…" disabled={disabled||!studentId||!note.trim()} onClick={()=>void save()}><Save/>Guardar observación</AsyncButton></div>
+      <div className={styles.dialogActions}><AsyncButton variant="outline" busy={busy} busyLabel="Guardando…" disabled={disabled||!studentId||!note.trim()||!date} onClick={()=>void save(true)}>Guardar y registrar otro</AsyncButton><AsyncButton className={styles.primary} busy={busy} busyLabel="Guardando…" disabled={disabled||!studentId||!note.trim()||!date} onClick={()=>void save()}><Save/>Guardar observación</AsyncButton></div>
     </DialogContent></Dialog>
   </section>;
 }

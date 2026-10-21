@@ -1,10 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {compareObservationDates, experienceCoverageGaps, experienceCoverageOpportunities, rankGuidedExperiences, guidedObservationLookFor, guidedExperienceIllustrations, observationMoment, toggleInterviewOption, guidedStudentsByCoverage, experiencePriorityLabel} from './diagnostic-ui-flow.mjs';
+import {compareObservationDates, experienceCoverageGaps, experienceCoverageOpportunities, rankGuidedExperiences, availableGuidedExperiences, guidedObservationLookFor, guidedExperienceIllustrations, observationMoment, toggleInterviewOption, guidedStudentsByCoverage, experiencePriorityLabel} from './diagnostic-ui-flow.mjs';
 import {projectFamilyAssessmentContext} from './family-interview-projection.mjs';
 import {familyInterviewQuestionGroups, interviewInterestOptions} from './family-interview-contract.mjs';
 import {diagnosticPedagogicalBlocks} from './pedagogical-blocks.mjs';
+
+test('digital activity requires explicit availability before it can be recommended',()=>{
+  const experiences=[{id:'digital',required_resource:'digital_creation',competencies:[{id:'tic'}]},{id:'play',competencies:[{id:'identity'}]}];
+  const students=[{id:'a'}],counts={'a:identity':4};
+  const original=JSON.stringify(experiences);
+  assert.deepEqual(availableGuidedExperiences(experiences).map(row=>row.id),['play']);
+  assert.equal(rankGuidedExperiences(availableGuidedExperiences(experiences),students,[],[],counts)[0].experience.id,'play');
+  assert.equal(rankGuidedExperiences(availableGuidedExperiences(experiences,true),students,[],[],counts)[0].experience.id,'digital');
+  assert.deepEqual(availableGuidedExperiences(experiences,false).map(row=>row.id),['play']);
+  assert.equal(JSON.stringify(experiences),original);
+});
 
 test('legacy nature IDs remain valid while overlapping interests are presented once',()=>{
   const details={interest_tags:['nature','plants','drawing']};

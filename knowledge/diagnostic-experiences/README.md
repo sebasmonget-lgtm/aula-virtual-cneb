@@ -1,7 +1,7 @@
 # Catálogo editorial de experiencias diagnósticas
 
 `catalog.json` es la única fuente editable de las experiencias guiadas. Su estado actual es
-`reviewed`, versión `diagnostic-v4.6`: revisión editorial interna de los 27 momentos de nueve
+`reviewed`, versión `diagnostic-v4.7`: revisión editorial interna de los 27 momentos de nueve
 experiencias. No implica certificación del MINEDU ni validación de eficacia en aula.
 No se generan experiencias con IA.
 

@@ -61,6 +61,11 @@ export function rankGuidedExperiences(experiences, students, guided, free, cover
   }).sort((a,b)=>b.missingRate-a.missingRate||b.fewRate-a.fewRate||a.recordRate-b.recordRate||a.index-b.index);
 }
 
+/** Availability is chosen for this visit, never inferred from a child's records. */
+export function availableGuidedExperiences(experiences, digitalCreationAvailable=false) {
+  return experiences.filter(experience=>!experience.required_resource || digitalCreationAvailable && experience.required_resource==='digital_creation');
+}
+
 export function experiencePriorityLabel(item) {
   if (item.missingRate === 1) return 'Sin observaciones en estas competencias';
   if (item.missingRate > 0) return 'Con algunas observaciones';
