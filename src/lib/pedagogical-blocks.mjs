@@ -1,8 +1,11 @@
 import { activityObservationCriteria, criterionMoments } from "./activity-observation-plan.mjs";
 import {activityReadingStages} from "./activity-reading-content.mjs";
 import { diagnosticMomentInstruction } from "./diagnostic-moment-instructions.mjs";
+import {activityTeacherText,orderedActivityCriteria} from './activity-teacher-reading.mjs';
 /** Server projection of explicit pedagogical fields. Split only explicit saved stage labels; never invent or summarize instructions. */
-export function activityPedagogicalBlocks(details = {}, steps = [], criteria = []) {
+export function activityPedagogicalBlocks(sourceDetails = {}, steps = [], sourceCriteria = []) {
+  const details={...sourceDetails,...Object.fromEntries(['meaningful_situation','child_actions','mediation','evidence_opportunities','closure_or_continuity'].map(key=>[key,activityTeacherText(sourceDetails[key])]))};
+  const criteria=orderedActivityCriteria(details,sourceCriteria);
   const planned = activityObservationCriteria(details);
   const opportunities = criteria.map(criterion => ({
     id: criterion.id, competency_id: criterion.competency_v4_id ?? criterion.competency_id,

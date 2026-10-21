@@ -52,6 +52,11 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.equal((xml.match(/Aún no hay observaciones registradas/g)??[]).length,1);
   assert.ok(xml.indexOf('Aún no hay observaciones registradas')<xml.indexOf('III. SECUENCIA DE LA ACTIVIDAD'),'El aviso no crea una sección final vacía');
   assert.doesNotMatch(xml, /Nombre del estudiante/);
+  const longPurpose='Explorar distintas maneras de construir un paso para que atraviese un carro, conversar sobre las decisiones que toman y comprobar sus ideas mediante intentos que puedan cambiar y explicar con los materiales a la vista.';
+  const longZip=await JSZip.loadAsync(await renderActivityUnifiedWord({...document,content:{...document.content,purpose:longPurpose}},cards));
+  const longXml=await longZip.file('word/document.xml').async('string');
+  assert.ok(longXml.includes(longPurpose),'El propósito largo se conserva íntegro en el cuerpo');
+  assert.equal(longXml.slice(0,longXml.indexOf('w:type="page"')).includes(longPurpose),false,'La vista opcional no desborda la portada con el propósito largo');
   const integratedDocument={...document,experience_details:{activity_route:[{...route,competency_ids:['PS_CONVIVE','COM_ORAL']}]},active_criterion:{...document.active_criterion,observation_focus:['Acordar turnos']}};
   const integratedZip=await JSZip.loadAsync(await renderActivityUnifiedWord(integratedDocument,cards));
   const integratedXml=await integratedZip.file('word/document.xml').async('string');
@@ -92,6 +97,13 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   const freeZip=await JSZip.loadAsync(await renderActivityUnifiedWord({...document,registered_evidence:[{student_name:"Ana",criterion_id:null,criterion_text:null,observation_text:"Dijo que le gustan las semillas rojas.",observed_at:"2026-04-14T15:00:00Z",source:"ordinary_observation"}]},cards));
   const freeXml=await freeZip.file("word/document.xml").async("string"),freeTable=[...freeXml.matchAll(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g)].find(match=>match[0].includes("Nombre del estudiante"))?.[0];
   assert.match(freeTable,/Sin criterio asociado/);assert.doesNotMatch(freeTable,/Acordar turnos/);
+  assert.doesNotMatch(freeTable,/Sin adjunto/,'Sin archivos, el espacio se dedica a leer la observación');
+  assert.equal(([...freeTable.matchAll(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g)][0][0].match(/<w:tc>/g)??[]).length,3);
+  const literal='Dijo COM_ORAL mientras miraba su dibujo.';
+  const literalZip=await JSZip.loadAsync(await renderActivityUnifiedWord({...document,content:{...document.content,meaningful_situation:'COM_ORAL: escuchar su explicación.'},registered_evidence:[{student_name:'Ana',observation_text:literal}]},cards));
+  const literalXml=await literalZip.file('word/document.xml').async('string');
+  assert.match(literalXml,/Se comunica: escuchar su explicación/,'El texto de planificación usa una etiqueta comprensible');
+  assert.ok(literalXml.includes(literal),'La observación literal nunca se reescribe al presentar las competencias');
   assert.match(completedXml, /El grupo propuso nuevos turnos/);
   const closureWithoutEvidence=await JSZip.loadAsync(await renderActivityUnifiedWord({...document,teacher_closure_note:'Mañana ofreceré un espacio más amplio.'},cards));
   const closureXml=await closureWithoutEvidence.file('word/document.xml').async('string');

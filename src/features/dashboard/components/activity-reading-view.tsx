@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import {CalendarDays,CheckCircle2,ListChecks,Target,Heart,Search,ClipboardList,BookOpen,FileText} from 'lucide-react';
 import {activityReadingStages,readingSentences,savedText} from '@/src/lib/activity-reading-content.mjs';
+import {activityTeacherText} from '@/src/lib/activity-teacher-reading.mjs';
 import {displayDate,displayDocumentDate} from '@/src/lib/display-date';
 import {competencyVisual} from '@/src/lib/competency-presentation';
 import {ProjectPictogram} from './project-pictogram';
@@ -10,7 +11,7 @@ import {WorkshopResources} from './workshop-resources';
 import styles from './activity-reading.module.css';
 
 function SavedLines({value}:{value:unknown}){
-  const lines=readingSentences(value) as string[];
+  const lines=readingSentences(activityTeacherText(value)) as string[];
   if(!lines.length)return null;
   return <ul className={styles.lines}>{lines.map((line,index)=><li key={index}>{line}</li>)}</ul>;
 }
@@ -21,6 +22,7 @@ export function ActivityReadingView({document,position,total,actions}:{document:
   const content=document.content,sequence=activityReadingStages(content.child_actions,{opening:content.meaningful_situation,closure:content.closure_or_continuity}) as {introduction:string;groupedContext?:boolean;stages:{label:string;text:string}[]};
   const names=new Map(document.competencies?.map(item=>[item.id,item.name])??[]);
   const competency=savedText(document.active_criterion?.competency_v4_id||content.competency_id),visual=competencyVisual(competency);
+  const additionalCriteria=(document.guide?.criteria??[]).filter(item=>(item.competency_v4_id??item.competency_id)!==competency);
   const confirmed=['active','confirmed'].includes(document.status);
   const art={title:document.title,purpose:savedText(content.purpose),primary_competency_ids:competency?[competency]:[]};
   return <article className={styles.reader} aria-label="Actividad completa">
@@ -50,10 +52,11 @@ export function ActivityReadingView({document,position,total,actions}:{document:
       <section className={`${styles.support} ${styles.rose}`}><h2><Search/>Qué observar</h2><SavedLines value={content.evidence_opportunities}/></section>
     </div>
     <div className={styles.references}>
-      {competency&&<section className={styles.mint}><h2>{visual?<Image src={visual.image} alt="" width={28} height={28} unoptimized/>:<BookOpen/>}Competencia {confirmed?'confirmada':'propuesta'}</h2><p>{names.get(competency)??competency}</p></section>}
+      {competency&&<section className={styles.mint}><h2>{visual?<Image src={visual.image} alt="" width={28} height={28} unoptimized/>:<BookOpen/>}Competencia principal</h2><p>{names.get(competency)??competency}</p></section>}
       <section className={styles.lilac}><h2><Target/>Criterio</h2><p>{savedText(document.active_criterion?.criterion_text||content.evaluation_criterion)}</p></section>
-      <section className={styles.sky}><h2><FileText/>Evidencia esperada</h2><p>{savedText(content.expected_evidence)}</p></section>
+      <section className={styles.sky}><h2><FileText/>Evidencia esperada</h2><p>{savedText(document.active_criterion?.expected_evidence||content.expected_evidence)}</p></section>
     </div>
+    {!!additionalCriteria.length&&<details className={styles.continuity}><summary className="min-h-11 cursor-pointer py-2 font-bold">Otras competencias de esta actividad</summary><div className="mt-3 space-y-5">{additionalCriteria.map(item=><section key={item.id}><h3 className="font-bold">{names.get(item.competency_v4_id??item.competency_id??'')??item.competency_text}</h3><p className="mt-1"><strong>Criterio: </strong>{item.criterion_text}</p>{item.details?.expected_evidence&&<p className="mt-1"><strong>Evidencia esperada: </strong>{item.details.expected_evidence}</p>}</section>)}</div></details>}
     {!!document.registered_evidence?.length&&<section className={styles.sequence}><h2><ClipboardList/>Observaciones registradas</h2><ul className="mt-3 space-y-3">{document.registered_evidence.map(item=><li key={item.id} className="rounded-xl bg-[#edf7fa] p-3"><strong>{item.student_name}</strong><span className="ml-2 text-sm">{displayDocumentDate(item.observed_at)}</span><p className="mt-1">{item.observation_text||'Evidencia privada adjunta'}</p></li>)}</ul></section>}
     {document.workshop&&<section className={styles.workshop}><h2>Taller del día · {savedText(document.workshop.content.title)}</h2>{[['Propósito','purpose'],['Materiales','materials'],['Inicio','opening'],['Desarrollo','development'],['Cierre','closure'],['Qué observar','criterion_or_observation_focus'],['Evidencia esperada','evidence_expected']].map(([label,key])=><div key={key}><h3>{label}</h3><SavedLines value={document.workshop?.content[key]}/></div>)}</section>}
   </article>;

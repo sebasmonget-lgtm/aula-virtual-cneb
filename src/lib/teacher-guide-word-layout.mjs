@@ -51,6 +51,18 @@ export function retainCoverPageBreak(xml) {
   });
 }
 
+/** Reclaim oversized empty centred lines, retaining the cover art and tables. */
+export function compactCoverSpacers(xml){
+ const paragraphs=[...xml.matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)];
+ const pageBreak=paragraphs.find(item=>/<w:br\b[^>]*w:type="page"/.test(item[0]));
+ if(!pageBreak)return xml;
+ const prefix=xml.slice(0,pageBreak.index).replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g,paragraph=>{
+  if(!/<w:jc w:val="center"\/>/.test(paragraph)||/<w:(?:drawing|pict|object|fldChar|instrText|sectPr)\b/.test(paragraph)||[...paragraph.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].some(item=>item[1].trim()))return paragraph;
+  return paragraph.replace(/<w:spacing\b[^>]*\/>/g,'').replace('<w:pPr>','<w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/>');
+ });
+ return prefix+xml.slice(pageBreak.index);
+}
+
 /** Short attached forms move as a unit instead of leaving a few rows alone. */
 export function keepShortTableTogether(table) {
   const paragraphs = [...table.matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)];

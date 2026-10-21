@@ -110,7 +110,7 @@ export async function generateTeacherActivity({ request, classroom, learningExpe
   try {
     const executionPlan = resolvePlan({ workflow: "activity", task: "generation" });
     const providerFactory = (plan) => createProvider(plan);
-    const generated = await generate(input, { providerFactory, executionPlan, skillInstructions: await loadSkill() });
+    const generated = await generate(input, { providerFactory, executionPlan, skillInstructions: `${await loadSkill()}\n\nEn los textos para la docente usa nombres sencillos de las competencias; reserva sus códigos para los campos curriculares del esquema. Cada evidencia debe corresponder al criterio de su propia competencia.` });
     const inherited = input.learning_experience_context?.inherited_route_item;
     return {
       proposal: inherited ? { ...generated.output, purpose: inherited.specific_purpose, competency_status: "confirmed", competency_id: inherited.competency_id,

@@ -35,7 +35,7 @@ export type OpenDocument = DocumentEntry & {
   guide?: {criteria: import('@/src/lib/local-database').ActivityCriterion[];pedagogical_blocks: import('./pedagogical-block').PedagogicalBlockData[]};
   starts_on?: string; ends_on?: string; occurs_on?: string; experience_title?: string;
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
-  active_criterion?: { criterion_text: string; competency_v4_id: string } | null;
+  active_criterion?: { criterion_text: string; competency_v4_id: string;expected_evidence?:string|null } | null;
   project_activities?: {id:string;title:string;date:string}[];
   registered_evidence?:{id:string;student_name:string;observation_text?:string;observed_at:string}[];
   workshop?: { id: string; content: Record<string, unknown> } | null;

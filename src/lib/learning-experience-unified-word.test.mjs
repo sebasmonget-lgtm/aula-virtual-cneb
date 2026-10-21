@@ -76,6 +76,7 @@ test("el Word V2 usa el mapa confirmado y las fechas reales sin inventar registr
   const xml = await archive.file("word/document.xml").async("string");
   assert.match(xml, /13\/04\/2026/);
   assert.match(xml, /2 semanas lectivas previstas/);
+  assert.match(xml,/1 día elegido: 13\/04\/2026/,'Conserva el tramo anual y aclara el día realmente seleccionado');
   assert.match(xml, /Partimos de preguntas del grupo/);
   const meaningful='La docente propone explorar las hojas del patio: ¿qué diferencias podemos descubrir?';
   const updated={...document,content:{...document.content,project_master:{...document.content.project_master,meaningful_situation:meaningful}}};
@@ -93,4 +94,8 @@ test("el Word V2 usa el mapa confirmado y las fechas reales sin inventar registr
   assert.ok(!xml.includes("<w:t>V. PROPÓSITO GENERAL</w:t>"), "No debe saltar el IV");
   assert.doesNotMatch(xml, /\{\{/);
   assert.doesNotMatch(xml, /Pendiente de completar por la docente/);
+  const integrated={...document,content:{...document.content,activity_route:[{...document.content.activity_route[0],competency_ids:['PS_CONVIVE','COM_ORAL'],additional_criteria:[{competency_id:'COM_ORAL',criterion_text:'Explica su elección a un compañero',expected_evidence:'Respuesta sobre su propio intento',observation_moments:['closure']}]}]}};
+  const integratedXml=await (await JSZip.loadAsync(await renderLearningExperienceUnifiedWord(integrated,cards))).file('word/document.xml').async('string');
+  assert.match(integratedXml,/Explica su elección a un compañero/);assert.match(integratedXml,/Respuesta sobre su propio intento/);
+  assert.deepEqual(document.content.activity_route[0].competency_ids,['PS_CONVIVE'],'El formato no altera la ruta confirmada');
 });

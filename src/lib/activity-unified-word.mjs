@@ -5,7 +5,8 @@ import path from "node:path";
 import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 import { activityReadingStages } from "./activity-reading-content.mjs";
-import { guidePanel, guideText, guideParagraph, guideDetails, keepShortTableTogether, retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
+import {activityTeacherText} from './activity-teacher-reading.mjs';
+import { guidePanel, guideText, guideParagraph, guideDetails, keepShortTableTogether, retainCoverPageBreak,compactCoverSpacers } from "./teacher-guide-word-layout.mjs";
 
 const oldTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx");
 const workshopTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-con-taller-v1.docx");
@@ -43,12 +44,15 @@ function replaceSectionBody(xml, startText, endText, body) {
 function activityGuide(content, whatToObserve, observationBlocks = [], names = new Map()) {
   const actions = activityReadingStages(content.child_actions);
   const mediation = activityReadingStages(content.mediation);
-  const observations = moment => (observationBlocks.find(block => block.id === moment)?.observations ?? []).map(item => ({
+  const printedCriteria=new Set();
+  const observations = moment => (observationBlocks.find(block => block.id === moment)?.observations ?? []).map(item => {
+    const repeated=printedCriteria.has(item.id??item.competency_id);printedCriteria.add(item.id??item.competency_id);
+    return {
     competency: names.get(item.competency_id) ?? item.competency_name ?? item.competency_id,
     criterion: item.criterion,
-    focus: (item.observation_focus ?? []).filter(text => text !== item.criterion),
-    evidence: item.expected_evidence,
-  }));
+    focus: repeated?[]:(item.observation_focus ?? []).filter(text => text !== item.criterion),
+    evidence: repeated?null:item.expected_evidence,
+  };});
   const before = guidePanel("Antes de empezar", [
     { title: "Docente · antes de empezar", body: content.teacher_preparation ? guideText(content.teacher_preparation) : "" },
     { title: "Materiales", body: content.materials?.length ? guideText(content.materials) : "" },
@@ -122,6 +126,15 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
   // Word still permits oversized rows to flow; repeated column labels retain context.
   output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g, (table) => {
     if (!xmlText(table).includes("Nombre del estudiante")) return table;
+    if(evidence.length&&evidence.every(item=>item.EVIDENCIA_TIPO==='Sin adjunto')){
+      const widths=[2100,2900,5000];
+      table=table.replace(/<w:tblGrid>[\s\S]*?<\/w:tblGrid>/,`<w:tblGrid>${widths.map(width=>`<w:gridCol w:w="${width}"/>`).join('')}</w:tblGrid>`)
+        .replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,row=>{
+          let column=0;return row.replace(/<w:tc(?:\s[^>]*)?>[\s\S]*?<\/w:tc>/g,cell=>{
+            const index=column++;return index===3?'':cell.replace(/<w:tcW\b[^>]*\/>/,`<w:tcW w:w="${widths[index]}" w:type="dxa"/>`);
+          });
+        });
+    }
     let first = true;
     return table.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, (row) => {
       const properties = `<w:cantSplit/>${first ? "<w:tblHeader/>" : ""}`;
@@ -163,7 +176,7 @@ function observedDate(value) {
 
 /** The planning document shows where observations will appear without inventing field notes or reflections. */
 export async function renderActivityUnifiedWord(document, cards = [], { logo = null } = {}) {
-  const content = document.content ?? {};
+  const content = Object.fromEntries(Object.entries(document.content??{}).map(([key,value])=>[key,['meaningful_situation','teacher_preparation','child_actions','mediation','evidence_opportunities','closure_or_continuity'].includes(key)?activityTeacherText(value):value]));
   const withWorkshop = content.document_template_version === "activity-with-workshop-v1";
   if (!withWorkshop && content.document_template_version !== "activity-unified-v1") throw new Error("La actividad no usa la plantilla unificada.");
   if (withWorkshop && !document.workshop?.content) throw new Error("El taller confirmado de este día no está disponible.");
@@ -225,7 +238,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     DESEMPENO_PERTINENTE: ageFocus,
     CRITERIO_EVALUACION: clean(criterion?.criterion_text) || clean(content.evaluation_criterion || route?.evaluation_criterion) || "La docente precisará el criterio antes de observar.",
     QUE_OBSERVAR: whatToObserve || "La docente precisará qué actuación observar.",
-    EVIDENCIA_ESPERADA: clean(content.expected_evidence || route?.expected_evidence) || clean(content.evidence_opportunities),
+    EVIDENCIA_ESPERADA: clean(criterion?.expected_evidence || content.expected_evidence || route?.expected_evidence) || clean(content.evidence_opportunities),
     COMPETENCIA_INTEGRADA: integrated.length ? `${integrated.join("; ")}. Integración prevista en el mapa; no acredita una actuación ni una valoración.` : "No se ha previsto otra competencia en el mapa de esta actividad.",
     ENFOQUE_TRANSVERSAL: list(approaches), ACTITUD_OBSERVABLE: list(attitudes),
     APOYOS_DIVERSIDAD: list(supports),
@@ -255,9 +268,9 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     appendixImages = await renderSheetPages(sheet);
   }
   const overview = [
-    ["Qué haremos hoy", clean(content.purpose)],
+    ["Qué haremos hoy", clean(content.purpose).length<=180?clean(content.purpose):""],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages, compactTrailingSpace: true,
-    transform: (xml) => insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide, curriculum, values), "Hoy en el aula", overview),
+    transform: (xml) => compactCoverSpacers(insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide, curriculum, values), "Hoy en el aula", overview)),
     transformPart: (part, xml) => part.includes("header") ? replaceWordText(xml, "PLANIFICACIÓN ANUAL", "ACTIVIDAD DE APRENDIZAJE") : xml });
 }

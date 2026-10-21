@@ -102,7 +102,7 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
     </section>}
 
     {!!activities.length&&<section className="overflow-hidden rounded-2xl border bg-white" aria-label="Actividades del proyecto">
-      <h2 className="p-4 font-bold text-[#172b52]">{activities.length} actividades guardadas</h2>
+      <h2 className="p-4 font-bold text-[#172b52]">{activities.length} {activities.length===1?'actividad guardada':'actividades guardadas'}</h2>
       <ol className="divide-y">{activities.map(item=><li key={item.id} className="grid min-h-24 items-center gap-3 px-4 py-4 sm:grid-cols-[9rem_1fr_auto]">
         <span className="text-sm text-[#526b87]">{displayDate(item.date)}</span><div className="min-w-0"><strong className="break-words text-sm text-[#172b52]">{item.title}</strong><AnnualCompetencies ids={item.competency_ids??[]} names={names}/></div><div className="flex flex-wrap items-center gap-2 sm:justify-end"><span className="rounded-full bg-[#e9f7f7] px-3 py-1 text-xs text-[#07576c]">{item.state}</span><Button variant="outline" className="text-sm" onClick={()=>writeWorkspaceLocation('Hoy',{activity:item.id})}>Ver en Hoy</Button><Button variant="outline" className="text-sm" onClick={()=>setConsultId(item.id)}>Ver detalles</Button></div>
       </li>)}</ol>

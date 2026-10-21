@@ -40,7 +40,7 @@ export async function confirmActivityWithCriterion(db, activityId, criterion, cr
         throw new Error("Los criterios de la actividad deben corresponder a competencias distintas.");
       seen.add(item.competency_id);
       const id = Array.isArray(criterionId) ? criterionId[index] : index === 0 ? criterionId : randomUUID();
-      await transaction.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,status,teacher_confirmed_at) values($1,$2,null,$3,null,$4,$5::jsonb,'active',now())`, [id, activityId, item.competency_id, item.criterion_text, JSON.stringify(item)]);
+      await transaction.query(`insert into activity_criteria(id,activity_id,competency_id,competency_v4_id,performance_id,criterion_text,details,display_order,status,teacher_confirmed_at) values($1,$2,null,$3,null,$4,$5::jsonb,$6,'active',now())`, [id, activityId, item.competency_id, item.criterion_text, JSON.stringify(item),index]);
     }
     if (!draft.supersedes_activity_id && !publication.acceptedBlock) {
       const schedule = (await transaction.query(`select id from class_schedule_entries where activity_id=$1 and classroom_id=$2

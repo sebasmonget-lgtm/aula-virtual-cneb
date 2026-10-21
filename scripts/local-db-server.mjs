@@ -448,7 +448,7 @@ async function dashboard() {
     select a.id, a.title, a.purpose, a.occurs_on, e.title as experience_title,
            coalesce(jsonb_agg(jsonb_build_object('id', c.id, 'criterion_text', c.criterion_text,
              'competency_id', c.competency_id, 'competency_v4_id', c.competency_v4_id, 'competency_text', co.official_text,
-             'performance_id', c.performance_id, 'evidence_kind', c.evidence_kind, 'details', c.details) order by c.display_order) filter (where c.id is not null), '[]'::jsonb) as criteria
+             'performance_id', c.performance_id, 'evidence_kind', c.evidence_kind, 'details', c.details) order by case when c.competency_v4_id=a.details->>'competency_id' then 0 else 1 end,c.display_order,c.id) filter (where c.id is not null), '[]'::jsonb) as criteria
       from activities a
       join learning_experiences e on e.id = a.experience_id
       left join activity_criteria c on c.activity_id = a.id and c.status = 'active'
@@ -508,7 +508,7 @@ async function dashboard() {
       left join lateral (
         select jsonb_agg(jsonb_build_object('id', ac.id, 'criterion_text', ac.criterion_text,
           'competency_id', ac.competency_id, 'competency_v4_id', ac.competency_v4_id, 'competency_text', co.official_text,
-          'performance_id', ac.performance_id, 'evidence_kind', ac.evidence_kind, 'details', ac.details) order by ac.display_order) as criteria
+          'performance_id', ac.performance_id, 'evidence_kind', ac.evidence_kind, 'details', ac.details) order by case when ac.competency_v4_id=a.details->>'competency_id' then 0 else 1 end,ac.display_order,ac.id) as criteria
         from activity_criteria ac left join competencies co on co.id = ac.competency_id
         where ac.activity_id = a.id and ac.status = 'active'
       ) criteria on true

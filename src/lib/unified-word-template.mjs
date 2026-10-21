@@ -149,7 +149,8 @@ export function insertCoverQuickView(xml, title, rows) {
   const cell = (value, width, shaded = false) => `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${shaded ? '<w:shd w:fill="EAF3F8"/>' : ""}<w:tcMar><w:top w:w="90" w:type="dxa"/><w:left w:w="130" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:right w:w="130" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:r><w:rPr>${shaded ? "<w:b/>" : ""}<w:sz w:val="18"/><w:color w:val="173352"/></w:rPr><w:t>${xmlEscape(value)}</w:t></w:r></w:p></w:tc>`;
   const heading = `<w:p><w:pPr><w:spacing w:before="180" w:after="90"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="23"/><w:color w:val="075D70"/></w:rPr><w:t>${xmlEscape(title)}</w:t></w:r></w:p>`;
   const table = `<w:tbl><w:tblPr><w:tblW w:w="10300" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:color="C9DFE9"/><w:bottom w:val="single" w:sz="4" w:color="C9DFE9"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2600"/><w:gridCol w:w="7700"/></w:tblGrid>${rows.map(([label, value]) => `<w:tr>${cell(label, 2600, true)}${cell(value, 7700)}</w:tr>`).join("")}</w:tbl>`;
-  return xml.replace(breakParagraph, `${heading}${table}${breakParagraph}`);
+  const stableRows=table.replaceAll('<w:tr>','<w:tr><w:trPr><w:cantSplit/></w:trPr>');
+  return xml.replace(breakParagraph, `${heading}${stableRows}${breakParagraph}`);
 }
 
 /** Keep the template's stationery, logo support and colours without a separate cover page. */

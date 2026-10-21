@@ -9,6 +9,20 @@ import { renderSavedDocumentWord } from "./document-word-export.mjs";
 
 const id = (number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
 
+test('consulta y Word conservan el criterio principal aunque otra competencia aparezca antes en SQL',async()=>{
+ const db=await fixture();try{
+  await db.query("update activities set details=details||$1::jsonb where id=$2",[JSON.stringify({document_template_version:'activity-unified-v1',competency_id:'CYT_INDAGA',evaluation_criterion:'Compara lo observado.',expected_evidence:'Comparación de las sombras.',additional_criteria:[{competency_id:'COM_ORAL',criterion_text:'Explica la prueba.',expected_evidence:'Relato oral.'}]}),id(12)]);
+  await db.query("update activity_criteria set details=details||$1::jsonb where id=$2",[JSON.stringify({expected_evidence:'Comparación de las sombras.'}),id(20)]);
+  await db.query("insert into activity_criteria(id,activity_id,competency_v4_id,criterion_text,details,status,teacher_confirmed_at,display_order) values($1,$2,'COM_ORAL','Explica la prueba.',$3::jsonb,'active',now(),-1)",[id(24),id(12),JSON.stringify({expected_evidence:'Relato oral.'})]);
+  const document=await loadSavedDocument(db,id(1),'activity',id(12));
+  assert.equal(document.active_criterion.competency_v4_id,'CYT_INDAGA');assert.equal(document.active_criterion.expected_evidence,'Comparación de las sombras.');
+  assert.equal(document.guide.criteria[0].id,id(20));assert.equal(document.guide.criteria[1].details.expected_evidence,'Relato oral.');
+  const zip=await JSZip.loadAsync(await renderActivityUnifiedWord(document,(await loadKnowledgeBaseV4()).competencyCards.map(card=>({...card,name:card.official_name}))));
+  assert.match(await zip.file('word/document.xml').async('string'),/Comparación de las sombras/);
+  assert.equal(await loadSavedDocument(db,id(2),'activity',id(12)),null);
+ }finally{await db.close();}
+});
+
 test('actividad consultada incluye solo la secuencia guardada autorizada y omite borradores',async()=>{
   const db=await fixture();try{
     await db.query(`insert into activities(id,experience_id,title,purpose,status,details,preparation,occurs_on)

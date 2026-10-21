@@ -1,6 +1,7 @@
 import { guidedObservationActive } from "./guided-observation-state.mjs";
 import { createHash } from "node:crypto";
 import { loadActivityObservations } from "./activity-observations.mjs";
+import {orderedActivityCriteria} from './activity-teacher-reading.mjs';
 import { diagnosticPlanningSummary } from "./diagnostic-assessment-v4.mjs";
 import { getCurrentClassroomContext } from "./classroom-context-service.mjs";
 import { projectPeriodClosureDocument } from "./period-closure-history.mjs";
@@ -181,10 +182,10 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       where a.id=$2 and c.teacher_id=$1 and sy.owner_id=$1 and a.details ? 'meaningful_situation'`, [teacherId, id])).rows[0];
     if (!row) return null;
     const registeredEvidence = await loadActivityObservations(db, { activityId: row.id, teacherId, classroomId: row.classroom_id });
-    const activityCriteria = (await db.query(`select id,criterion_text,competency_id,competency_v4_id,details from activity_criteria
+    const activityCriteria = orderedActivityCriteria(row.details,(await db.query(`select id,criterion_text,competency_id,competency_v4_id,details from activity_criteria
       where activity_id=$1 and (($2='archived' and version=1) or ($2<>'archived' and status='active'))
-      order by display_order,teacher_confirmed_at desc nulls last`, [row.id,row.status])).rows;
-    const activeCriterion=activityCriteria[0];
+      order by display_order,teacher_confirmed_at desc nulls last`, [row.id,row.status])).rows);
+    const activeCriterion=row.details?.competency_id?activityCriteria.find(item=>(item.competency_v4_id??item.competency_id)===row.details.competency_id):activityCriteria[0];
     const closure = (await db.query(`select del.teacher_closure_note,case when del.actual_started_at is not null then del.execution_date::text end as actual_execution_date from daily_execution_logs del
       join class_schedule_entries se on se.id=del.schedule_entry_id
       where se.activity_id=$1 and se.classroom_id=$2 and (del.teacher_closure_note is not null or del.actual_started_at is not null)
@@ -205,7 +206,8 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
         where e.classroom_id=$3 and a.status=$2 and (e.id=$1 or $2='active' and e.source_proposal_id=(select source_proposal_id from learning_experiences where id=$1))
         order by a.occurs_on,a.id`,[row.experience_id,row.status,row.classroom_id])).rows.map(item=>({id:item.id,title:item.title,date:dateOnly(item.occurs_on)})),
       active_criterion: activeCriterion ? { criterion_text: activeCriterion.criterion_text,
-        competency_v4_id: activeCriterion.competency_v4_id, observation_focus: activeCriterion.details?.observation_focus ?? [] } : null,
+        competency_v4_id: activeCriterion.competency_v4_id, observation_focus: activeCriterion.details?.observation_focus ?? [],
+        expected_evidence: activeCriterion.details?.expected_evidence ?? (activeCriterion.competency_v4_id===row.details?.competency_id?row.details?.expected_evidence:null) } : null,
       registered_evidence: registeredEvidence.map((item) => ({ id: item.id, student_id: item.student_id,
         criterion_id: item.criterion_id, criterion_text: item.criterion_text, competency_v4_id: item.competency_v4_id,
         student_name: item.student_name, observation_text: item.observation_text, observation_status: item.observation_status,

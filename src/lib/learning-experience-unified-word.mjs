@@ -1,4 +1,4 @@
-import { retainCoverPageBreak, guideDetails } from "./teacher-guide-word-layout.mjs";
+import { retainCoverPageBreak, guideDetails, keepShortTableTogether } from "./teacher-guide-word-layout.mjs";
 import { routeObservationCriteria } from "./activity-observation-plan.mjs";
 import { ageReference, compactPlanningTable } from "./pedagogical-word-presentation.mjs";
 import path from "node:path";
@@ -16,8 +16,8 @@ const durationWeeks = (startsOn, endsOn) => {
 };
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
 
-function paragraph(text, bold = false, bullet = false) {
-  return `<w:p><w:pPr><w:spacing w:before="${bold ? 140 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${bold ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${text}`)}</w:t></w:r></w:p>`;
+function paragraph(text, bold = false, bullet = false, keepNext = false) {
+  return `<w:p><w:pPr><w:spacing w:before="${bold ? 140 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${bold || keepNext ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${text}`)}</w:t></w:r></w:p>`;
 }
 
 
@@ -71,7 +71,7 @@ function valuesFor(document, cards) {
     NUMERO_EXPERIENCIA: Number.isInteger(document.source_proposal_index) ? String(document.source_proposal_index + 1) : "Emergente",
     CODIGO_EXPERIENCIA: document.id.slice(0, 8).toUpperCase(), TITULO_EXPERIENCIA: document.title,
     FECHA_INICIO: dateLabel(document.starts_on), FECHA_FIN: dateLabel(document.ends_on),
-    DURACION_REFERENCIAL: modern ? durationWeeks(document.starts_on, document.ends_on) : "Ajustable según el grupo", INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
+    DURACION_REFERENCIAL: modern ? `${durationWeeks(document.starts_on, document.ends_on)}${content.activity_route.length?` · ${content.activity_route.length} ${content.activity_route.length===1?'día elegido: '+dateLabel(content.activity_route[0].date??content.activity_route[0].planned_date):'días elegidos'}`:''}` : "Ajustable según el grupo", INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
     EDAD_AULA: `${document.age || ""} años · ${clean(document.classroom)}`,
     DOCENTE: clean(document.teacher_name) || "Docente del aula", UGEL: clean(document.ugel),
     PRIORIDAD_ANUAL_O_PROYECTO_ORIGEN: document.origin === "planned" ? "Propuesta del plan anual" : clean(content.planning_reason),
@@ -133,7 +133,13 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     ["Cómo acompañar los próximos encuentros", values.USO_EVIDENCIAS_PARA_AJUSTAR],
   ]);
   const byId = new Map(cards.map(card=>[card.id,card.name??card.official_name]));
-  const route = compactPlanningTable(["Actividad y fecha", "Propósito", "Criterios y evidencias"], content.activity_route.map(item=>[
+  const route = content.activity_route.some(item=>routeObservationCriteria(item).length>1)
+    ? content.activity_route.map(item=>paragraph(`${item.number}. ${item.title} · ${dateLabel(item.date)}`,true)+
+      paragraph(`Propósito: ${item.specific_purpose}`,false,false,true)+routeObservationCriteria(item).map(criterion=>
+        paragraph(byId.get(criterion.competency_id)??criterion.competency_id,true)+keepShortTableTogether(guideDetails([
+          ["Criterio",criterion.criterion_text],["Evidencia esperada",criterion.expected_evidence],
+        ]))).join("")).join("")
+    : compactPlanningTable(["Actividad y fecha", "Propósito", "Criterios y evidencias"], content.activity_route.map(item=>[
     `${item.number}. ${item.title}\n${dateLabel(item.date)}`,
     item.specific_purpose,
     routeObservationCriteria(item).map(criterion=>`${byId.get(criterion.competency_id)??criterion.competency_id}\n${criterion.criterion_text}\nEvidencia: ${criterion.expected_evidence}`).join("\n\n")
