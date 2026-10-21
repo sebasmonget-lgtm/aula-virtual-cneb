@@ -1541,3 +1541,11 @@ La competencia principal es la declarada en la actividad, no la primera fila dev
 ## 2026-10-21 — Alcance verificable de las iteraciones pedagógicas
 
 El límite de seis intentos se aplica a cada documento/generación individual e incluye fallos y reparaciones; no obliga a seis ni se comparte entre todos los alumnos. Recuperar resultados y maquetar no son llamadas nuevas. Se registran intentos sin precio conocido aparte del subtotal, nunca como consumo cero. Una copia local para revisar una secuencia completa debe declarar sus ajustes de fuentes y no acreditar ejecución remota. No completar valoraciones para eludir el bloqueo de cierre anual. Conservar pendientes explícitos; una muestra de plantilla no equivale a un cierre confirmado. Resultado: QA_CIERRE_AUDITORIA_PEDAGOGICA_2026-10-21.md.
+
+## 2026-10-21 — Fechas, seguimiento y ausencia de registros
+
+Diagnóstico: el período inicial previsto se conserva separado de las fechas reales de las fuentes; el mismo lector clasifica recojo inicial, actualización, registros anteriores o mezclados para pantalla y Word. No presentar observaciones posteriores como estado inicial. El seguimiento individual reutiliza literalmente planes futuros presentes en el comentario confirmado; sin plan explícito no se inventa uno. La corrección de plantilla no exige cambiar el modelo ni regenerar contenidos válidos.
+
+Sin registros de asistencia se indica ausencia de información, sin gráfica ni categorías cero. Con registros se conservan ceros reales y días pendientes separados. La presentación de AD/B/C se puede comprobar en copia aislada; esa comprobación técnica no acredita pertinencia pedagógica de una letra ni habilita cerrar el año sin evidencia.
+
+Las exportaciones locales deben cargar los mismos referentes curriculares completos que la descarga canónica; las tarjetas abreviadas de interfaz no sustituyen desempeños por edad. Cambios de maquetación conservan contenido y citas. Medir cada operación con alcance declarado: latencia HTTP y pruebas no representan tiempo docente; no sumar ejecuciones paralelas como duración global. Ver QA_SEGUNDA_REVISION_PEDAGOGICA_2026-10-21.md.
