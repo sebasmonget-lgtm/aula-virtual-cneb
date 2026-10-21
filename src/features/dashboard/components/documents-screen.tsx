@@ -17,6 +17,7 @@ import {ActivityReadingView} from "./activity-reading-view";
 import {AnnualProjectPreview} from "./annual-project-preview";
 import type {ChangeProposal} from "./annual-proposal-change-dialog";
 import { DocumentSyncPanel } from "./document-sync-panel";
+import {DiagnosticDocumentPreparation} from './diagnostic-document-preparation';
 
 import {familyReportSectionForReader} from "@/src/lib/family-report-presentation.mjs";
 import {diagnosticReportReadings,diagnosticReportPurpose,diagnosticReportPeriod,diagnosticReportFollowups} from '@/src/lib/diagnostic-report-reading.mjs';
@@ -159,6 +160,7 @@ export type DocumentFolder = "diagnostic"|"annual"|"experiences"|"evaluation";
 const folderKinds:Record<DocumentFolder,DocumentKind[]>={diagnostic:["diagnostic_summary"],annual:["annual_plan"],experiences:["experience","activity"],evaluation:["family_report","period_closure"]};
 const documentParam=(value:string)=>/^(annual_plan|diagnostic_summary|experience|activity|family_report|period_closure):[0-9a-f-]{36}$/i.test(value)?value:undefined;
 export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder?:DocumentFolder } = {}) {
+  const [preparingDiagnostic,setPreparingDiagnostic]=useState(false);
   const [authMode, setAuthMode] = useState<"local" | "supabase">("local");
   const [documents, setDocuments] = useState<DocumentEntry[]>([]);
   const [documentKey,setDocumentKey]=useWorkspaceParam("Documentos","document","",documentParam);
@@ -304,8 +306,10 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
     } catch (error) { setWordError(error instanceof Error ? error.message : "No se pudo guardar el Word."); }
     finally { setSavingWord(false); }
   }
+  if(preparingDiagnostic)return <section className="mx-auto max-w-5xl space-y-5"><DiagnosticDocumentPreparation onBack={()=>setPreparingDiagnostic(false)} onConfirmed={id=>{setPreparingDiagnostic(false);setOpened(null);setError('');setOpening(true);setRevision(value=>value+1);setSelected({kind:'diagnostic_summary',id});}}/></section>;
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro title={folder?{diagnostic:"Evaluación diagnóstica",annual:"Plan anual",experiences:"Proyectos y actividades",evaluation:"Evaluación"}[folder]:"Documentos"} description={folder?"Consulta y descarga los documentos de esta carpeta, con su fuente y versión.":"Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes."} icon={BookOpen} illustration="/project-illustrations/book.webp" />
+    {!selected&&(!folder||folder==='diagnostic')&&<Button variant="outline" className="min-h-12 whitespace-normal" onClick={()=>setPreparingDiagnostic(true)}><FileText/>Preparar diagnóstico de mi aula</Button>}
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
       <div className="flex flex-wrap gap-2">{opened?.kind==='annual_plan'&&opened.content.journey_version===2&&onPlan&&<Button variant="outline" disabled={savingWord} onClick={()=>{onPlan();writeWorkspaceLocation('Planificar',{tab:'annual',annualTools:'year',annualPlan:opened.id});}}>Ver Mi año</Button>}{needsProjectWord && opened.status === "active" && <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareProjectWord()}>{savingWord ? "Preparando Word..." : "Preparar Word del proyecto"}</Button>}{artifactFeature && opened && opened.kind!=="annual_plan" && ["experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
         (stableArtifact ? <Button className="min-h-11" disabled={savingWord} onClick={() => void downloadStableArtifact(stableArtifact)}><Download className="mr-2 size-4" />Descargar versión estable</Button>

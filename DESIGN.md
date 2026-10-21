@@ -1,5 +1,9 @@
 # Diseño de Ayni
 
+## Documento diagnóstico en Documentos · 2026-10-21
+
+Modo Operate, refinamiento de la interfaz existente. Acción «Preparar diagnóstico de mi aula» visible en Documentos; preparación opcional, separada de entrevistas → chat. Superficie blanca, borde y componentes compartidos, azul/teal actuales, texto breve y acciones de 44–48 px. Propuesta editable lista al terminar, lecturas por competencia en detalle, guardado y confirmación expresos. En móvil los botones se apilan. Las esperas recuperables permiten salir y volver sin otra generación ni sustitución de cambios escritos. Sin modal ni resumen manual obligatorio antes del chat.
+
 ## Evaluar: identidad de competencias · 2026-10-20
 
 Modo Operate. Se conserva la identidad cálida de Ayni: las competencias reutilizan los colores y pictogramas existentes, con alias cortos en las filas y encabezados de matriz; el nombre oficial permanece accesible. La revisión muestra observaciones ya guardadas y valoraciones por revisar como conceptos diferentes. Los tres destinos tienen iconos, contenedor blanco, borde visible y selección teal con aria-current; cada encabezado separa título, bimestre y fechas. Fila de competencia con superficie suave, progreso real y una acción Revisar. Consolidado mantiene columnas compactas y nombres fijos. El estado vacío de informes usa una ilustración de cuidadores de 640px, mostrada a 176px; no se amplía el pictograma de 160px de Mi año.

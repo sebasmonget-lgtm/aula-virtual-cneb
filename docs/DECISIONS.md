@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## 2026-10-21 — Documento diagnóstico opcional desde Documentos
+
+La captura inicial mantiene el acceso directo al chat. Preparar el documento diagnóstico es una acción aparte en Documentos, con las fuentes guardadas, la generación recuperable existente y revisión docente antes de confirmar. Una propuesta lista se abre para revisar sin una elección intermedia de «usar resumen». Volver a entrar reutiliza el borrador o trabajo guardado; no genera IA al consultar ni reintenta fallos silenciosamente. No restituir revisiones individuales/prioridades como requisitos del año. Conservar la plantilla y los servicios autorizados actuales.
+
 ## 2026-10-21 — Candidata de piloto sin promocionar Producción
 
 Preparar un alias Preview propio desde checkout limpio y commit identificado, con reloj de QA desactivado, sin agregar cambios de aplicación para pasar verificaciones. Mantener protección Vercel y explicitar que comparte la base QA; antes del piloto externo, separar datos/configuración y resolver accesos. Una restauración PGlite valida consistencia de datos y archivos, no recuperación de los servicios cloud. No convertir guardas de cierre en errores ni completar notas para obtener un video: mostrar pendientes y conservar confirmación docente. Montaje de capturas y voz local se identifica como demostración; móvil físico se prueba posteriormente con la usuaria. Detalle en QA_PILOTO_Y_VIDEO_2026-10-21.md.
