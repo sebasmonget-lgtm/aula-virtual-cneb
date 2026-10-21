@@ -37,3 +37,6 @@ Pruebas focales de síntesis, límites de alcance, referencias, guardado, confir
 La modificación concurrente de ai-execution-router-v4.mjs pertenece a otro chat y no forma parte de esta entrega. Rollback: restaurar el deployment QA anterior o revertir estos cambios de proyección/contrato, sin borrar entrevistas, observaciones ni versiones confirmadas. No tocar Producción.
 
 Fuentes: Programa Curricular de Educación Inicial, apartado III; CNEB, evaluación formativa; guía de planificación Inicial 2019, p. 19; guía de proyectos 2019; cartilla de evaluación diagnóstica, pp. 4–7 y 13–24. Copias oficiales verificadas y referencias en QA_ITERACIONES_E2E_2026-10-20.md.
+
+Configuración de recuperación: selección explícita de la conexión original únicamente para la rama QA codex/qa-corrections-20261019 en Preview. Las claves del gateway pueden permanecer cifradas e inactivas; no se crea fallback automático ni se cambia el modelo. Una configuración parcial sin perfil explícito sigue fallando de forma cerrada. Producción y otras ramas conservan su configuración. Esta selección evita que el siguiente push de QA restaure por accidente la conexión que no está terminando las llamadas extensas.
+

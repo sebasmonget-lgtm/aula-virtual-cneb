@@ -14,6 +14,11 @@ test("gateway requires its own credential and exact HTTPS endpoint",()=>{
  for(const change of [{AYNI_TEXT_API_KEY:""},{AYNI_TEXT_API_BASE_URL:""},{AYNI_TEXT_API_BASE_URL:"http://api.miraiapi.com/v1"},{AYNI_TEXT_API_BASE_URL:"https://other.example/v1"},{AYNI_TEXT_API_PROFILE:"unknown"}]) assert.throws(()=>resolveTextConnection({...environment,...change},"gpt-6.1-sol"),/Configuración incompleta/);
  assert.deepEqual(resolveTextConnection({OPENAI_API_KEY:"original-key"},"gpt-6.1-sol"),{apiKey:"original-key",baseURL:undefined,custom:false});
 });
+test('selección explícita de la conexión original conserva inactivas las claves del gateway',()=>{
+ assert.deepEqual(resolveTextConnection({...environment,AYNI_TEXT_API_PROFILE:'openai'},'gpt-6.1-sol'),{apiKey:'original-key',baseURL:undefined,custom:false});
+ const partial={...environment};delete partial.AYNI_TEXT_API_PROFILE;
+ assert.throws(()=>resolveTextConnection(partial,'gpt-6.1-sol'),/Configuración incompleta/);
+});
 test("SDK receives the custom endpoint without changing the resolved model",()=>{
  const client=new OpenAIProvider({apiKey:"gateway-key",baseURL:environment.AYNI_TEXT_API_BASE_URL,model:"gpt-6.1-sol"}).getClient();
  assert.equal(client.baseURL,environment.AYNI_TEXT_API_BASE_URL);
