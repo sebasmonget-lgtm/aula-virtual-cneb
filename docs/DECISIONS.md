@@ -1566,3 +1566,7 @@ Por aclaración explícita posterior se retira DiagnosticBriefReview de los dos 
 ### Indagación y paginación de actividades
 
 El generador diario no debe añadir prohibiciones de explorar ausentes del mapa: puede recoger la anticipación y permitir un primer intento con recursos autorizados, sin adelantar la comparación sistemática ni cambiar el criterio. No se convierte en obligación de experimentar cada día. Instrucción validada con segunda muestra; modelos y validadores conservados. En Word de actividad, criterios cortos y referentes mantienen sus títulos unidos; los otros consumidores del layout conservan el comportamiento por defecto. Publicación QA 6736961, 66 checks PASS; Producción intacta.
+
+### Revisión móvil sin rediseño · 2026-10-21
+
+Asistencia conserva las cuatro categorías y su confirmación explícita; antes de `sm` las distribuye en dos columnas para que las etiquetas quepan. La X compartida conserva el icono y gana área de interacción de 44 px. El detalle de una propuesta conserva la posición del calendario anual, también antes de desarrollar el proyecto. No cambiar fuentes pedagógicas ni regenerar IA para comprobar adaptación móvil. Capturas de navegador redimensionado se identifican como tales; pruebas de cámara, micrófono, teclado y gestos requieren dispositivo real. Ver QA_MOVIL_2026-10-21.md.
