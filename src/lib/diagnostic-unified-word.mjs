@@ -1,7 +1,7 @@
 import path from "node:path";
 import { insertCoverQuickView, renderUnifiedWord, removeParagraphsContaining, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
-import {diagnosticCompetencyReading,diagnosticRecordExcerpt,diagnosticReportPurpose} from './diagnostic-report-reading.mjs';
+import {diagnosticCompetencyReading,diagnosticRecordExcerpt,diagnosticReportPurpose,diagnosticObservedDay,diagnosticReportPeriod,diagnosticStudentFollowup} from './diagnostic-report-reading.mjs';
 
 const templateUrl = path.join(process.cwd(), "assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx");
 const competencyFields = [
@@ -42,13 +42,7 @@ function replaceFromParagraphToTable(xml, startText, endText, body) {
 
 // Civil dates are already local. Instants must be projected into the school's
 // time zone before being used as calendar dates in a teacher-facing document.
-function observedDay(value) {
-  const raw = String(value ?? "");
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  const instant = new Date(raw);
-  if (!raw || Number.isNaN(instant.getTime())) return "";
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(instant);
-}
+const observedDay=diagnosticObservedDay;
 
 function uniqueObservations(observations) {
   const seen = new Set();
@@ -101,13 +95,7 @@ function valuesFor(document, context, cards) {
   const children = snapshot.children;
   const commentCount = children.filter((child) => clean(child.teacher_comment)).length;
   const observedIds = new Set(observations.map((item) => item.student_id));
-  const dates = records.map((item) => observedDay(item.observed_at)).filter(Boolean).sort();
-  const observedFrom = dateLabel(dates[0]);
-  const observedTo = dateLabel(dates.at(-1));
-  const plannedStart = String(context.diagnostic_period_start ?? "").slice(0, 10);
-  const plannedEnd = String(context.diagnostic_period_end ?? "").slice(0, 10);
-  const datesOutsidePeriod = /^\d{4}-\d{2}-\d{2}$/.test(plannedStart) && /^\d{4}-\d{2}-\d{2}$/.test(plannedEnd)
-    && dates.some((date) => date < plannedStart || date > plannedEnd);
+  const period=diagnosticReportPeriod(document,context);
   const needs = clean(group.needs);
   const strengths = clean(group.strengths);
   const priorities = clean(group.planning_priorities);
@@ -131,16 +119,14 @@ function valuesFor(document, context, cards) {
     EDAD_AULA: `${context.age} años · ${clean(context.classroom || document.classroom)}`,
     DOCENTE: clean(context.teacher_name) || "Docente del aula",
     UGEL: clean(context.ugel) || "No registrada",
-    FECHA_INICIO_DIAGNOSTICO: dateLabel(context.diagnostic_period_start) || observedFrom || "Inicio del año escolar",
-    FECHA_FIN_DIAGNOSTICO: dateLabel(context.diagnostic_period_end) || observedTo || "Fecha de confirmación del informe",
+    FECHA_INICIO_DIAGNOSTICO: dateLabel(period.startsOn) || "Sin registros fechados",
+    FECHA_FIN_DIAGNOSTICO: dateLabel(period.endsOn) || "Sin registros fechados",
     N_ESTUDIANTES: String(children.length),
     N_OBSERVADOS: String(observedIds.size),
     N_ENTREVISTAS_COMPLETADAS: String(children.filter((item) => item.has_confirmed_interview).length),
     N_EVIDENCIAS_REVISADAS: String(records.length),
     PROPOSITO_DIAGNOSTICO: diagnosticReportPurpose,
-    CONTEXTO_PERIODO_DIAGNOSTICO: dates.length
-      ? `Registros revisados: del ${observedFrom} al ${observedTo}${commentCount ? ", junto con comentarios confirmados de la docente" : ""}.${datesOutsidePeriod ? ` Actualización del diagnóstico con registros posteriores o anteriores al recojo previsto. Revisar fechas: hay registros fuera del período previsto (${dateLabel(plannedStart)} al ${dateLabel(plannedEnd)}).` : ""}`
-      : "Aún faltan observaciones fechadas del aula; se continuará recogiendo información.",
+    CONTEXTO_PERIODO_DIAGNOSTICO: [period.recordsLabel,period.kind!=='initial'&&period.initialPeriodLabel,period.scopeNote].filter(Boolean).join(' '),
     FOCOS_DIAGNOSTICOS: "El juego, la expresión, la convivencia, la exploración y las necesidades que aparecen en el aula.",
     CONDICIONES_RECOJO: "Las entrevistas describen el contexto familiar. Las observaciones docentes muestran lo ocurrido en el aula; una ausencia de registro no indica una dificultad.",
     ESTADO_ENTREV: `${children.filter((item) => item.has_confirmed_interview).length} de ${children.length} entrevistas confirmadas`,
@@ -149,7 +135,7 @@ function valuesFor(document, context, cards) {
     ESTADO_PORT: "Producciones y portafolio: consultar los registros disponibles en Ayni.",
     INFORMACION_PENDIENTE: children.length > observedIds.size
       ? `${children.length - observedIds.size} niños aún no tienen observaciones docentes en este corte. Se continuará observando.`
-      : "La observación continúa durante el año; estas conclusiones son iniciales.",
+      : "Las conclusiones se limitan a este corte; se contrastarán en otras situaciones.",
     DIAGNOSTICO_FORTALEZAS: strengths || "Información insuficiente para describir una fortaleza grupal.",
     DIAGNOSTICO_NECESIDADES: needs || "Información insuficiente para precisar necesidades grupales.",
     DIAGNOSTICO_INTERESES: reportedInterests.length ? `Las familias mencionaron intereses como ${reportedInterests.join(", ")}. Conviene retomarlos y observar cuáles aparecen también en el juego y las experiencias del aula.` : "Las entrevistas no aportan intereses estructurados suficientes para resumirlos aquí; se seguirán explorando durante el juego y la conversación.",
@@ -177,19 +163,18 @@ function valuesFor(document, context, cards) {
   // The teacher's confirmed comments are the nominal interpretation. No model
   // invents a child-specific diagnosis or a future observation for this table.
   const followups = children.map((child) => {
+    const followup=diagnosticStudentFollowup(child);
     const childObservations = observations.filter((item) => item.student_id === child.student_id && clean(item.observation_text));
-    const chronological = uniqueObservations(childObservations).sort((a, b) => String(a.observed_at ?? "").localeCompare(String(b.observed_at ?? "")));
+    const chronological = uniqueObservations(childObservations).sort((a, b) => observedDay(a.observed_at).localeCompare(observedDay(b.observed_at))||String(a.id??'').localeCompare(String(b.id??'')));
     const selected = chronological.length > 1 ? [chronological[0], chronological.at(-1)] : chronological;
     const excerpts = selected.map((item) =>
       `${competencyNames.get(item.competency_id) || "Observación"}: “${diagnosticRecordExcerpt(item.observation_text)}”`);
     return {
       name: child.name,
-      situation: [clean(child.teacher_comment) && `Docente: ${clean(child.teacher_comment)}`,
+      situation: [clean(followup.comment) && `Docente: ${clean(followup.comment)}`,
         !clean(child.teacher_comment) && excerpts.length && `En el aula: ${excerpts.join("; ")}${chronological.length > selected.length ? ` (Se muestran ${selected.length} de ${chronological.length} registros; consultar los demás en Ayni).` : ""}`,
         clean(child.family_context?.adaptation_context) && `Familia informa: ${clean(child.family_context.adaptation_context)}`].filter(Boolean).join(" ") || "Información insuficiente.",
-      support: child.information_status === "insufficient_information"
-        ? "Continuar observando y precisar el acompañamiento con nuevos registros."
-        : "Retomar lo descrito en otro juego y registrar qué hace, qué dice y qué ayuda le resulta útil.",
+      support: followup.nextStep,
       records: chronological.length,
       date: "Durante las próximas experiencias",
     };
@@ -202,7 +187,7 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
   output = replaceSectionBody(output, "II. PROPÓSITO Y ALCANCE", "III. CÓMO SE RECOGIÓ LA INFORMACIÓN", [
     paragraph("II. PROPÓSITO Y FECHAS", true),
     paragraph(values.PROPOSITO_DIAGNOSTICO),
-    paragraph(`Período previsto de recojo: ${values.FECHA_INICIO_DIAGNOSTICO} al ${values.FECHA_FIN_DIAGNOSTICO}.`, true),
+    paragraph(`${diagnosticReportPeriod({content:{report_snapshot:snapshot}},context).periodLabel}: ${values.FECHA_INICIO_DIAGNOSTICO} al ${values.FECHA_FIN_DIAGNOSTICO}.`, true),
     paragraph(values.CONTEXTO_PERIODO_DIAGNOSTICO),
     paragraph(`Qué se buscó conocer: ${values.FOCOS_DIAGNOSTICOS}`),
   ].join(""));
@@ -251,13 +236,15 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
   const individual = followups.map((child) => [
     paragraph(child.name, true),
     paragraph(`Registros y contexto: ${child.situation}`, false, true, true),
-    paragraph(`Apoyo o siguiente paso: ${child.support}`, false, true),
+    child.support?paragraph(`Siguiente paso indicado por la docente: ${child.support}`, false, true):'',
     paragraph(`${countLabel(child.records, 'registro disponible', 'registros disponibles')} en Ayni.`, false, true),
   ].join("")).join("");
   output = replaceFromParagraphToTable(output, "Seguimientos individuales o apoyos específicos", "VIII. USO DE LA INFORMACIÓN",
     paragraph("Seguimiento por niña o niño", true) + individual);
-  output = replaceWordText(output, "Periodo de recojo", "Período previsto de recojo");
-  output = replaceWordText(output, "Periodo diagnóstico", "Período previsto del diagnóstico");
+  const period=diagnosticReportPeriod({content:{report_snapshot:snapshot}},context);
+  output = replaceWordText(output, "Periodo de recojo", period.periodLabel);
+  output = replaceWordText(output, "Periodo diagnóstico", period.periodLabel);
+  if(period.kind==='update')output=replaceWordText(output,'EVALUACIÓN','ACTUALIZACIÓN');
   output = replaceWordText(output, "Conocer cómo inicia el grupo para acompañar mejor sus aprendizajes.", diagnosticReportPurpose);
   if (Number(context.school_year) !== 2026) output = removeParagraphsContaining(output, ["Orientaciones para el inicio del año escolar 2026"]);
   // Preserve the original heading runs/icons, but use a native paragraph so
@@ -292,5 +279,6 @@ export async function renderDiagnosticUnifiedWord(document, context, cards = [],
     ["Qué falta observar", clean(group.needs).split(/(?<=[.!?])\s+/u)[0]],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl, values, logo, compactTrailingSpace: true,
+    transformPart:(_part,xml)=>diagnosticReportPeriod(document,context).kind==='update'?replaceWordText(xml,'EVALUACIÓN DIAGNÓSTICA','ACTUALIZACIÓN DIAGNÓSTICA'):xml,
     transform: (xml) => retainCoverPageBreak(insertCoverQuickView(transformDiagnostic(xml, { ...context, competencyCards: cards }, snapshot, followups, values), "El diagnóstico en una mirada", overview)) });
 }

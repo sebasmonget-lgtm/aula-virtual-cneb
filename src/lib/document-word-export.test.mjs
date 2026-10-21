@@ -35,9 +35,19 @@ test('Word familiar muestra gráfica circular y cantidades editables sin cambiar
  const document=base('family_report',{introduction:'Compartimos sus aprendizajes.',sections:[]}),before=structuredClone(document);
  const attendance={total:10,present:6,late:1,absent:1,excused:1,pending:1,as_of:'2026-12-18'};
  const bytes=await renderSavedDocumentWord(document,cards,{attendance}),zip=await JSZip.loadAsync(bytes),xml=await zip.file('word/document.xml').async('string');
- for(const text of ['Asistencia del bimestre','Asistió 7 de 10 días de clase.','Gráfica circular de asistencia','Asistencia','Tardanzas','Faltas','Total: 10 días de clase','66.7 %','11.1 %','22.2 %','1 falta justificada','1 día sin registrar','18/12/2026'])assert.ok(xml.includes(text),text);
+ for(const text of ['Asistencia del bimestre','Asistió 7 de 9 días registrados.','Gráfica circular de asistencia','Asistencia','Tardanzas','Faltas','Total: 10 días de clase','66.7 %','11.1 %','22.2 %','1 falta justificada','1 día sin registrar','18/12/2026'])assert.ok(xml.includes(text),text);
  assert.ok(Object.keys(zip.files).some(name=>name.startsWith('word/media/')));
  assert.equal((xml.match(/Asistencia del bimestre/g)??[]).length,1);assert.deepEqual(document,before);assert.deepEqual(attendance,{total:10,present:6,late:1,absent:1,excused:1,pending:1,as_of:'2026-12-18'});
+});
+test('asistencia sin datos y valoración pendiente no se imprimen como cero faltas ni como C',async()=>{
+ const doc=base('family_report',{sections:[{competency_id:'COM_ORAL',progress_summary:'Aún falta conocer cómo participa en otras conversaciones.',examples:[],support_or_conditions:[],next_steps:[],family_suggestions:[],insufficiency_note:'Falta evidencia para una valoración del período.'}]});
+ const attendance={total:43,present:0,late:0,absent:0,excused:0,pending:43,as_of:'2026-12-18'};
+ const zip=await JSZip.loadAsync(await renderSavedDocumentWord(doc,cards,{attendance})),xml=await zip.file('word/document.xml').async('string');
+ assert.match(xml,/Sin información de asistencia registrada/);assert.match(xml,/43 días de clase por registrar/);
+ assert.doesNotMatch(xml,/Porcentajes sobre 0|0 días|Gráfica circular de asistencia/);
+ assert.match(xml,/Sin valoración/);assert.match(xml,/Falta evidencia/);
+ const allAbsent=await JSZip.loadAsync(await renderSavedDocumentWord(doc,cards,{attendance:{total:3,present:0,late:0,absent:3,excused:0,pending:0}}));
+ const real=await allAbsent.file('word/document.xml').async('string');assert.match(real,/Gráfica circular de asistencia/);assert.match(real,/100 %/);assert.doesNotMatch(real,/Sin información de asistencia registrada/);
 });
 
 test('Word imprime la versión sencilla sin modificar la conclusión ni la nota docente',async()=>{

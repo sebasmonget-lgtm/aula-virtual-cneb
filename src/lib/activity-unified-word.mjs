@@ -218,7 +218,9 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     ]);
   }).join("") + (integratedIds.some(id => !observedIds.includes(id) && !criteria.some(item => (item.competency_v4_id ?? item.competency_id) === id))
     ? readableBlock("Integración prevista en el mapa", integrated) : "");
-  const supports = document.experience_details?.source_proposal_snapshot?.supports ?? [];
+  // General project supports belong to the project. Daily help is already in
+  // each moment's mediation; do not print unrelated inherited safety advice.
+  const supports = Array.isArray(content.supports)?content.supports:[];
   const supportBlocks = readableBlock("Apoyos previstos", supports);
   guide.sequence += supportBlocks;
   const approaches = document.experience_details?.transversal_approaches ?? [];

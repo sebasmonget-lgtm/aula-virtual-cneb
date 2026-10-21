@@ -28,6 +28,10 @@ const group=(title,values)=>list(values).length?[label(title),...bullets(values)
 async function attendanceBlock(attendance){
   const chart=familyAttendanceChart(attendance);
   if(!chart)return [label('Asistencia del bimestre'),paragraph('Sin información de asistencia para este informe.')];
+  if(!chart.recorded)return [table([new TableRow({cantSplit:true,children:[cell([
+    label('Asistencia del bimestre'),paragraph(chart.summary),
+    ...((chart.note||chart.asOf)?[paragraph([chart.note,chart.asOf?`Corte: ${date(chart.asOf)}.`:''].filter(Boolean).join(' '))]:[]),
+  ],WIDTH,{shading:{fill:'FFF7E5'},margins:{top:170,bottom:170,left:260,right:260}})]})],[WIDTH]),space()];
   const data=await sharp(Buffer.from(familyAttendanceDonutSvg(chart))).png().toBuffer();
   const image=new ImageRun({data,type:'png',transformation:{width:184,height:184},altText:{id:'1001',name:'Gráfica circular de asistencia',title:'Distribución de asistencia',description:chart.rows.map(row=>`${row.label}: ${row.count} días, ${row.percentageLabel}`).join('; ')}});
   const legend=chart.rows.flatMap(row=>[

@@ -33,6 +33,7 @@ export type Proposal = {
   plan_format?: string; organization_criteria?: string[]; transversal_approaches?: string[];
 };
 export type DocumentContext = {
+  diagnostic_period_start?:string|null;diagnostic_period_end?:string|null;
   institution_name?: string; institution_code?: string; district?: string; ugel?: string;
   teacher_name?: string; classroom_section?: string; age?: number; school_year?: number;
   starts_on?: string; ends_on?: string; student_count?: number | null;

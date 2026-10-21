@@ -6,8 +6,22 @@ import { listSavedDocuments, loadSavedDocument } from "./document-library-servic
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
 import { renderSavedDocumentWord } from "./document-word-export.mjs";
+import {diagnosticReportPeriod} from './diagnostic-report-reading.mjs';
 
 const id = (number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
+
+test('el lector diagnóstico autorizado comparte con Word el período inicial y el corte del snapshot',async()=>{
+ const db=await fixture();try{
+  await db.exec('create table calendar_blocks(school_year_id uuid,type text,start_date date,end_date date); create table initial_stages(school_year_id uuid,duration_weeks int);');
+  const details={document_format:'diagnostic-unified-v1',report_snapshot:{version:'diagnostic-unified-v1',children:[],observations:[{observed_at:'2026-12-18'}]}};
+  await db.query('update diagnostic_group_reviews set details=$1::jsonb where id=$2',[JSON.stringify(details),id(9)]);
+  const doc=await loadSavedDocument(db,id(1),'diagnostic_summary',id(9));
+  assert.equal(doc.title,'Actualización diagnóstica');assert.equal(diagnosticReportPeriod(doc,doc.document_context).kind,'update');
+  assert.equal(doc.document_context.diagnostic_period_start,'2026-03-16');
+  assert.equal(await loadSavedDocument(db,id(2),'diagnostic_summary',id(9)),null);
+  assert.deepEqual((await db.query('select details from diagnostic_group_reviews where id=$1',[id(9)])).rows[0].details,details);
+ }finally{await db.close();}
+});
 
 test('consulta y Word conservan el criterio principal aunque otra competencia aparezca antes en SQL',async()=>{
  const db=await fixture();try{

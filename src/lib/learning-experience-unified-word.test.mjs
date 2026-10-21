@@ -24,7 +24,8 @@ test("el proyecto unificado clona la ruta, usa currículo de la edad y no antici
   const xml = await archive.file("word/document.xml").async("string");
   assert.match(xml, /Elegimos juegos/);
   assert.match(xml, /Nos organizamos/);
-  assert.match(xml, /ajustar el acompañamiento docente, conservando la secuencia confirmada/);
+  assert.match(xml, /Ajusta las preguntas, los apoyos y el tiempo/);
+  assert.doesNotMatch(xml,/conservando la secuencia confirmada/);
   assert.doesNotMatch(xml, /ajustar las siguientes actividades/);
   for (const label of ["Primeros pasos", "Cómo acompañará la docente", "Qué observar", "Evidencia esperada"])
     assert.match(xml, new RegExp(label));

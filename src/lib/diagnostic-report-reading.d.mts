@@ -3,3 +3,8 @@ export function diagnosticCompetencyReading(snapshot:unknown,competencyId:string
 export function diagnosticReportReadings(document:unknown):DiagnosticReportReading[];
 export function diagnosticRecordExcerpt(text:unknown,limit?:number):string;
 export const diagnosticReportPurpose:string;
+export function diagnosticObservedDay(value:unknown):string;
+export type DiagnosticReportPeriod={kind:'undated'|'cut'|'initial'|'update'|'prior'|'mixed';title:string;from:string;to:string;plannedStart:string;plannedEnd:string;periodLabel:string;startsOn:string;endsOn:string;recordsLabel:string;initialPeriodLabel:string;scopeNote:string};
+export function diagnosticReportPeriod(document:unknown,context?:unknown):DiagnosticReportPeriod;
+export function diagnosticStudentFollowup(child:unknown):{comment:string;nextStep:string};
+export function diagnosticReportFollowups(document:unknown):{studentId:string;name:string;comment:string;nextStep:string}[];

@@ -25,10 +25,10 @@ export function FamilyReportAttendance({ classroomId, periodId, studentId }:{ cl
     <h3><CalendarCheck size={18} aria-hidden="true"/>Asistencia del bimestre</h3>
     {!current?<p role="status">Cargando asistencia…</p>:current.error?<div role="alert"><p>{current.error}</p><Button variant="outline" onClick={()=>{setResult(null);setRetry(value=>value+1);}}>Volver a cargar</Button></div>:!chart?<p>No hay información de asistencia para este alumno.</p>:<>
       <p className={styles.summary}>{chart.summary}</p>
-      <div className={styles.chart}>
+      {chart.recorded>0&&<div className={styles.chart}>
         <svg className={styles.donut} viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="72" fill="none" stroke="#E7EDF3" strokeWidth="28"/><g transform="rotate(-90 100 100)">{chart.rows.map((row:{key:string;count:number;color:string;width:number},index:number)=>row.count>0&&<circle key={row.key} cx="100" cy="100" r="72" fill="none" stroke={row.color} strokeWidth="28" strokeDasharray={`${row.width/100*2*Math.PI*72} ${2*Math.PI*72}`} strokeDashoffset={-chart.rows.slice(0,index).reduce((sum:number,part:{width:number})=>sum+part.width,0)/100*2*Math.PI*72}/>)}</g><text x="100" y="101" textAnchor="middle" className={styles.total}>{chart.recorded}</text><text x="100" y="123" textAnchor="middle" className={styles.totalLabel}>{chart.pending?'días registrados':'días de clase'}</text></svg>
         <div className={styles.legend}>{chart.rows.map((row:{key:string;label:string;count:number;color:string;percentageLabel:string})=><div className={styles.row} key={row.key}><span className={styles.swatch} style={{backgroundColor:row.color}} aria-hidden="true"/><span>{row.label}<small>{row.count} {row.count===1?'día':'días'}</small></span><strong>{row.percentageLabel}</strong></div>)}<p className={styles.totalDays}>Total: {chart.total} días de clase</p></div>
-      </div>
+      </div>}
       <p className={styles.note}>{chart.note}{chart.asOf&&` Corte: ${chart.asOf.slice(8,10)}/${chart.asOf.slice(5,7)}/${chart.asOf.slice(0,4)}.`}</p>
     </>}
   </section>;

@@ -7,6 +7,7 @@ import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { recordAIQAResult } from "./ai-qa-trace.mjs";
 import { randomUUID } from "node:crypto";
 import { currentSetupPerformance } from "./setup-performance.mjs";
+import {diagnosticReportPeriod} from './diagnostic-report-reading.mjs';
 
 const fields = ["strengths", "needs", "planning_priorities"];
 const readingFields={competency_id:{type:'string'},summary:{type:'string',minLength:1,maxLength:700},next_step:{type:'string',minLength:1,maxLength:400},
@@ -94,7 +95,7 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
   timing.sources_before_ms = performance.now() - started;
   const old=(await db.query(`select ai_snapshot from diagnostic_group_reviews
     where id=$1 and created_by=$2 and status='draft'`,[draftId,teacherId])).rows[0]?.ai_snapshot;
-  if(old?.output&&old.contract_version==='diagnostic-reading-v2'&&sameDiagnosticSources(old.source_snapshot,sources.source_snapshot))return {details:old.output,cached:true};
+  if(old?.output&&old.contract_version==='diagnostic-reading-v3'&&sameDiagnosticSources(old.source_snapshot,sources.source_snapshot))return {details:old.output,cached:true};
   const lease=randomUUID();
   const claimed=await db.query(`update diagnostic_group_reviews set ai_snapshot=$3::jsonb
     where id=$1 and created_by=$2 and status='draft' and
@@ -104,10 +105,13 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
   try {
     const plan = resolvePlan({ workflow: "diagnostic_group_synthesis", task: "generation" });
     const provider = createProvider(plan, { timeoutMs: 180_000 });
+    const period=diagnosticReportPeriod({content:{report_snapshot:{observations:(sources.observed_records??[]).flatMap(child=>child.notes)}}});
     const bundle = { workflow: "diagnostic_group_synthesis", context: { age: sources.age, student_count: sources.student_count,
+      observation_period:{starts_on:period.from,ends_on:period.to,meaning:'Fechas de los registros recibidos; no se presupone que corresponden al inicio del año.'},
       confirmed_teacher_comments: sources.comments, observed_records: (sources.observed_records ?? []).map(child=>({...child,notes:child.notes.map(({record_id,...note})=>{void record_id;return note;})})), family_reported_context: sources.family_reported_context ?? [] }, curriculum: { competency_cards: sources.competency_options ?? [] },
       constraints: { must: ["Distinguir explícitamente lo observado, lo reportado por la familia y la interpretación docente. Una entrevista familiar no acredita un aprendizaje observado. Si hay contradicciones, conservar el tipo de fuente y expresar lo que falta observar. Cada afirmación cita sus fuentes únicamente en claims.source_refs. El texto docente y claims.text no contienen alias child_N ni IDs; usar expresiones prudentes como un niño o algunos niños según el alcance sustentado.", "Los comentarios individuales son opcionales; no suponer que su ausencia indica dificultad.", "Expresar necesidades como oportunidades pedagógicas.",
         "Redactar una visión breve del grupo, sin priorizar competencias todavía.", "No convertir ausencia de registro en dificultad.",
+        "La síntesis se refiere al corte de registros recibido. No describas cómo empezó el grupo ni un progreso a lo largo de todo el año si las fuentes no muestran esos momentos. No uses el número de notas como prueba de suficiencia pedagógica.",
         "En competency_readings incluye una lectura por cada competencia con observaciones directas recibidas, sin añadir competencias sin registros. En summary describe qué permiten comprender esas actuaciones, en hasta 45 palabras; en next_step propone una oportunidad o ayuda concreta en hasta 25 palabras. No copies el conteo de registros como análisis ni repitas el mismo siguiente paso en todas las competencias. Usa solo source_refs de observaciones directas vinculadas a esa competencia. individual conserva un solo niño; subgroup exige al menos dos distintos y no representa a toda el aula. Si esos registros no permiten interpretar, information_gap y explica qué falta conocer. No imprimas alias ni IDs en summary o next_step.",
         "Recibir una pregunta o ayuda prevista para la edad no demuestra una dificultad. Propón observar cómo participa el niño y qué apoyo le resulta útil; no impongas actuar sin ayuda como condición general de aprendizaje.",
         "En needs, distinguir necesidad de acompañamiento observada de falta de información. Solo plantear una necesidad grupal con un patrón comparable en varios niños o comentarios docentes confirmados que la sustenten; si no hay ese sustento, formular qué conviene seguir observando.",
@@ -134,7 +138,7 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
     timing.db_connect_before_store_ms = measured?.db_connect ?? null;
     timing.query_count_before_store = measured?.queries ?? null;
     const stored=await db.query(`update diagnostic_group_reviews set ai_snapshot=$1::jsonb,updated_at=now()
-      where id=$2 and status='draft' and ai_snapshot->>'lease_token'=$3 returning id`, [JSON.stringify({ status:'ready',contract_version:'diagnostic-reading-v2',output: details,
+    where id=$2 and status='draft' and ai_snapshot->>'lease_token'=$3 returning id`, [JSON.stringify({ status:'ready',contract_version:'diagnostic-reading-v3',output: details,
       provider: response.provider_metadata?.provider ?? plan.provider, model: plan.model,
       reasoning_effort: plan.reasoning_effort, routing_policy_version: plan.routing_policy_version,
       response_id: response.provider_metadata?.response_id ?? null,

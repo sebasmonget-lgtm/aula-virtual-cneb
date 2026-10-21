@@ -7,6 +7,7 @@ import { buildProviderRequest } from "./ai-generation-v4.mjs";
 import { loadLearningExperienceSkill } from "./learning-experience-skill.mjs";
 import { focusedKnowledgeForDirectWorkflow } from "./ai-focused-knowledge.mjs";
 import {isMaterialPlaceholder} from './annual-proposal-intent.mjs';
+import {projectFlexibilityGuidance} from './activity-teacher-reading.mjs';
 
 import { routeObservationCriteria, validCriterionMoments } from "./activity-observation-plan.mjs";
 import { validateOfficialPerformanceRefs, OFFICIAL_PERFORMANCE_VERSION } from "./official-performance-references.mjs";
@@ -194,7 +195,7 @@ export function projectDetails({ source, preview, decisions, dependents, master,
     spaces_and_materials: master.resources,
     evidence_opportunities: dependents.general_criteria.flatMap((item) => item.expected_evidence),
     family_or_community_links: [], adjustment_points: [],
-    flexibility_notes: "Ajustar el acompañamiento y los apoyos según lo observado, conservando la secuencia confirmada.",
+    flexibility_notes: projectFlexibilityGuidance,
     ...(previous?.resource_readiness ? {resource_readiness:previous.resource_readiness} : {}),
     preview, decisions, dependents, planning_feedback: previous?.planning_feedback ?? null,
     ...(previous?.rebased_from?{rebased_from:previous.rebased_from}:{}),

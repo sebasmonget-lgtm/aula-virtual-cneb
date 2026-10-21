@@ -1,5 +1,6 @@
 import { retainCoverPageBreak, guideDetails, keepShortTableTogether } from "./teacher-guide-word-layout.mjs";
 import { routeObservationCriteria } from "./activity-observation-plan.mjs";
+import {projectFlexibilityGuidance,projectFlexibilityText} from './activity-teacher-reading.mjs';
 import { ageReference, compactPlanningTable } from "./pedagogical-word-presentation.mjs";
 import path from "node:path";
 import { insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
@@ -90,11 +91,11 @@ function valuesFor(document, cards) {
     PARTICIPACION_FAMILIA_COMUNIDAD: clean(content.formal_content?.family_collaboration) || list(content.family_or_community_links),
     ESTRATEGIA_RECOJO_EVIDENCIAS: clean(content.formal_content?.assessment_followup) || "Observar y registrar actuaciones durante el juego y las actividades.",
     INSTRUMENTOS_PROYECTO: "Notas de observación y evidencias registradas por la docente.",
-    USO_EVIDENCIAS_PARA_AJUSTAR: "Revisar los registros para ajustar el acompañamiento docente, conservando la secuencia confirmada.",
+    USO_EVIDENCIAS_PARA_AJUSTAR: projectFlexibilityGuidance,
     NRO_ACTIVIDAD: "", FECHA_ACTIVIDAD: "", TITULO_ACTIVIDAD: "", PROPOSITO_ESPECIFICO: "", COMPETENCIA_PRINCIPAL_ACTIVIDAD: "", CRITERIO_ACTIVIDAD: "", EVIDENCIA_ACTIVIDAD: "",
     MATERIALES_RECURSOS_PROYECTO: list(content.spaces_and_materials), ORGANIZACION_ESPACIOS: clean(content.organization_of_spaces) || "",
     HITOS_CALENDARIO: `${dateLabel(document.starts_on)} al ${dateLabel(document.ends_on)}`,
-    AJUSTES_FLEXIBILIDAD: list(content.adjustment_points) || clean(content.flexibility_notes),
+    AJUSTES_FLEXIBILIDAD: list(content.adjustment_points) || projectFlexibilityText(clean(content.flexibility_notes)),
     CIERRE_SOCIALIZACION: clean(content.formal_content?.closing) || "Compartir lo realizado y conversar sobre lo aprendido, según decida el grupo.",
     SINTESIS_EVIDENCIAS_PROYECTO: "", AVANCES_GRUPO: "", NECESIDADES_EMERGENTES: "", AJUSTES_REALIZADOS: "",
     VALORACION_APRENDIZAJES: "", EVIDENCIAS_CIERRE: "", PROYECCION_SIGUIENTE: "", DIRECTOR_COORDINADOR: "",

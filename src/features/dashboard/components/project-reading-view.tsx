@@ -4,6 +4,7 @@ import {CalendarDays,Target,Heart,Eye,Package,ListChecks,Lightbulb} from 'lucide
 import {displayDate} from '@/src/lib/display-date';
 import {presentMaterials} from '@/src/lib/annual-proposal-intent.mjs';
 import {projectSituation} from '@/src/lib/project-situation.mjs';
+import {projectFlexibilityText} from '@/src/lib/activity-teacher-reading.mjs';
 import {AnnualCompetencies} from './annual-project-preview';
 import {ProjectPictogram} from './project-pictogram';
 import type {OpenDocument} from './documents-screen';
@@ -25,7 +26,7 @@ export function ProjectReadingView({document}:{document:OpenDocument}){
     {situation&&<section className={`${styles.support} ${styles.sand}`}><h2><Lightbulb/>Situación significativa</h2><p>{situation}</p></section>}
     <section className={`${styles.purpose} ${styles.mint}`}><Image src="/project-illustrations/ideas.webp" alt="" width={96} height={96} unoptimized className={styles.illustration}/><div><h2><Target/>Qué buscamos</h2><p>{text(content.purpose)||text(decisions.purpose)}</p></div></section>
     {!!journey.length&&<section className={styles.sequence}><h2><ListChecks/>Qué harán los niños</h2><ol className="mt-4 grid gap-4 sm:grid-cols-2">{journey.map((item,index)=><li key={index} className="flex items-start gap-3 rounded-xl bg-[#edf7fa] p-4"><Image src={`/project-illustrations/${['planning_play','ideas','sharing'][index%3]}.webp`} alt="" width={65} height={75} unoptimized className="h-20 w-16 shrink-0 object-contain"/><div><h3>{text(item.title)}</h3><p>{text(item.description)}</p></div></li>)}</ol></section>}
-    <div className={styles.pair}><section className={`${styles.support} ${styles.sand}`}><h2><Package/>Materiales</h2><ul className={styles.lines}>{materials.map((item,index)=><li key={index}>{item}</li>)}</ul>{!materials.length&&<p>Sin materiales adicionales registrados.</p>}</section><section className={`${styles.support} ${styles.sky}`}><h2><Heart/>Cómo acompañar</h2><ul className={styles.lines}>{mediation.map((item,index)=><li key={index}>{item}</li>)}</ul></section></div>
+    <div className={styles.pair}><section className={`${styles.support} ${styles.sand}`}><h2><Package/>Materiales</h2><ul className={styles.lines}>{materials.map((item,index)=><li key={index}>{item}</li>)}</ul>{!materials.length&&<p>Sin materiales adicionales registrados.</p>}</section><section className={`${styles.support} ${styles.sky}`}><h2><Heart/>Cómo acompañar</h2><ul className={styles.lines}>{mediation.map((item,index)=><li key={index}>{item}</li>)}</ul>{text(content.flexibility_notes)&&<p className="mt-3">{projectFlexibilityText(text(content.flexibility_notes))}</p>}</section></div>
     {!!criteria.length&&<section className={`${styles.support} ${styles.lilac}`}><h2><Eye/>Qué observar</h2><ul className="space-y-4">{criteria.map((item,index)=><li key={index}><AnnualCompetencies ids={[text(item.competency_id)]} names={names}/><p className="mt-2">{text(item.criterion)}</p></li>)}</ul></section>}
     {text(master.closing_description)&&<section className={`${styles.support} ${styles.mint} mt-4`}><h2>Para cerrar el proyecto</h2><p>{text(master.closing_description)}</p></section>}
   </article>;

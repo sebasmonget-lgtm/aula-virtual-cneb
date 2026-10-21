@@ -4,6 +4,33 @@ import {validateDiagnosticSuggestion} from './ai-diagnostic-evaluation-service.m
 import {diagnosticCompetencyReading,diagnosticReportReadings,diagnosticRecordExcerpt} from './diagnostic-report-reading.mjs';
 import {compactWordDocumentEnd} from './unified-word-template.mjs';
 import {buildAnnualClassroomSnapshot} from './annual-classroom-snapshot.mjs';
+import {diagnosticReportPeriod,diagnosticStudentFollowup,diagnosticReportFollowups} from './diagnostic-report-reading.mjs';
+
+test('el corte diferencia inicio, actualización, mezcla, fechas previas y ausencia de fechas sin alterar originales',()=>{
+ const context={diagnostic_period_start:'2027-04-05',diagnostic_period_end:'2027-04-16'};
+ const doc=dates=>({content:{report_snapshot:{observations:dates.map(observed_at=>({observed_at}))}}});
+ for(const [dates,kind,start]of [[['2027-04-06'],'initial','2027-04-05'],[['2027-09-20'],'update','2027-09-20'],[['2027-04-06','2027-09-20'],'mixed','2027-04-06'],[['2027-03-20'],'prior','2027-03-20'],[[],'undated','']]){
+  const input=doc(dates),before=structuredClone(input),period=diagnosticReportPeriod(input,context);
+  assert.equal(period.kind,kind);assert.equal(period.startsOn,start);assert.deepEqual(input,before);
+  assert.doesNotMatch(period.scopeNote,/marzo/);
+ }
+ assert.equal(diagnosticReportPeriod(doc(['2027-04-06'])).kind,'cut');
+ assert.equal(diagnosticReportPeriod(doc(['2027-04-06T02:00:00Z']),context).from,'2027-04-05');
+ assert.equal(diagnosticReportPeriod(doc(['fecha no registrada']),context).kind,'undated');
+});
+
+test('el seguimiento separa solo propuestas explícitas de cada comentario confirmado y no inventa un apoyo',()=>{
+ const children=[{student_id:'a',name:'Ana',teacher_comment:'Ana eligió una caja. Conviene ofrecer otra base y escuchar su decisión.'},
+ {student_id:'b',name:'Luis',teacher_comment:'Luis explicó su dibujo. Se le ofrecerán telas para probar otra representación.'},
+ {student_id:'c',name:'Sara',teacher_comment:'Sara miró el cuento.'},
+ {student_id:'d',name:'Omar',teacher_comment:'Omar describió su recorrido. Se mantendrán pasos amplios y pausas.'}];
+ const doc={content:{report_snapshot:{children}}},before=structuredClone(doc),result=diagnosticReportFollowups(doc);
+ assert.equal(result[0].nextStep,'Conviene ofrecer otra base y escuchar su decisión.');assert.equal(result[0].comment,'Ana eligió una caja.');
+ assert.equal(result[1].nextStep,'Se le ofrecerán telas para probar otra representación.');
+ assert.equal(result[2].nextStep,'');assert.equal(result[2].comment,'Sara miró el cuento.');
+ assert.equal(result[3].nextStep,'Se mantendrán pasos amplios y pausas.');
+ assert.deepEqual(diagnosticStudentFollowup({}),{comment:'',nextStep:''});assert.deepEqual(doc,before);
+});
 
 const record='00000000-0000-4000-8000-000000000001';
 const sources={known_names:[],comments:[],family_reported_context:[{source_id:'child_1_family_v1',child:'child_1',source_type:'family_reported_context'}],

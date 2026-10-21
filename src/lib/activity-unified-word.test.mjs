@@ -49,6 +49,14 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.doesNotMatch(xml, /\{\{/);
   assert.doesNotMatch(xml, /V\. REGISTRO DE OBSERVACIONES Y EVIDENCIAS/);
   assert.match(xml, /Aún no hay observaciones registradas/);
+  const general=structuredClone(document);
+  general.experience_details.source_proposal_snapshot={supports:['Acompañar la manipulación y atender derrames.']};
+  const scoped=await JSZip.loadAsync(await renderActivityUnifiedWord(general,cards));
+  const scopedXml=await scoped.file('word/document.xml').async('string');
+  assert.doesNotMatch(scopedXml,/atender derrames/);assert.match(scopedXml,/¿Cómo podemos compartir/);
+  general.content.supports=['Mostrar los objetos mientras cuenta su propuesta.'];
+  const own=await JSZip.loadAsync(await renderActivityUnifiedWord(general,cards));
+  assert.match(await own.file('word/document.xml').async('string'),/Mostrar los objetos mientras cuenta su propuesta/);
   assert.equal((xml.match(/Aún no hay observaciones registradas/g)??[]).length,1);
   assert.ok(xml.indexOf('Aún no hay observaciones registradas')<xml.indexOf('III. SECUENCIA DE LA ACTIVIDAD'),'El aviso no crea una sección final vacía');
   assert.doesNotMatch(xml, /Nombre del estudiante/);

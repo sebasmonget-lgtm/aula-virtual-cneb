@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {activityTeacherText,orderedActivityCriteria} from './activity-teacher-reading.mjs';
+import {activityTeacherText,orderedActivityCriteria,projectFlexibilityText,projectFlexibilityGuidance} from './activity-teacher-reading.mjs';
 import {activityPedagogicalBlocks} from './pedagogical-blocks.mjs';
 
 test('orden arbitrario del SQL no cambia la competencia principal ni mezcla sus evidencias',()=>{
@@ -20,4 +20,9 @@ test('presentación de planificación sustituye solo códigos conocidos y conser
  const result=activityTeacherText(source);
  assert.deepEqual(result,['Inicio: Convive: proponer un acuerdo.','Se comunica: contar qué cambió.','Palabras y tildes: ¿qué pasó?']);
  assert.notEqual(result,source);assert.equal(source[0],'Inicio: PS_CONVIVE: proponer un acuerdo.');
+});
+test('la flexibilidad no impone la ruta como guion rígido ni reescribe decisiones docentes',()=>{
+ assert.equal(projectFlexibilityText('Ajustar el acompañamiento y los apoyos según lo observado, conservando la secuencia confirmada.'),projectFlexibilityGuidance);
+ assert.match(projectFlexibilityGuidance,/preguntas, los apoyos y el tiempo/);
+ const authored='Retomaremos el dibujo si los niños quieren ampliar su idea.';assert.equal(projectFlexibilityText(authored),authored);
 });

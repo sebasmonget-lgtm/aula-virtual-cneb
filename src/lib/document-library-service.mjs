@@ -11,6 +11,8 @@ import { interviewInterestOptions } from "./family-interview-contract.mjs";
 import { annualDisplaySubjects } from "./annual-teacher-display.mjs";
 import { activityPedagogicalBlocks } from "./pedagogical-blocks.mjs";
 import {activityMaterials} from './activity-materials.mjs';
+import {diagnosticReportPeriod} from './diagnostic-report-reading.mjs';
+import {diagnosticTimingContext} from './diagnostic-report-period-context.mjs';
 
 const dateOnly = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value ?? "").slice(0, 10);
 const timestamp = (value) => value instanceof Date ? value.toISOString() : String(value ?? "");
@@ -131,12 +133,14 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
       formal_ready: Boolean(row.formal_content), document_context: documentContext };
   }
   if (kind === "diagnostic_summary") {
-    const row = (await db.query(`select d.id,d.status,d.version,d.details,d.teacher_confirmed_at,sy.year,c.section,c.institution_name
+    const row = (await db.query(`select d.id,d.status,d.version,d.details,d.teacher_confirmed_at,sy.id as school_year_id,sy.year,c.section,c.institution_name
       from diagnostic_group_reviews d join classrooms c on c.id=d.classroom_id join school_years sy on sy.id=c.school_year_id
       where d.id=$2 and c.teacher_id=$1 and sy.owner_id=$1`, [teacherId, id])).rows[0];
-    return row ? { id: row.id, kind, title: "Resumen diagnóstico del aula", status: row.status,
+    const timing=row?.details?.report_snapshot?await diagnosticTimingContext(db,row.school_year_id,Number(row.year)):{};
+    const period=diagnosticReportPeriod({content:row?.details},timing);
+    return row ? { id: row.id, kind, title: row.details?.report_snapshot?period.title:"Resumen diagnóstico del aula", status: row.status,
       version: Number(row.version), school_year: Number(row.year), classroom: row.section,
-      institution_name: row.institution_name, confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
+      institution_name: row.institution_name,document_context:timing, confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
       content: { strengths: row.details?.strengths ?? "", needs: row.details?.needs ?? "", planning_priorities: row.details?.planning_priorities ?? "",
         document_format: row.details?.document_format, report_snapshot: row.details?.report_snapshot } } : null;
   }

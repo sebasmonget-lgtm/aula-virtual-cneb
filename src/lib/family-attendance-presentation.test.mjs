@@ -7,7 +7,7 @@ test('círculo familiar conserva días excluyentes, colores y porcentajes que su
 });
 test('justificada pertenece a faltas y los pendientes se indican fuera del círculo',()=>{
  const chart=familyAttendanceChart({total:10,present:6,late:1,absent:1,excused:1,pending:1});assert.equal(chart.recorded,9);assert.deepEqual(chart.rows.map(r=>r.count),[6,1,2]);assert.match(chart.note,/1 día sin registrar/);assert.match(chart.note,/9 días registrados/);assert.match(chart.note,/1 falta justificada/);assert.equal(chart.rows.reduce((sum,r)=>sum+r.percentage,0),100);
- const unknown=familyAttendanceChart({total:3,present:0,late:0,absent:0,excused:0,pending:3});assert.equal(unknown.summary,'Aún no hay asistencia registrada.');assert.equal(unknown.rows[2].count,0);assert.ok(unknown.rows.every(r=>r.percentageLabel==='—'));assert.doesNotMatch(familyAttendanceDonutSvg(unknown),/NaN|Infinity/);
+ const unknown=familyAttendanceChart({total:3,present:0,late:0,absent:0,excused:0,pending:3});assert.equal(unknown.summary,'Sin información de asistencia registrada.');assert.equal(unknown.rows[2].count,0);assert.ok(unknown.rows.every(r=>r.percentageLabel==='—'));assert.doesNotMatch(familyAttendanceDonutSvg(unknown),/NaN|Infinity/);assert.doesNotMatch(unknown.note,/Porcentajes sobre 0/);
 });
 test('redondeo de tercios y combinaciones pequeñas no inventa diferencias para cantidades iguales',()=>{
  for(let present=0;present<12;present++)for(let late=0;late<7;late++)for(let absent=0;absent<5;absent++){

@@ -19,7 +19,7 @@ import type {ChangeProposal} from "./annual-proposal-change-dialog";
 import { DocumentSyncPanel } from "./document-sync-panel";
 
 import {familyReportSectionForReader} from "@/src/lib/family-report-presentation.mjs";
-import {diagnosticReportReadings,diagnosticReportPurpose} from '@/src/lib/diagnostic-report-reading.mjs';
+import {diagnosticReportReadings,diagnosticReportPurpose,diagnosticReportPeriod,diagnosticReportFollowups} from '@/src/lib/diagnostic-report-reading.mjs';
 
 type DocumentKind = "annual_plan" | "diagnostic_summary" | "experience" | "activity" | "family_report" | "period_closure";
 type DocumentEntry = {
@@ -110,6 +110,7 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
     return <article className="rounded-3xl border bg-white p-5 sm:p-8"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">Proyección provisional · cierre V{document.version}</p><h2 className="mt-2 text-2xl font-extrabold">{document.title}</h2><p className="mt-2 text-sm text-[#526b87]">{document.classroom} · {document.school_year} · {dateFor(document.period_start??"")} a {dateFor(document.period_end??"")}</p><p className="mt-4 rounded-xl bg-[#eaf7fb] p-3 text-sm">Puedes descargar el registro del cierre confirmado. Esta exportación conserva sus datos y no se presenta como una plantilla oficial adicional.</p><div className="mt-5 space-y-3">{entries.map((entry,index)=>{const assessment=(entry.assessment_details??{}) as Record<string,unknown>,conclusion=(entry.conclusion_details??{}) as Record<string,unknown>,evidence=Array.isArray(entry.evidence)?entry.evidence:[];return <section key={`${entry.assessment_id??index}`} className="rounded-xl border p-4"><h3 className="font-bold">{text(entry.student_name)} · {names.get(text(entry.competency_id))??text(entry.competency_id)}</h3><p className="mt-1 text-sm">Nivel confirmado por la docente: <b>{text(entry.achievement_level)}</b> · {evidence.length} registros</p>{text(assessment.evidence_overview)&&<p className="mt-2 text-sm">{text(assessment.evidence_overview)}</p>}{text(conclusion.conclusion_text)&&<p className="mt-2 text-sm"><b>Conclusión:</b> {text(conclusion.conclusion_text)}</p>}</section>;})}</div></article>;
   }
   const content = document.content;
+  const diagnosticPeriod=document.kind==='diagnostic_summary'?diagnosticReportPeriod(document,document.document_context??{}):null;
   const names = new Map((document.competencies ?? []).map((card) => [card.id, card.name]));
   return <article aria-label={labelFor(document)} className="overflow-hidden rounded-[1.5rem] border border-[var(--ayni-panel-border)] bg-white shadow-[var(--ayni-panel-shadow)]">
     <header className="bg-gradient-to-r from-[#e8f6fa] to-[#f5f9fd] p-5 sm:p-8">
@@ -121,9 +122,11 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
     <div className="space-y-5 p-5 sm:p-8">
       {document.kind === "diagnostic_summary" && <>
         <p className="text-sm text-[#526b87]">{diagnosticReportPurpose}</p>
+        {diagnosticPeriod&&<Section title={diagnosticPeriod.periodLabel} value={[diagnosticPeriod.recordsLabel,diagnosticPeriod.kind!=='initial'&&diagnosticPeriod.initialPeriodLabel,diagnosticPeriod.scopeNote].filter(Boolean).join(' ')}/>}
         <Section title="Fortalezas del grupo" value={content.strengths} /><Section title="Dónde acompañar más" value={content.needs} />
         <Section title="Qué tendremos en cuenta al planificar" value={content.planning_priorities} />
         {diagnosticReportReadings(document).map(reading=><section key={reading.competency_id} className="space-y-3 rounded-xl border border-[var(--ayni-panel-border)] p-4"><h3 className="font-bold">{names.get(reading.competency_id)??reading.competency_id}</h3><Section title="Qué nos muestran los registros" value={reading.summary}/><Section title="Qué haremos después" value={reading.next_step}/></section>)}
+        {diagnosticReportFollowups(document).length>0&&<details className="rounded-xl border border-[var(--ayni-panel-border)] p-4"><summary className="cursor-pointer font-bold">Seguimiento por niña o niño</summary><div className="mt-4 space-y-5">{diagnosticReportFollowups(document).map(child=><section key={child.studentId} className="space-y-2"><h3 className="font-bold">{child.name}</h3>{child.comment&&<p className="text-sm leading-relaxed">{child.comment}</p>}{child.nextStep&&<p className="text-sm leading-relaxed"><b>Siguiente paso indicado por la docente:</b> {child.nextStep}</p>}</section>)}</div></details>}
       </>}
       {document.kind === "experience" && <>
         <Section title="Para qué la haremos" value={content.purpose} /><Section title="Nuestro punto de partida" value={content.starting_point} />

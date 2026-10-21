@@ -1,4 +1,9 @@
 import {competencyLabels} from './competency-labels.mjs';
+export const projectFlexibilityGuidance='Ajusta las preguntas, los apoyos y el tiempo según lo que observes. Si cambia lo que harán los niños, revisa la propuesta del proyecto con Ayni.';
+/** Translate only our old fixed instruction; authored planning notes stay intact. */
+export function projectFlexibilityText(value){
+ return value==='Ajustar el acompañamiento y los apoyos según lo observado, conservando la secuencia confirmada.'?projectFlexibilityGuidance:value;
+}
 
 /** Presentation of planning prose only. Never apply to literal child records. */
 export function activityTeacherText(value){

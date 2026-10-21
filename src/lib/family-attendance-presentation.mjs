@@ -16,8 +16,8 @@ export function familyAttendanceChart(attendance) {
   const format=new Intl.NumberFormat('es-PE',{maximumFractionDigits:1});
   const resultRows=rows.map((row,i)=>({...row,percentage:tenths[i]/10,percentageLabel:recorded?`${format.format(tenths[i]/10)} %`:'—'}));
   return { rows:resultRows, total, recorded, pending, excused, attended: present + late, asOf: attendance.as_of,
-    summary: !total ? 'Aún no hay días de clase en este período.' : pending === total ? 'Aún no hay asistencia registrada.' : `Asistió ${present + late} de ${total} días de clase.`,
-    note: [pending?`${pending} ${pending===1?'día sin registrar':'días sin registrar'}. Porcentajes sobre ${recorded} días registrados.`:'Las tardanzas se muestran por separado.',excused?`${excused} ${excused===1?'falta justificada incluida':'faltas justificadas incluidas'}.`:'',recorded&&Math.abs(tenths.reduce((sum,n)=>sum+n,0)-1000)>0?'Porcentajes redondeados.':''].filter(Boolean).join(' ') };
+    summary: !total ? 'Aún no hay días de clase en este período.' : !recorded ? 'Sin información de asistencia registrada.' : pending?`Asistió ${present + late} de ${recorded} días registrados.`:`Asistió ${present + late} de ${total} días de clase.`,
+    note: [!total?'':!recorded?`${pending} ${pending===1?'día de clase por registrar':'días de clase por registrar'}.`:pending?`${pending} ${pending===1?'día sin registrar':'días sin registrar'}. Porcentajes sobre ${recorded} días registrados.`:'Las tardanzas se muestran por separado.',excused?`${excused} ${excused===1?'falta justificada incluida':'faltas justificadas incluidas'}.`:'',recorded&&Math.abs(tenths.reduce((sum,n)=>sum+n,0)-1000)>0?'Porcentajes redondeados.':''].filter(Boolean).join(' ') };
 }
 
 export function familyAttendanceDonutSvg(chart){

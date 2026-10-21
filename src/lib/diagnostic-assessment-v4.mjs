@@ -13,6 +13,7 @@ import { isDiagnosticScaffoldSummary } from "./diagnostic-review-copy.mjs";
 import { interviewInterestOptions } from "./family-interview-contract.mjs";
 import { normalizeFamilyInterviewDetails } from "./diagnostic-sources-v4.mjs";
 import { annualJourneySafeText } from "./annual-journey-privacy.mjs";
+import {diagnosticTimingContext} from './diagnostic-report-period-context.mjs';
 
 // Preserve the teacher's text and its source type; do not infer privacy from words or surnames.
 const anonymousDiagnosticText = (value, names) => {
@@ -642,9 +643,13 @@ async function confirmGroup(db, teacherId, id) {
   });
   // Newly confirmed reports include every active child without fabricating a comment.
   // Existing immutable legacy reports retain their original format and source policy.
+  const year=(await db.query('select sy.id,sy.year from school_years sy join classrooms c on c.school_year_id=sy.id where c.id=$1 and c.teacher_id=$2 and sy.owner_id=$2',[classroom.id,teacherId])).rows[0];
+  if(!year)fail('no_classroom','El año escolar no pertenece a tu aula.');
+  const timing=await diagnosticTimingContext(db,year.id,Number(year.year));
   const details = { ...row.details, document_format: "diagnostic-unified-v1",
     report_snapshot: {
       version: "diagnostic-unified-v1", children,
+      initial_collection_period:{starts_on:timing.diagnostic_period_start,ends_on:timing.diagnostic_period_end},
       religion_applicable: classroom.religion_applicable === true,
       castellano_l2_applicable: classroom.castellano_l2_applicable === true,
       observations: workspace.observations.map((item) => ({ id: item.id, student_id: item.student_id,

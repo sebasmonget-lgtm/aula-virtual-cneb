@@ -110,7 +110,7 @@ export async function generateTeacherActivity({ request, classroom, learningExpe
   try {
     const executionPlan = resolvePlan({ workflow: "activity", task: "generation" });
     const providerFactory = (plan) => createProvider(plan);
-    const generated = await generate(input, { providerFactory, executionPlan, skillInstructions: `${await loadSkill()}\n\nEn los textos para la docente usa nombres sencillos de las competencias; reserva sus códigos para los campos curriculares del esquema. Cada evidencia debe corresponder al criterio de su propia competencia.` });
+    const generated = await generate(input, { providerFactory, executionPlan, skillInstructions: `${await loadSkill()}\n\nEn los textos para la docente usa nombres sencillos de las competencias; reserva sus códigos para los campos curriculares del esquema. Cada evidencia debe corresponder al criterio de su propia competencia. En la mediación de cada momento, concreta la ayuda que corresponde a esa acción: tiempo para responder, objetos o registros a la vista, demostración del niño, pareja o ayuda de manipulación cuando proceda. No copies apoyos generales del proyecto si no corresponden a los materiales y acciones de este día. No supongas una dificultad individual ni atribuyas una ayuda futura al pasado.` });
     const inherited = input.learning_experience_context?.inherited_route_item;
     return {
       proposal: inherited ? { ...generated.output, purpose: inherited.specific_purpose, competency_status: "confirmed", competency_id: inherited.competency_id,

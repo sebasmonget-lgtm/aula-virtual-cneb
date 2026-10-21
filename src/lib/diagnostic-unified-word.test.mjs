@@ -37,7 +37,7 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
   if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "diagnostic-unified-qa.docx"), rendered);
   const zip = await JSZip.loadAsync(rendered);
   const xml = await zip.file("word/document.xml").async("string");
-  for (const value of ["Ana Pérez", "Luis Rojas", "Ana explicó cómo organizó los bloques.", "Eligió materiales", "Retomar lo descrito en otro juego", "Información insuficiente", "UGEL 03"])
+  for (const value of ["Ana Pérez", "Luis Rojas", "Ana explicó cómo organizó los bloques.", "Eligió materiales", "Información insuficiente", "UGEL 03"])
     assert.match(xml, new RegExp(value));
   assert.match(xml, /16\/03\/2026/);
   assert.match(xml, /27\/03\/2026/);
@@ -64,7 +64,9 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
   const lateXml = await (await JSZip.loadAsync(await renderDiagnosticUnifiedWord(late, context,
     [{ id: "PS_IDENTIDAD", name: "Construye su identidad" }]))).file("word/document.xml").async("string");
   assert.match(lateXml, /Registros revisados: del 28\/09\/2026 al 28\/09\/2026/);
-  assert.match(lateXml, /Revisar fechas: hay registros fuera del período previsto \(16\/03\/2026 al 27\/03\/2026\)/);
+  assert.match(lateXml, /Recojo inicial previsto: del 16\/03\/2026 al 27\/03\/2026/);
+  assert.match(lateXml, /ACTUALIZACIÓN/);
+  assert.match(lateXml, /no describe cómo empezó el grupo al comenzar el año/);
 });
 
 test("diagnóstico exportado respeta Lima, notas únicas y áreas no aplicables", async () => {
