@@ -9,6 +9,9 @@ import { canonicalProjectRoute } from "./planning-contract-v3.mjs";
 import { routeObservationCriteria } from "./activity-observation-plan.mjs";
 
 const MAX_PURPOSE_LENGTH = 500;
+// A complete daily guide can exceed the provider's 30 s default. Keep each
+// existing attempt bounded within the 300 s route and 360 s preparation lease.
+const ACTIVITY_TIMEOUT_MS = 90_000;
 const MAX_CONTEXT_LENGTH = 1_000;
 const MAX_MATERIALS = 20;
 const MAX_MATERIAL_LENGTH = 120;
@@ -109,7 +112,7 @@ export async function generateTeacherActivity({ request, classroom, learningExpe
   if (input.workflow !== "activity") throw new ActivityGenerationUIError("unsupported_workflow", "No pudimos preparar la actividad.");
   try {
     const executionPlan = resolvePlan({ workflow: "activity", task: "generation" });
-    const providerFactory = (plan) => createProvider(plan);
+    const providerFactory = (plan) => createProvider(plan, { timeoutMs: ACTIVITY_TIMEOUT_MS });
     const generated = await generate(input, { providerFactory, executionPlan, skillInstructions: `${await loadSkill()}\n\nEn los textos para la docente usa nombres sencillos de las competencias; reserva sus códigos para los campos curriculares del esquema. Cada evidencia debe corresponder al criterio de su propia competencia. En la mediación de cada momento, concreta la ayuda que corresponde a esa acción: tiempo para responder, objetos o registros a la vista, demostración del niño, pareja o ayuda de manipulación cuando proceda. No copies apoyos generales del proyecto si no corresponden a los materiales y acciones de este día. No supongas una dificultad individual ni atribuyas una ayuda futura al pasado. No añadas prohibiciones de explorar que el mapa no establece. En una primera aproximación a un reto de indagación, permite un primer intento con los materiales disponibles después de recoger la anticipación, sin adelantar la comparación sistemática de otro día ni cambiar el criterio. No prolongues una actividad solo conversando o dibujando sobre lo que podrían probar, salvo que las decisiones o condiciones concretas impidan probar en ese encuentro.` });
     const inherited = input.learning_experience_context?.inherited_route_item;
     return {

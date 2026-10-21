@@ -1,11 +1,52 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildTeacherActivityGenerationInput, generateTeacherActivity, ActivityGenerationUIError, teacherMessageForActivityGenerationError } from "./ai-activity-ui-service.mjs";
+import { resolveAIExecutionPlan, resolveAIFallbackPlan } from "./ai-execution-router-v4.mjs";
 
 const classroom = { id: "classroom-5", section: "Sala Amarilla", age: 5 };
 const request = { activityPurpose: "Explorar cambios de sombra.", context: "El grupo juega con linternas.", materials: ["linternas", "papel"] };
 const proposal = { title: "Sombras", purpose: "Explorar", meaningful_situation: "Situación", teacher_preparation: "Preparar", child_actions: "Explorar", mediation: "Preguntar", evidence_opportunities: "Observar", closure_or_continuity: "Cerrar", competency_status: "unconfirmed", competency_id: null };
 const plan = { execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "medium" };
+
+test("una guía completa conserva los planes de IA y da 90 s a cada proveedor existente", async () => {
+  const primary = resolveAIExecutionPlan({ workflow: "activity", task: "generation" });
+  const fallback = resolveAIFallbackPlan(primary);
+  const calls = [];
+  const result = await generateTeacherActivity({
+    request, classroom, loadSkill: async () => "Guía curricular",
+    createProvider: (receivedPlan, options) => {
+      calls.push({ plan: receivedPlan, options });
+      return { plan: receivedPlan };
+    },
+    generate: async (input, options) => {
+      assert.equal(input.workflow, "activity");
+      assert.deepEqual(options.executionPlan, primary);
+      // Exercise both factory paths without making a network call or retry.
+      assert.deepEqual(options.providerFactory(primary).plan, primary);
+      assert.deepEqual(options.providerFactory(fallback).plan, fallback);
+      return { output: proposal, metadata: { workflow: "activity", model: primary.model,
+        execution_plan: primary, attempts: [{ model: primary.model }] }, provenance: {} };
+    },
+  });
+  assert.deepEqual(calls, [
+    { plan: primary, options: { timeoutMs: 90_000 } },
+    { plan: fallback, options: { timeoutMs: 90_000 } },
+  ]);
+  assert.deepEqual(result.proposal, proposal);
+  assert.deepEqual(result.internalMetadata.attempts, [{ model: primary.model }]);
+});
+
+test("un tiempo agotado conserva su error y no añade un reintento silencioso", async () => {
+  let generations = 0;
+  await assert.rejects(generateTeacherActivity({ request, classroom,
+    loadSkill: async () => "Guía curricular", generate: async () => {
+      generations++;
+      throw Object.assign(new Error("private provider detail"), { reason: "timeout" });
+    },
+  }), error => error instanceof ActivityGenerationUIError && error.reason === "timeout"
+    && !error.message.includes("private provider detail"));
+  assert.equal(generations, 1);
+});
 
 test("la generación real del contrato reúne las tarjetas de varias competencias y conserva la principal y sus criterios",async()=>{
  const route={id:'route-multi',specific_purpose:'Comparar, contar y explicar',competency_id:'CYT_INDAGA',competency_ids:['CYT_INDAGA','COM_ORAL','MAT_CANTIDAD'],evaluation_criterion:'Compara semillas',expected_evidence:'Señala diferencias',observation_moments:['development'],
