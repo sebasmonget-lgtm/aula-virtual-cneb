@@ -1274,3 +1274,8 @@ Por pedido de extender a anual/todas las generaciones y avisar para avanzar: inv
 ### Recorrido móvil y capturas · 21 de octubre
 
 e7399f5 publicado solo en QA (dpl_9Fb257RafFJXrBp6resJDvjpVypf), 35 regresiones, gates canónicos limpios y 66 checks staging/alias PASS. Asistencia usa dos columnas en celular; X compartida tiene área 44 px con icono intacto; detalle sin proyecto desarrollado recibe el número del calendario, corrigiendo el 1 fijo. Recorrido inicial 360 px y 24 registros posteriores en 390/320, horizontal 844 y escritorio 1366, sin desbordamiento de página ni imágenes rotas en esos estados. Chat directo, datos y documentos conservados; 65 tablas, diez niños, trece archivos e historial IA intactos tras navegador. Sin generaciones ni costo IA nuevo. Diez capturas JPEG 015a–015j y secuencia v6 en outputs/Ayni-celular-2026-10-21 y carpeta del recorrido; video no montado. No acreditar cámara/micrófono/teclado/gestos o teléfonos físicos, ni todos los guardados/errores como repetidos. Producción conservada. Detalle y tiempos: QA_MOVIL_2026-10-21.md.
+
+
+### 21 de octubre — Documento diagnóstico ya confirmado
+
+A pedido de la usuaria, Documentos oculta la preparación si el aula activa ya tiene diagnóstico confirmado; conserva consulta/descarga e historial. Comprobación paralela y de solo lectura; error de avance no impide consultar el catálogo. No se infiere desde otras aulas ni de que exista plan anual. Sin rediseño, cambios pedagógicos o IA. Ver QA_DIAGNOSTICO_CONSULTA_2026-10-21.md para gates y publicación.

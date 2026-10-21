@@ -161,6 +161,7 @@ const folderKinds:Record<DocumentFolder,DocumentKind[]>={diagnostic:["diagnostic
 const documentParam=(value:string)=>/^(annual_plan|diagnostic_summary|experience|activity|family_report|period_closure):[0-9a-f-]{36}$/i.test(value)?value:undefined;
 export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder?:DocumentFolder } = {}) {
   const [preparingDiagnostic,setPreparingDiagnostic]=useState(false);
+  const [diagnosticReviewed,setDiagnosticReviewed]=useState<boolean|null>(null);
   const [authMode, setAuthMode] = useState<"local" | "supabase">("local");
   const [documents, setDocuments] = useState<DocumentEntry[]>([]);
   const [documentKey,setDocumentKey]=useWorkspaceParam("Documentos","document","",documentParam);
@@ -190,10 +191,26 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
 
   useEffect(() => {
     const controller = new AbortController();
-    apiFetch(`${localDatabaseApiUrl}/api/documents`, { signal: controller.signal }).then(async (response) => {
+    const diagnosticStatus = !folder || folder === 'diagnostic'
+      ? apiFetch(`${localDatabaseApiUrl}/api/diagnostics/progress`, { signal: controller.signal }).then(async response => {
+          if (!response.ok) throw new Error("No pudimos consultar el diagnóstico guardado.");
+          const progress = await response.json() as {reviewed?:boolean};
+          if (typeof progress.reviewed !== "boolean") throw new Error("No pudimos consultar el diagnóstico guardado.");
+          return progress.reviewed;
+        })
+      : Promise.resolve(null);
+    const catalog = apiFetch(`${localDatabaseApiUrl}/api/documents`, { signal: controller.signal }).then(async (response) => {
       if (!response.ok) throw new Error("No pudimos cargar tus documentos.");
       return response.json() as Promise<{ documents: DocumentEntry[] }>;
-    }).then((result) => { if(!controller.signal.aborted){setDocuments(folder?result.documents.filter(row=>folderKinds[folder].includes(row.kind)):result.documents); setError("");} })
+    });
+    Promise.allSettled([catalog,diagnosticStatus]).then(([catalogResult,diagnosticResult]) => {
+      if(controller.signal.aborted)return;
+      if(catalogResult.status==='rejected')throw catalogResult.reason;
+      const result=catalogResult.value;
+      setDocuments(folder?result.documents.filter(row=>folderKinds[folder].includes(row.kind)):result.documents);
+      setDiagnosticReviewed(diagnosticResult.status==='fulfilled'?diagnosticResult.value:null);
+      setError(diagnosticResult.status==='rejected'?"Tus documentos están disponibles. No pudimos comprobar si falta preparar el diagnóstico. Inténtalo otra vez.":"");
+    })
       .catch(() => { if (!controller.signal.aborted) setError("No pudimos cargar tus documentos. Inténtalo otra vez."); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
@@ -306,10 +323,10 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
     } catch (error) { setWordError(error instanceof Error ? error.message : "No se pudo guardar el Word."); }
     finally { setSavingWord(false); }
   }
-  if(preparingDiagnostic)return <section className="mx-auto max-w-5xl space-y-5"><DiagnosticDocumentPreparation onBack={()=>{setPreparingDiagnostic(false);setRevision(value=>value+1);}} onConfirmed={id=>{setPreparingDiagnostic(false);setOpened(null);setError('');setOpening(true);setRevision(value=>value+1);setSelected({kind:'diagnostic_summary',id});}}/></section>;
+  if(preparingDiagnostic)return <section className="mx-auto max-w-5xl space-y-5"><DiagnosticDocumentPreparation onBack={()=>{setPreparingDiagnostic(false);setRevision(value=>value+1);}} onConfirmed={id=>{setDiagnosticReviewed(true);setPreparingDiagnostic(false);setOpened(null);setError('');setOpening(true);setRevision(value=>value+1);setSelected({kind:'diagnostic_summary',id});}}/></section>;
   return <section className="mx-auto max-w-5xl space-y-5">
     <PageIntro title={folder?{diagnostic:"Evaluación diagnóstica",annual:"Plan anual",experiences:"Proyectos y actividades",evaluation:"Evaluación"}[folder]:"Documentos"} description={folder?"Consulta y descarga los documentos de esta carpeta, con su fuente y versión.":"Encuentra aquí tus diagnósticos, planes, experiencias, actividades, cierres e informes."} icon={BookOpen} illustration="/project-illustrations/book.webp" />
-    {!selected&&(!folder||folder==='diagnostic')&&<Button variant="outline" className="min-h-12 whitespace-normal" onClick={()=>setPreparingDiagnostic(true)}><FileText/>Preparar diagnóstico de mi aula</Button>}
+    {!selected&&!loading&&!error&&diagnosticReviewed===false&&(!folder||folder==='diagnostic')&&<Button variant="outline" className="min-h-12 whitespace-normal" onClick={()=>setPreparingDiagnostic(true)}><FileText/>Preparar diagnóstico de mi aula</Button>}
     {selected && <div className="flex flex-wrap items-center justify-between gap-3"><Button variant="outline" className="min-h-11" onClick={() => { setSelected(null); setOpened(null); setError(""); setWordMessage(""); setWordError(""); }}><ArrowLeft className="mr-2 size-4" />Volver a mis documentos</Button>
       <div className="flex flex-wrap gap-2">{opened?.kind==='annual_plan'&&opened.content.journey_version===2&&onPlan&&<Button variant="outline" disabled={savingWord} onClick={()=>{onPlan();writeWorkspaceLocation('Planificar',{tab:'annual',annualTools:'year',annualPlan:opened.id});}}>Ver Mi año</Button>}{needsProjectWord && opened.status === "active" && <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareProjectWord()}>{savingWord ? "Preparando Word..." : "Preparar Word del proyecto"}</Button>}{artifactFeature && opened && opened.kind!=="annual_plan" && ["experience"].includes(opened.kind) && ["active","archived"].includes(opened.status) && downloadable &&
         (stableArtifact ? <Button className="min-h-11" disabled={savingWord} onClick={() => void prepareArtifact(true)}><Download className="mr-2 size-4" />Descargar versión estable</Button>

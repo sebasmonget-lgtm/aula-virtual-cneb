@@ -1,0 +1,7 @@
+# Diagnóstico confirmado: consultar sin ofrecer repetir
+
+La usuaria solicita retirar Preparar diagnóstico de mi aula cuando ya hay uno confirmado. Documentos consulta en paralelo el catálogo existente y el avance diagnóstico autorizado del aula activa. El botón solo aparece con revisión explícitamente no confirmada, lectura terminada y sin error. No decide a partir de documentos de otras aulas o años. Un borrador todavía se puede continuar; no se bloquea por haber creado un plan sin diagnóstico.
+
+La consulta/descarga y las versiones confirmadas permanecen disponibles. Abrir Documentos no crea revisiones, no llama a IA y no cambia el plan anual. Si falla el avance, el catálogo disponible sigue visible con reintento y el botón de preparación permanece oculto. Se conservan componentes, colores y distribución. Sin migración ni cambio de autorizaciones. Reversión: revertir el control de visibilidad y su lectura de avance.
+
+36 pruebas existentes de recuperación diagnóstica, catálogo autorizado y continuidad PASS; build Next webpack PASS. La primera ejecución simultánea de typecheck y build produjo una carrera sobre tipos generados de Next; typecheck posterior al build PASS. Detector visual sin hallazgos mecánicos. Publicación y comprobación real de consulta/descarga pendientes hasta adjuntar recibos.

@@ -1582,3 +1582,8 @@ Asistencia conserva las cuatro categorías y su confirmación explícita; antes 
 ### Órdenes de aplicación y decisiones pedagógicas · 2026-10-21
 
 Generar, guardar, descargar, abrir o continuar son operaciones del producto cuando se refieren al uso de Ayni; no se convierten en intereses, temas o proyectos. La conversación conserva esos mensajes y clasifica explícitamente los turnos sin contenido pedagógico para que la recuperación literal no los importe como contexto. Los mensajes mixtos conservan sus fragmentos pedagógicos y su procedencia. No usar listas de palabras prohibidas: un nombre de pantalla puede coincidir con un proyecto válido si existe intención pedagógica explícita. No reescribir históricos ni eliminar decisiones docentes por inferencia. Validar exclusiones y mantener CAS, permisos y recuperación. Ver QA_DESDE_CERO_Y_TUTORIAL_2026-10-21.md.
+
+
+### 2026-10-21 — Diagnóstico inicial como documento de consulta
+
+Después de confirmar el diagnóstico inicial, Documentos ofrece su lectura y descarga mediante el catálogo; deja de ofrecer preparar otro. La decisión usa el avance autorizado del aula activa. Si se creó el plan sin preparar el documento, el acceso sigue disponible hasta confirmarlo. Las observaciones cotidianas no fuerzan repetir el diagnóstico ni reemplazan automáticamente el plan. Conserva historial y motores internos.

@@ -18,7 +18,7 @@ Reversión: retirar el timeout explícito y su constante. No modifica migracione
 
 24 pruebas de servicio de actividad, proveedor, bloque completo, cola y continuación PASS. Incluyen ambas creaciones de proveedor con 90 segundos conservando planes/salida, error de espera sin reintento silencioso, presupuesto de evaluación breve conservado, recuperación sin repetir IA, exclusión mutua y publicación atómica. Typecheck y build Next webpack PASS; lint cero errores y una advertencia histórica.
 
-Publicación solo QA y recuperación real del proyecto pendientes al escribir esta entrada. Se mantiene el límite de seis intentos por llamada; las dos pausas observadas corresponden a actividades distintas, no seis generaciones del proyecto. Los tiempos/costos se registran por separado del tiempo dedicado a revisar y publicar.
+2170407 publicado solo en QA, dpl_F5R32WQTxDhGUCdqmagVZJbup5py: 24 comprobaciones staging/alias PASS, 66 hashes de fuentes preservados y Producción intacta. Después de la publicación, la acción explícita de retomar completó las diez actividades del proyecto de sombras conservando el trabajo parcial. Las dos pausas correspondieron a actividades distintas; el maestro no se regeneró. No se atribuye una reducción de latencia a este margen mayor. Se mantiene el límite de seis intentos por llamada; las dos pausas observadas corresponden a actividades distintas, no seis generaciones del proyecto. Los tiempos/costos se registran por separado del tiempo dedicado a revisar y publicar.
 
 ## Prevención
 
