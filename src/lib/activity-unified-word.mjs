@@ -6,7 +6,9 @@ import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, remove
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 import { activityReadingStages } from "./activity-reading-content.mjs";
 import {activityTeacherText} from './activity-teacher-reading.mjs';
-import { guidePanel, guideText, guideParagraph, guideDetails, keepShortTableTogether, retainCoverPageBreak,compactCoverSpacers } from "./teacher-guide-word-layout.mjs";
+import { guidePanel as renderGuidePanel, guideText, guideParagraph, guideDetails, keepShortTableTogether, retainCoverPageBreak,compactCoverSpacers } from "./teacher-guide-word-layout.mjs";
+
+const guidePanel = (title, columns, observations) => renderGuidePanel(title, columns, observations, { keepObservationsTogether: true });
 
 const oldTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx");
 const workshopTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-con-taller-v1.docx");
@@ -159,6 +161,8 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
   output=replaceWordText(output,"Capacidad(es) pertinente(s)","Capacidades de referencia");
   output=replaceWordText(output,"V. SECUENCIA DE LA ACTIVIDAD","III. SECUENCIA DE LA ACTIVIDAD");
   output=replaceWordText(output,"III. REFERENTES CURRICULARES","IV. REFERENTES CURRICULARES");
+  output=output.replace(paragraphPattern, paragraph => xmlText(paragraph).includes("IV. REFERENTES CURRICULARES")
+    ? paragraph.replace("<w:pPr>","<w:pPr><w:keepNext/>") : paragraph);
   output=replaceWordText(output,"VI. REGISTRO DE OBSERVACIONES","V. REGISTRO DE OBSERVACIONES");
   output=replaceWordText(output,"VI. CUADERNO DE CAMPO","V. CUADERNO DE CAMPO");
   const numerals=["V","VI","VII"];
@@ -211,11 +215,11 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const curriculum = criteria.map(item => {
     const id = item.competency_v4_id ?? item.competency_id;
     const reference = cards.find(card => card.id === id);
-    return readableParagraph(names.get(id) ?? id, { bold: true }) + guideDetails([
+    return keepShortTableTogether(readableParagraph(names.get(id) ?? id, { bold: true }) + guideDetails([
       ["Referentes curriculares", ageReference(reference, document.age, item.details?.official_performance_refs ?? item.official_performance_refs)],
       ["Criterio de esta actividad", item.criterion_text],
       ["Evidencia esperada", item.details?.expected_evidence ?? item.expected_evidence ?? content.expected_evidence],
-    ]);
+    ]));
   }).join("") + (integratedIds.some(id => !observedIds.includes(id) && !criteria.some(item => (item.competency_v4_id ?? item.competency_id) === id))
     ? readableBlock("Integración prevista en el mapa", integrated) : "");
   // General project supports belong to the project. Daily help is already in

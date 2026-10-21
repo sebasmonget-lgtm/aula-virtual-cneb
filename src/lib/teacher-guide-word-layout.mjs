@@ -16,7 +16,7 @@ function cell(content, span, fill) {
   return `<w:tc><w:tcPr><w:tcW w:w="${width / 2 * span}" w:type="dxa"/>${span === 2 ? '<w:gridSpan w:val="2"/>' : ""}<w:shd w:val="clear" w:fill="${fill}"/><w:vAlign w:val="top"/></w:tcPr>${content}</w:tc>`;
 }
 
-const row = cells => `<w:tr>${cells.join("")}</w:tr>`;
+const row = (cells, keepTogether = false) => `<w:tr>${keepTogether ? "<w:trPr><w:cantSplit/></w:trPr>" : ""}${cells.join("")}</w:tr>`;
 
 /** Source-template pattern: coloured labels and a full readable text column. */
 export function guideDetails(entries) {
@@ -26,7 +26,7 @@ export function guideDetails(entries) {
 }
 
 /** Warm, printable two-column guide, with criteria at their saved moment. */
-export function guidePanel(title, columns, observations = []) {
+export function guidePanel(title, columns, observations = [], { keepObservationsTogether = false } = {}) {
   const populated = columns.filter(column => column.body);
   if (!populated.length && !observations.length) return "";
   const heading = `<w:tr><w:trPr><w:tblHeader/><w:cantSplit/></w:trPr>${cell(guideParagraph(title, { bold: true, color: "086C7C", size: 25, keepNext: true }), 2, "DCEFF0")}</w:tr>`;
@@ -37,7 +37,7 @@ export function guidePanel(title, columns, observations = []) {
     guideParagraph(`Qué observar · ${item.competency}`, { bold: true, color: "684495" }) +
     guideText(item.criterion) +
     (item.focus?.length ? guideText(item.focus) : "") +
-    (item.evidence ? guideParagraph(`Evidencia esperada: ${item.evidence}`) : ""), 2, "F4EFFA")])).join("");
+    (item.evidence ? guideParagraph(`Evidencia esperada: ${item.evidence}`) : ""), 2, "F4EFFA")], keepObservationsTogether)).join("");
   return `<w:tbl><w:tblPr><w:tblW w:w="${width}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders>${["top", "left", "bottom", "right", "insideH", "insideV"].map(side => `<w:${side} w:val="single" w:sz="6" w:color="D1E2EA"/>`).join("")}</w:tblBorders><w:tblCellMar><w:top w:w="150" w:type="dxa"/><w:left w:w="180" w:type="dxa"/><w:bottom w:w="110" w:type="dxa"/><w:right w:w="180" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="5000"/><w:gridCol w:w="5000"/></w:tblGrid>${heading}${body}${notes}</w:tbl><w:p><w:pPr><w:spacing w:after="90" w:line="60" w:lineRule="exact"/></w:pPr></w:p>`;
 }
 
