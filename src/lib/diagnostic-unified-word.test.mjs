@@ -15,7 +15,8 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
       report_snapshot: { version: "diagnostic-unified-v1", religion_applicable: false, castellano_l2_applicable: false,
         children: [
           { student_id: id(1), name: "Ana Pérez", information_status: "information_available",
-            teacher_comment: "Ana explicó cómo organizó los bloques.", has_confirmed_interview: true },
+            teacher_comment: "Ana explicó cómo organizó los bloques.", has_confirmed_interview: true,
+            family_context:{interests:'Me gusta cocinar y a veces bailar.'} },
           { student_id: id(2), name: "Luis Rojas", information_status: "insufficient_information",
             teacher_comment: "Necesito observar a Luis en otros juegos.", has_confirmed_interview: false },
         ],
@@ -36,7 +37,7 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
   if (process.env.AYNI_QA_DOCX_DIR) await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR, "diagnostic-unified-qa.docx"), rendered);
   const zip = await JSZip.loadAsync(rendered);
   const xml = await zip.file("word/document.xml").async("string");
-  for (const value of ["Ana Pérez", "Luis Rojas", "En el aula:", "Eligió materiales", "Retomar Construye su identidad", "Información insuficiente", "UGEL 03"])
+  for (const value of ["Ana Pérez", "Luis Rojas", "Ana explicó cómo organizó los bloques.", "Eligió materiales", "Retomar lo descrito en otro juego", "Información insuficiente", "UGEL 03"])
     assert.match(xml, new RegExp(value));
   assert.match(xml, /16\/03\/2026/);
   assert.match(xml, /27\/03\/2026/);
@@ -46,6 +47,8 @@ test("el informe unificado conserva nombres autorizados, evidencia factual e inf
   assert.doesNotMatch(xml, /estos intereses:|\.;|Animales; Construcción/);
   assert.doesNotMatch(xml, /\{\{|SEGUIMIENTO_2|SEGUIMIENTO_3|EVID_RELIGION|EVID_CASTELLANO_L2/);
   assert.match(xml, /2 comentarios individuales confirmados por la docente/);
+  assert.doesNotMatch(xml,/vinculadas con Me gusta|Retomar Construye su identidad/);
+  assert.match(xml,/1 registro disponible en Ayni/);
   const optional = structuredClone(document);
   for (const child of optional.content.report_snapshot.children) { child.teacher_comment = ""; child.review_id = null; child.information_status = "insufficient_information"; }
   const optionalZip = await JSZip.loadAsync(await renderDiagnosticUnifiedWord(optional, context, [{ id: "PS_IDENTIDAD", name: "Construye su identidad" }, { id: "PS_CONVIVE", name: "Convive" }]));

@@ -17,7 +17,7 @@ export function assertProposalPreviewScope(before, after, proposalId, protectedI
   const original = before.proposed_experiences.find(row => row.proposal_id === proposalId);
   const changed = after.proposed_experiences.find(row => row.proposal_id === proposalId);
   if (!original || !changed) journeyFail("invalid_scope", "Elige un proyecto de este año.");
-  if (protectedIds.includes(proposalId)) journeyFail("protected_proposal", "Este proyecto conserva trabajo iniciado. Elige un proyecto futuro.");
+  if (protectedIds.includes(proposalId)) journeyFail("protected_proposal", "Conservamos esta propuesta y sus fechas. Elige un tramo futuro para preparar cambios.");
   const stable=plan=>Object.fromEntries(Object.entries(plan).filter(([key])=>!["proposed_experiences","pending_changes","change_history","metrics","pedagogical_review","organization_criteria"].includes(key)));
   if (!same(stable(before),stable(after)) ||
     !same(before.pending_changes.filter(change=>change.proposal_id!==proposalId),after.pending_changes.filter(change=>change.proposal_id!==proposalId)) ||

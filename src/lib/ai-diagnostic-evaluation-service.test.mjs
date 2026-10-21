@@ -8,11 +8,28 @@ import { prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDia
   prepareDiagnosticGroupReview, diagnosticGroupProposalSources, loadDiagnosticAssessmentWorkspace,saveDiagnosticGroupReview,confirmDiagnosticGroupReview } from "./diagnostic-assessment-v4.mjs";
 import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "./ai-diagnostic-evaluation-service.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
+import {recordConfirmedSpontaneousObservation} from './diagnostic-sources-v4.mjs';
 
 const cited = (output, refs=[]) => ({...output,claims:["strengths","needs","planning_priorities"].map(field=>({field,text:output[field],scope:field==="strengths"&&refs.length?"individual":field==="needs"?"information_gap":"planning_decision",source_refs:refs}))});
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const otherTeacher = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
+test('la muestra combina libres y guiadas por fecha, conservando las seis más recientes',async()=>{
+ const db=await database();try{
+  await createPilotClassroom(db,teacher,{teacherName:'Docente',institutionName:'Escuela',section:'A',age:5,year:2026,startsOn:'2026-03-01',endsOn:'2026-12-18'});
+  await importStudentsForTeacher(db,teacher,[{firstName:'Ana',lastName:'Rojas'}]);
+  const workspace=await loadDiagnosticExperienceWorkspace(db,teacher),studentId=workspace.students[0].id,experience=workspace.experiences[0];
+  for(let day=15;day<=18;day++)await recordDiagnosticExperienceObservation(db,teacher,{studentId,experienceId:experience.id,aspectId:experience.aspects[0].id,observedAt:`2026-03-${day}`,observationStatus:'observed_without_judgment',observationText:`Guiada del día ${day}: eligió un sector y explicó qué quería hacer.`});
+  for(let day=10;day<=13;day++){
+   await recordConfirmedSpontaneousObservation(db,teacher,{studentId,contextLabel:'Juego',observedAt:`2026-03-${day}`,competencyIds:['PS_IDENTIDAD'],observationText:`Libre del día ${day}: eligió una caja y contó qué haría.`});
+  }
+  const draft=await prepareDiagnosticGroupReview(db,teacher),sources=await diagnosticGroupProposalSources(db,teacher,draft.id),notes=sources.observed_records[0].notes;
+  assert.equal(notes.length,6);
+  assert.deepEqual(notes.map(note=>new Date(note.observed_at).toISOString().slice(0,10)),['2026-03-12','2026-03-13','2026-03-15','2026-03-16','2026-03-17','2026-03-18']);
+  assert.ok(notes.at(-1).text.startsWith('Guiada del día 18'));
+ }finally{await db.close();}
+});
 
 test('lectura por competencia: propuesta editable, referencias autorizadas y copia confirmada inmutable',async()=>{
  const db=await database();try{

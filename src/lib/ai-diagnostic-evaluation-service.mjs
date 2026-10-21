@@ -94,7 +94,7 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
   timing.sources_before_ms = performance.now() - started;
   const old=(await db.query(`select ai_snapshot from diagnostic_group_reviews
     where id=$1 and created_by=$2 and status='draft'`,[draftId,teacherId])).rows[0]?.ai_snapshot;
-  if(old?.output&&old.contract_version==='diagnostic-reading-v1'&&sameDiagnosticSources(old.source_snapshot,sources.source_snapshot))return {details:old.output,cached:true};
+  if(old?.output&&old.contract_version==='diagnostic-reading-v2'&&sameDiagnosticSources(old.source_snapshot,sources.source_snapshot))return {details:old.output,cached:true};
   const lease=randomUUID();
   const claimed=await db.query(`update diagnostic_group_reviews set ai_snapshot=$3::jsonb
     where id=$1 and created_by=$2 and status='draft' and
@@ -134,7 +134,7 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
     timing.db_connect_before_store_ms = measured?.db_connect ?? null;
     timing.query_count_before_store = measured?.queries ?? null;
     const stored=await db.query(`update diagnostic_group_reviews set ai_snapshot=$1::jsonb,updated_at=now()
-      where id=$2 and status='draft' and ai_snapshot->>'lease_token'=$3 returning id`, [JSON.stringify({ status:'ready',contract_version:'diagnostic-reading-v1',output: details,
+      where id=$2 and status='draft' and ai_snapshot->>'lease_token'=$3 returning id`, [JSON.stringify({ status:'ready',contract_version:'diagnostic-reading-v2',output: details,
       provider: response.provider_metadata?.provider ?? plan.provider, model: plan.model,
       reasoning_effort: plan.reasoning_effort, routing_policy_version: plan.routing_policy_version,
       response_id: response.provider_metadata?.response_id ?? null,

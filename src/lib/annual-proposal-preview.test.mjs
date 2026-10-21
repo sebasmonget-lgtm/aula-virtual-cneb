@@ -8,6 +8,7 @@ import {defaultInitialStage} from "./annual-plan-calendar.mjs";
 import {generationFixture} from "./test-fixtures/annual-journey.mjs";
 import {assertProposalPreviewScope} from "./annual-proposal-preview.mjs";
 import {handleAnnualJourneyRoutes} from "../../scripts/annual-journey-routes.mjs";
+import {withPedagogicalClock} from './pedagogical-clock.mjs';
 
 test("chat de cambio: revisión privada antes de aplicar, CAS, propiedad y protección",async t=>{
   const db=new PGlite();
@@ -20,7 +21,7 @@ test("chat de cambio: revisión privada antes de aplicar, CAS, propiedad y prote
     let calls=0,invalidPatch=false,invalidChat=false,chatRequests=[];
     const route=async(path,body,user=teacherId)=>{
       let result;
-      await handleAnnualJourneyRoutes({request:{method:body===undefined?"GET":"POST"},response:{},url:new URL(`http://localhost/api/annual-journey/${path}`),db,teacherId:user,
+      await withPedagogicalClock({date:'2026-10-13',time:'08:00'},()=>handleAnnualJourneyRoutes({request:{method:body===undefined?"GET":"POST"},response:{},url:new URL(`http://localhost/api/annual-journey/${path}`),db,teacherId:user,
         readJson:async()=>body,send:(_r,status,data)=>{result={status,data};},annualPlanningContext:async()=>context,annualDocumentContext:()=>({teacher_name:"QA"}),
         createProvider:()=>({generate:async request=>{
           calls++;
@@ -37,7 +38,7 @@ test("chat de cambio: revisión privada antes de aplicar, CAS, propiedad y prote
           }
           const fixture=generationFixture(request.ai_context_bundle.curriculum.competency_cards);
           return{output:{...fixture,proposals:fixture.proposals.map(row=>({...row,opportunities:fixture.everyday_opportunities.slice(0,2).map(({moment,...item})=>{void moment;return item;})}))}};
-        }})});return result;
+        }})}));return result;
     };
     const start=await route("start");
     const initial=await route("generate",{teacherIdeas:"",sourceFingerprint:start.data.snapshot.source_fingerprint});assert.equal(initial.status,201,JSON.stringify(initial.data));

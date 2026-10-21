@@ -565,7 +565,9 @@ export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
   const allowed = new Set(competencyOptions.map((card) => card.id));
   const observed = students.map((student) => {
     const rows = currentSources.get(student.id).rows.map((row) => ({ row, text: anonymousDiagnosticText(row.observation_text, names) }))
-      .filter((item) => item.text).slice(-6);
+      .filter((item) => item.text)
+      .sort((a,b)=>new Date(a.row.observed_at).getTime()-new Date(b.row.observed_at).getTime()||String(a.row.id).localeCompare(String(b.row.id)))
+      .slice(-6);
     const textLimit = Math.min(1200, Math.floor(perChildBudget / Math.max(1, rows.length)));
     return { child: childAliases.get(student.id), notes: rows.map(({ row, text }, index) => ({
       source_id: `${childAliases.get(student.id)}_observation_${index + 1}`, record_id:row.id,

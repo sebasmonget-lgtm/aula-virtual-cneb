@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import {renderUnifiedWord, removeParagraphsContaining} from "./unified-word-template.mjs";
 import { annualDisplayTitle } from "./annual-year-editor.mjs";
 import { annualTeacherText } from "./annual-teacher-display.mjs";
-import { Document, HeadingLevel, Paragraph, Packer, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle } from "docx";
+import { Document, Paragraph, Packer, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle } from "docx";
 import { familyInterviewQuestionGroups } from "./family-interview-contract.mjs";
 import * as interview from "./family-interview-contract.mjs";
 import {competencyLabels} from './competency-labels.mjs';
@@ -100,7 +100,9 @@ export async function renderAnnualJourneyWord(document, cards = [], {logo = null
   const age=document.age??document.document_context?.age;
   const names = new Map(cards.map((card) => [card.id, card.official_name ?? card.name]));
   // Direct formatting survives insertion into the original stationery's styles.
-  const heading=(text,title=false)=>new Paragraph({heading:title?HeadingLevel.TITLE:HeadingLevel.HEADING_1,keepNext:true,spacing:{before:title?0:180,after:80,line:276},children:[new TextRun({text,font:'Poppins',size:title?32:25,bold:true,color:'173B65'})]});
+  // The retained stationery has no Heading1/Title styles. Keep headings
+  // self-contained instead of referencing styles from the discarded body ZIP.
+  const heading=(text,title=false)=>new Paragraph({outlineLevel:0,keepNext:true,keepLines:true,spacing:{before:title?0:180,after:80,line:276},children:[new TextRun({text,font:'Poppins',size:title?32:25,bold:true,color:'173B65'})]});
   const children = [heading(`Mi año ${document.school_year} · versión ${document.version}`,true),
     new Paragraph({ text: [document.document_context?.institution_name, document.document_context?.teacher_name,
       document.document_context?.classroom_section??document.document_context?.section,age?`${age} años`:null,Number.isInteger(document.content.classroom_snapshot.student_count)?`${document.content.classroom_snapshot.student_count} niños`:null].filter(Boolean).join(" · ") })];

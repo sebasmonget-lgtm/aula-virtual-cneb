@@ -178,7 +178,6 @@ function valuesFor(document, context, cards) {
   // invents a child-specific diagnosis or a future observation for this table.
   const followups = children.map((child) => {
     const childObservations = observations.filter((item) => item.student_id === child.student_id && clean(item.observation_text));
-    const observedCompetencies = [...new Set(childObservations.map((item) => competencyNames.get(item.competency_id)).filter(Boolean))].slice(0, 2);
     const chronological = uniqueObservations(childObservations).sort((a, b) => String(a.observed_at ?? "").localeCompare(String(b.observed_at ?? "")));
     const selected = chronological.length > 1 ? [chronological[0], chronological.at(-1)] : chronological;
     const excerpts = selected.map((item) =>
@@ -186,13 +185,12 @@ function valuesFor(document, context, cards) {
     return {
       name: child.name,
       situation: [clean(child.teacher_comment) && `Docente: ${clean(child.teacher_comment)}`,
-        excerpts.length && `En el aula: ${excerpts.join("; ")}${chronological.length > selected.length ? ` (Se muestran ${selected.length} de ${chronological.length} registros; consultar los demás en Ayni).` : ""}`,
+        !clean(child.teacher_comment) && excerpts.length && `En el aula: ${excerpts.join("; ")}${chronological.length > selected.length ? ` (Se muestran ${selected.length} de ${chronological.length} registros; consultar los demás en Ayni).` : ""}`,
         clean(child.family_context?.adaptation_context) && `Familia informa: ${clean(child.family_context.adaptation_context)}`].filter(Boolean).join(" ") || "Información insuficiente.",
       support: child.information_status === "insufficient_information"
         ? "Continuar observando y precisar el acompañamiento con nuevos registros."
-        : [clean(child.family_context?.interests) && `Ofrecer oportunidades vinculadas con ${clean(child.family_context.interests)} y comprobar si ese interés aparece en el aula.`,
-          observedCompetencies.length && `Retomar ${observedCompetencies.join(" y ")} en nuevas situaciones; considerar el comentario docente antes de ajustar los apoyos.`,
-          !observedCompetencies.length && "Planificar primeras oportunidades de observación y considerar el comentario docente."].filter(Boolean).join(" "),
+        : "Retomar lo descrito en otro juego y registrar qué hace, qué dice y qué ayuda le resulta útil.",
+      records: chronological.length,
       date: "Durante las próximas experiencias",
     };
   });
@@ -241,7 +239,9 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
       const rest = notes.filter((item) => clean(item.observation_text)).length - examples.length;
       const evidence = excerpts || paragraph(notes.length ? `${countLabel(notes.length, "registro", "registros")} sin nota descriptiva.` : "Información insuficiente: aún no hay observaciones vinculadas.", false, true);
       const reading = analysis?.summary??(notes.length ? `Hay registros de ${countLabel(new Set(notes.map((item) => item.student_id)).size, "niño", "niños")}. La lectura pedagógica de esta competencia está pendiente de revisión docente.` : "Información insuficiente para interpretar esta competencia en el grupo.");
-      const decision = analysis?.next_step??(notes.length ? "Revisar estas actuaciones para decidir una oportunidad o ayuda concreta." : "Preparar una oportunidad de observación pertinente antes de concluir sobre esta competencia.");
+      const decision = analysis?.next_step??(notes.length ? "Revisar estas actuaciones para decidir una oportunidad o ayuda concreta." : id==='TRANS_TIC'
+        ? "Confirmar si hay dispositivos disponibles y acompañamiento antes de planificar una oportunidad con tecnología."
+        : "Preparar una oportunidad de observación pertinente antes de concluir sobre esta competencia.");
       return paragraph(name, true) + paragraph("Ejemplos de los registros", true) + evidence +
         (rest > 0 ? paragraph(`${rest} registros más disponibles en Ayni.`, false, true) : "") +
         paragraph(`Lectura inicial: ${reading}`, false, false, true) + paragraph(`Decisión inicial: ${decision}`, true, false, false);
@@ -252,11 +252,13 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
     paragraph(child.name, true),
     paragraph(`Registros y contexto: ${child.situation}`, false, true, true),
     paragraph(`Apoyo o siguiente paso: ${child.support}`, false, true),
+    paragraph(`${countLabel(child.records, 'registro disponible', 'registros disponibles')} en Ayni.`, false, true),
   ].join("")).join("");
   output = replaceFromParagraphToTable(output, "Seguimientos individuales o apoyos específicos", "VIII. USO DE LA INFORMACIÓN",
     paragraph("Seguimiento por niña o niño", true) + individual);
   output = replaceWordText(output, "Periodo de recojo", "Período previsto de recojo");
   output = replaceWordText(output, "Periodo diagnóstico", "Período previsto del diagnóstico");
+  output = replaceWordText(output, "Conocer cómo inicia el grupo para acompañar mejor sus aprendizajes.", diagnosticReportPurpose);
   if (Number(context.school_year) !== 2026) output = removeParagraphsContaining(output, ["Orientaciones para el inicio del año escolar 2026"]);
   // Preserve the original heading runs/icons, but use a native paragraph so
   // Word can attach the heading to the next section across a page boundary.
@@ -265,7 +267,8 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
     const rows=[...table.matchAll(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g)];
     if(rows.length>1&&/^[IVX]+\.\s/.test(xmlText(rows[0][0]).trim())){
       let header=rows[0][0].replace(/<w:pPr>/g,'<w:pPr><w:keepNext/>');
-      header=header.includes('<w:trPr>')?header.replace('<w:trPr>','<w:trPr><w:tblHeader/><w:cantSplit/>'):header.replace(/(<w:tr(?:\s[^>]*)?>)/,'$1<w:trPr><w:tblHeader/><w:cantSplit/></w:trPr>');
+      header=header.replace(/<w:tblHeader\b[^>]*\/>/g,'');
+      header=header.includes('<w:trPr>')?header.replace('<w:trPr>','<w:trPr><w:cantSplit/>'):header.replace(/(<w:tr(?:\s[^>]*)?>)/,'$1<w:trPr><w:cantSplit/></w:trPr>');
       return table.replace(rows[0][0],header);
     }
     if((table.match(/<w:tr(?:\s|>)/g)??[]).length!==1||title.length>180||! /^[IVX]+\.\s/.test(title))return table;

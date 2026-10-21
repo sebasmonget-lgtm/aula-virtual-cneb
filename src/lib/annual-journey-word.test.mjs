@@ -36,5 +36,7 @@ test('Word anual conserva fuentes una vez, con referencias y alcance legibles si
  }
  assert.deepEqual(stack,[]);
  assert.match(xml,/w:color w:val="173B65"/);
+ assert.doesNotMatch(xml,/<w:pStyle w:val="(?:Heading1|Title)"/,'el cuerpo insertado no referencia estilos ausentes en la plantilla');
+ assert.match(xml,/<w:keepLines\/>/);
  assert.deepEqual(plan,before);
 });

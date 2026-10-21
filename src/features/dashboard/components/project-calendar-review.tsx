@@ -11,7 +11,7 @@ export function ProjectCalendarReview({ days, selectedDates, onChange, disabled 
   const months = [...new Set(days.map(day => day.date.slice(0, 7)))];
   return <div className="mt-4 space-y-4">
     <p className="text-sm text-[#526b87]">Toca un día para marcarlo o quitarlo. Los fines de semana, feriados y días sin clase no se pueden elegir.</p>
-    <div className="flex flex-wrap items-center gap-4 text-sm"><span className="flex items-center gap-2"><span className="size-4 rounded border border-[#087d96] bg-[#dff3f7]" aria-hidden="true"/>Elegido</span><span className="flex items-center gap-2"><span className="size-4 rounded border bg-[#f1f4f7]" aria-hidden="true"/>Sin clase</span><strong className="ml-auto text-[#07576c]" role="status">{selectedDates.length} días elegidos</strong></div>
+    <div className="flex flex-wrap items-center gap-4 text-sm"><span className="flex items-center gap-2"><span className="size-4 rounded border border-[#087d96] bg-[#dff3f7]" aria-hidden="true"/>Elegido</span><span className="flex items-center gap-2"><span className="size-4 rounded border bg-[#f1f4f7]" aria-hidden="true"/>Sin clase</span><strong className="ml-auto text-[#07576c]" role="status">{selectedDates.length} {selectedDates.length===1?'día elegido':'días elegidos'}</strong></div>
     {months.map(month => {
       const monthDays = days.filter(day => day.date.startsWith(month));
       const offset = (new Date(`${monthDays[0].date}T12:00:00Z`).getUTCDay() + 6) % 7;

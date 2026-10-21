@@ -24,7 +24,7 @@ export async function handleAnnualProjectChat({request,response,url,db,context,s
     futureOnly=true;card={...card,title:project.title,purpose:project.purpose,primary_competency_ids:project.details.decisions.competency_ids};}
   if(request.method==="GET"){send(response,200,publicProjectChat(await loadProjectChat(db,context.id,proposalId)),origin);return true;}
   if(request.method!=="POST"){send(response,405,{error:"Acción no disponible."},origin);return true;}
-  if(!futureOnly&&(await protectedIds(plan)).includes(proposalId))journeyFail("protected_proposal","Este proyecto conserva trabajo iniciado. Podemos ajustar solo los días futuros desde una nueva versión.");
+  if(!futureOnly&&(await protectedIds(plan)).includes(proposalId))journeyFail("protected_proposal","Esta propuesta conserva fechas o decisiones ya guardadas. Abre el proyecto para preparar cambios en sus días futuros.");
   if(typeof body.text!=="string"||!body.text.trim()||body.text.length>1600||!(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i).test(body.turnId??""))journeyFail("invalid_intent","Escribe un mensaje breve para Ayni.");
   let row,lease=randomUUID(),replay=false;
   await versionTransaction(db,`project-chat:${context.id}:${proposalId}`,async tx=>{

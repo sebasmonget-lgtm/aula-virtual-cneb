@@ -57,6 +57,9 @@ test("una selección curricular de otra edad se repara sin cambiar el criterio n
   assert.equal(calls.length, 2);
   assert.equal(result.metadata.repair_used, true);
   assert.deepEqual(calls[1].ai_context_bundle.confirmed_decisions, decisions);
+  assert.match(calls[1].ai_context_bundle.task,/conserva exactamente 2 actividades, una por fecha/);
+  assert.match(calls[1].ai_context_bundle.task,/No agregues días ni dividas una fecha/);
+  assert.match(calls[0].ai_context_bundle.task,/no obliga a cada niño a recorrer todas las opciones/);
   assert.equal(result.output.activity_route[0].evaluation_criterion, master.activities[0].criterion_text);
   assert.deepEqual(result.output.activity_route[0].official_performance_refs, master.activities[0].official_performance_refs);
 });
