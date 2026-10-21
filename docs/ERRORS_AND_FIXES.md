@@ -1,5 +1,21 @@
 # Errores y soluciones
 
+## 2026-10-20 — Logo guardado con URL local en QA
+
+Síntoma: la vista previa del PNG funciona al configurar el aula, pero aparece una imagen rota al volver al perfil en la Preview. Causa comprobada: el tablero y la respuesta inicial construyen `logo_url` con `http://127.0.0.1:8788`, aunque la imagen está correctamente vinculada y se puede leer desde Storage privado. Solución local: origen compartido según Auth; ruta relativa del mismo host para Supabase y origen absoluto para el API local separado. Sin migración ni cambios a archivos/RLS.
+
+Validación: once pruebas PASS, incluidos alta/relectura HTTP, imagen accesible al propietario, 401 sin sesión y 404 para otra docente; lint, typecheck y builds Vinext/Next webpack PASS. La primera ejecución de la ampliación de pruebas esperaba `no-store`, pero el contrato existente es `private, max-age=60`: se corrigió esa expectativa sin modificar caché ni permisos. Prevención: comprobar ambos caminos de respuesta con logo y sin logo, más el modo local. Publicación y revisión visual en el enlace QA pendientes; no confundir la prueba con Auth simulado con el despliegue. Ver `docs/qa/QA_LOGO_Y_CAPTURAS_2026-10-20.md`.
+
+## 2026-10-20 — Hallazgo abierto en orientación observacional de pantalla y Word
+
+**Síntoma.** En la muestra histórica de 21 actividades, 20 Word no contienen íntegro el campo guardado de oportunidades observacionales. Un comentario posterior a la lectura queda representado como oportunidad de Desarrollo. Los registros reales no se perdieron: los 20 existentes en tres actividades están en sus exportaciones y 21 pruebas de captura/lectura/Word pasan.
+
+**Causa comprobada.** La rama por momentos del renderer no imprime ese campo; usa bloques de criterios. `criterionMoments` asigna Desarrollo cuando faltan momentos y rótulos explícitos. Los apoyos generales del proyecto también se agregan al Word diario sin una proyección equivalente en el detalle.
+
+**Estado.** Auditoría, sin solución implementada ni validada. Se propone una proyección compartida de orientación/momento/apoyos, preservando fuentes confirmadas, registros e historia. No deducir momentos con filtros de palabras ni añadir todo el texto por duplicado.
+
+**Prevención propuesta.** QA vertical con Inicio/Desarrollo/Cierre y captura libre contextual en Hoy, detalle y Word; correcciones, anulaciones y permisos. Los campos nuevos del generador no prueban por sí solos coherencia semántica. Informe: `docs/qa/AUDITORIA_INICIAL_DOCUMENTOS_CNEB_2026-10-20.md`.
+
 ## 2026-10-20 — Recurso de carátula fuera del paquete de descarga Word
 
 Síntoma: Word local correcto y 500 al descargar el nuevo Preview; el alias QA se conserva en la versión anterior. El adorno se había colocado en public/evaluation, fuera de los directorios públicos incluidos explícitamente por outputFileTracingIncludes. Se mueve a assets/templates, que ya forma parte del paquete servidor, conservando los mismos bytes. Comprobar con build de Next y descargas reales antes de promover. No fallar silenciosamente ni borrar textos para resolver un problema de empaquetado.

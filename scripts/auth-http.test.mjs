@@ -85,11 +85,18 @@ test("Preview QA clock works before onboarding, validates Origin, and reloads si
     const qaHeaders = { origin, cookie: cookie.split(";")[0], "content-type": "application/json" };
     const created = await fetch(`${instance.base}/api/pilot/setup`, { method: "POST", headers: qaHeaders,
       body: JSON.stringify({ teacherName: "Docente ficticia de reloj", institutionName: "Colegio ficticio", section: "QA", age: 5,
-        year: 2026, startsOn: "2026-03-02", endsOn: "2026-12-31" }) });
+        year: 2026, startsOn: "2026-03-02", endsOn: "2026-12-31",
+        createLogo: true, logoInitials: "JB", initialSnapshot: true }) });
     assert.equal(created.status, 201, await created.clone().text());
     const firstDashboard = (await created.json()).dashboard;
     assert.equal(firstDashboard.today.date, "2026-12-18");
     assert.equal(firstDashboard.today.now, "10:30");
+    assert.equal(firstDashboard.profile.logo_url, `${instance.base}/api/assets/${firstDashboard.profile.logo_asset_id}`);
+    const localLogo = await fetch(firstDashboard.profile.logo_url);
+    assert.equal(localLogo.status, 200);
+    assert.match(localLogo.headers.get("content-type"), /image\/svg\+xml/);
+    const reloadedDashboard = await (await fetch(`${instance.base}/api/dashboard`, { headers: qaHeaders })).json();
+    assert.equal(reloadedDashboard.profile.logo_url, firstDashboard.profile.logo_url);
     const imported = await fetch(`${instance.base}/api/students/import`, { method: "POST", headers: qaHeaders,
       body: JSON.stringify({ students: [{ firstName: "Niña", lastName: "Ficticia QA", birthDate: "2021-03-01" }] }) });
     assert.equal(imported.status, 201, await imported.clone().text());
@@ -255,9 +262,25 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({ teacherName: `Docente ${label}`, institutionName: `Jardín ${label}`,
           section: label, age: 5, year: 2026, startsOn: "2026-03-02", endsOn: "2026-12-31",
-          castellanoL2Applicable: false, religionApplicable: false }),
+          castellanoL2Applicable: false, religionApplicable: false,
+          createLogo: label === "A", logoInitials: "JB", initialSnapshot: true }),
       });
-      assert.equal(setup.status, 201, `setup ${label}: ${await setup.text()}`);
+      assert.equal(setup.status, 201, `setup ${label}: ${await setup.clone().text()}`);
+      const setupDashboard = (await setup.json()).dashboard;
+      if (label === "A") {
+        const logoPath = `/api/assets/${setupDashboard.profile.logo_asset_id}`;
+        assert.equal(setupDashboard.profile.logo_url, logoPath);
+        const reloadedDashboard = await (await call("/api/dashboard", token)).json();
+        assert.equal(reloadedDashboard.profile.logo_url, logoPath);
+        const ownedLogo = await call(logoPath, token);
+        assert.equal(ownedLogo.status, 200);
+        assert.match(ownedLogo.headers.get("content-type"), /image\/svg\+xml/);
+        assert.match(ownedLogo.headers.get("cache-control"), /^private,/);
+        assert.equal((await call(logoPath)).status, 401);
+        assert.equal((await call(logoPath, "token-b")).status, 404);
+      } else {
+        assert.equal(setupDashboard.profile.logo_url, null);
+      }
     }
     for (const token of ["token-a", "token-b"]) {
       const usage = await call("/api/ai-usage", token);

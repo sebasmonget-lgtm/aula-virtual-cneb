@@ -151,6 +151,9 @@ const assetsDir = path.join(root, ".local", "assets");
 const evidenceAssetsDir = path.join(assetsDir, "evidences");
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
 const authMode = process.env.AYNI_AUTH_MODE ?? "local";
+// Remote clients use the authenticated asset route on their current host.
+// Only the separate local API needs an absolute loopback origin.
+const logoOrigin = authMode === "local" ? `http://127.0.0.1:${port}` : "";
 const dbMode = process.env.AYNI_DB_MODE ?? (authMode === "local" ? "local" : "postgres");
 const storageConfig = { url: process.env.AYNI_SUPABASE_URL, serviceRoleKey: process.env.AYNI_SUPABASE_SERVICE_ROLE_KEY };
 const evidenceStorage = dbMode === "local" ? createLocalPrivateEvidenceStorage(evidenceAssetsDir)
@@ -542,7 +545,7 @@ async function dashboard() {
     profile: profileResult.rows[0] ? {
       ...profileResult.rows[0],
       logo_url: profileResult.rows[0].logo_asset_id
-        ? `http://127.0.0.1:${port}/api/assets/${profileResult.rows[0].logo_asset_id}`
+        ? `${logoOrigin}/api/assets/${profileResult.rows[0].logo_asset_id}`
         : null,
     } : null,
   };
@@ -859,7 +862,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           ? initialClassroomDashboard(saved, qaDailyClock ?? {
             date: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()),
             time: new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date()),
-          }, `http://127.0.0.1:${port}`)
+          }, logoOrigin)
           : await measureSetupPhase("dashboard", () => dashboard());
         if (qaDailyClock) data.today.qa_clock = qaDailyClock;
         send(response, saved.replayed ? 200 : 201, { dashboard: data }, origin);

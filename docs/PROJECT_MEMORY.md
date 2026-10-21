@@ -1,5 +1,17 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-20 — Recorrido desde cero, logo y capturas
+
+Tras el reinicio de la cuenta QA expresamente autorizado sin respaldos, se aprueba la primera página y se configura un aula de cinco años con datos de ejemplo de apariencia natural y un logo PNG cargado por UI; no usar etiquetas de prueba en los campos. No se añaden niños ni se genera el diagnóstico todavía. El logo queda guardado, pero el tablero devuelve una URL localhost en Vercel. Corrección local compartida para alta y relectura: ruta relativa con Auth Supabase y origen absoluto para API local. Once regresiones HTTP/servicios, lint, typecheck y builds Vinext/Next PASS. Sin migración ni publicación de esta corrección.
+
+Nueva preferencia: capturar cada paso realmente revisado para un posterior video promocional/tutorial. Secuencia e imágenes en `outputs/ayni-recorrido-20261020/`, fuera de Git; fallos separados de tomas utilizables. Matrícula vacía capturada, configuración pendiente de logo corregido en QA. No se ha creado ni publicado un video. Alcance y rollback: `docs/qa/QA_LOGO_Y_CAPTURAS_2026-10-20.md`.
+
+Continuación acordada conservando últimos commits/pushes: fetch confirma base `9bc5b26` y cero diferencias con origin. 53 regresiones de logo, alta, informes, asistencia, carátula y Word PASS. La corrección solo modifica dos puntos de respuesta del mismo servidor mediante un origen compartido, sin reemplazar mejoras recientes. Preparar commit nuevo y Preview QA; resultado real de despliegue, smoke y preservación de datos/Producción en `.local/logo-release-20261020/release.json`, más comprobación visual posterior. No asumir publicada una preparación.
+
+## 2026-10-20 — Auditoría inicial de documentos y observaciones diarias
+
+Lectura de fuentes oficiales, código y aula QA en transacción READ ONLY. Inventario: 47 documentos con históricos; 35 exportaciones locales desde 34 fuentes activas y el cierre histórico más reciente. Las 20 observaciones de tres actividades aparecen con texto y alumno; la actividad del adjunto tiene cero registros. 21 pruebas PASS. Hallazgos abiertos: orientación observacional no trasladada íntegramente al Word en 20 actividades, fallback histórico a Desarrollo, apoyos generales añadidos al diario, repetición y plan anual de 51 páginas con procedencia nominal. Seis muestras renderizadas, inspección visual parcial explícita. Sin cambios de producto/datos, IA pagada ni despliegue. Alcance, fuentes y límites: `docs/qa/AUDITORIA_INICIAL_DOCUMENTOS_CNEB_2026-10-20.md`.
+
 ## 2026-10-19 — Cierre local del mapeo de desempeños por edad
 
 W-05 completado: catálogo aditivo versionado de 134 desempeños del PCI canónico (35/44/55 para 3/4/5 años), con páginas y hashes; comparación geométrica y pypdf independiente 134/134. KB/contextos reciben referencias; nuevos criterios generales y diarios seleccionan IDs validados por competencia/edad, la guía hereda por código y la confirmación conserva JSONB. Word cita los seleccionados y no reclasifica históricos. Una muestra real detectó mediación cortada: holgura de longitud e integridad de terminación en generación nueva, sin filtros generales. 155 regresiones, typecheck/lint/build PASS y doce páginas Word revisadas. Acumulado estimado USD 4,75075397 de 5. Sin commit, despliegue ni cloud. Detalle: `docs/qa/QA_DESEMPENOS_OFICIALES_2026-10-19.md`.
