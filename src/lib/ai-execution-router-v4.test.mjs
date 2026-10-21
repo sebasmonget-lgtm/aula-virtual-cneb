@@ -2,6 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { AI_ROUTING_POLICY, AIExecutionRoutingError, resolveAIFallbackPlan, resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 
+test("audio usa transcripción con detección de idioma sin fallback que omita el control", () => {
+  const plan = resolveAIExecutionPlan({ workflow: "audio_transcription", task: "generation" });
+  assert.equal(plan.model, "gpt-transcribe");
+  assert.equal(plan.fallback, null);
+});
+
 test("aplica los tiers semánticos GPT-6 a los workflows productivos", () => {
   const cases = [
     ["annual_plan", "global_planning", "gpt-6.1-sol", "high"],

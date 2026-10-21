@@ -126,8 +126,15 @@ test("Preview QA clock works before onboarding, validates Origin, and reloads si
 test("the HTTP boundary protects every route and local PGlite remains usable", { timeout: 90000 }, async () => {
   const temp = await mkdtemp(path.join(tmpdir(), "ayni-auth-"));
   const dataDir = path.join(temp, "pgdata");
+  let mockTranscription = { text: "пожалуйста,", languages: [{ code: "ru" }] };
+  const transcriptionRequests = [];
   const authServer = createServer(async (request, response) => {
     response.setHeader("content-type", "application/json");
+    if (request.url === "/v1/audio/transcriptions") {
+      let raw = ""; for await (const chunk of request) raw += chunk;
+      transcriptionRequests.push(raw);
+      response.writeHead(200); response.end(JSON.stringify(mockTranscription)); return;
+    }
     if (request.url === "/auth/v1/user") {
       const id = request.headers.authorization === "Bearer token-a" ? teacherA
         : request.headers.authorization === "Bearer token-b" ? teacherB
@@ -187,6 +194,7 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
       AYNI_ALLOWED_ORIGIN: "http://localhost:5173",
       VERCEL: "1", VERCEL_URL: "ayni-aula-staging-fixture-ayni4.vercel.app",
       AYNI_LOCAL_TEACHER_ID: "ignored-in-auth-mode",
+      OPENAI_API_KEY: "mock-transcription-key", OPENAI_BASE_URL: `http://127.0.0.1:${authPort}/v1`,
     });
     const call = async (pathname, token, init = {}) => fetch(`${running.base}${pathname}`, {
       ...init, headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...init.headers },
@@ -334,6 +342,28 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     const birthdayCalendarB = await (await call("/api/school-calendar?birthdayYear=2026", "token-b")).json();
     assert.deepEqual(birthdayCalendarA.birthdays, []);
     assert.ok(birthdayCalendarB.birthdays.some(item => item.student_id === studentB && item.date === "2026-12-19"));
+    const wav = Buffer.alloc(16044);
+    wav.write("RIFF"); wav.writeUInt32LE(16036, 4); wav.write("WAVEfmt ", 8); wav.writeUInt32LE(16, 16);
+    wav.writeUInt16LE(1, 20); wav.writeUInt16LE(1, 22); wav.writeUInt32LE(8000, 24); wav.writeUInt32LE(16000, 28);
+    wav.writeUInt16LE(2, 32); wav.writeUInt16LE(16, 34); wav.write("data", 36); wav.writeUInt32LE(16000, 40);
+    const dictation = { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({
+      studentId: studentB, purpose: "interview", audio: { mimeType: "audio/wav", base64: wav.toString("base64") } }) };
+    const rejectedDictation = await call("/api/audio/transcribe", "token-b", dictation);
+    assert.equal(rejectedDictation.status, 422);
+    const rejectedResult = await rejectedDictation.json();
+    assert.equal(rejectedResult.reason, "language_not_spanish");
+    assert.equal("transcript" in rejectedResult, false);
+    assert.equal(JSON.stringify(rejectedResult).includes("пожалуйста"), false);
+    mockTranscription = { text: "Le gusta correr, saltar y leer.", languages: [{ code: "es" }] };
+    const acceptedDictation = await call("/api/audio/transcribe", "token-b", dictation);
+    assert.equal(acceptedDictation.status, 200);
+    assert.deepEqual(await acceptedDictation.json(), { transcript: mockTranscription.text, improved_text: mockTranscription.text, language: "es" });
+    assert.equal(transcriptionRequests.length, 2);
+    assert.ok(transcriptionRequests.every(raw => raw.includes("gpt-transcribe") && raw.includes('name="languages[]"') && !raw.includes('name="language"')));
+    const untouchedInterviewResponse = await call(`/api/diagnostics/students/${studentB}/family-interview`, "token-b");
+    assert.equal(untouchedInterviewResponse.status, 200);
+    const untouchedInterview = await untouchedInterviewResponse.json();
+    assert.equal(untouchedInterview.draft, null);
     const inactiveB=await call("/api/students/inactive","token-b");assert.equal(inactiveB.status,200);assert.deepEqual((await inactiveB.json()).students,[]);
     assert.equal((await call(`/api/students/${studentB}/enrollment`,"token-a",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({status:"inactive",expectedStatus:"active"})})).status,404);
     const spontaneousB = await call("/api/diagnostics/spontaneous-observations", "token-b", {

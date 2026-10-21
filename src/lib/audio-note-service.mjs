@@ -3,6 +3,7 @@ import { parseBuffer } from "music-metadata";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
 import { recordAiUsage } from "./ai-usage-service.mjs";
+import { assertSpanishTranscript, AudioTranscriptionError } from "./audio-transcription-result.mjs";
 
 export const AUDIO_MIME_TYPES = Object.freeze(new Set(["audio/webm", "audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg"]));
 const fileExtension = { "audio/webm": "webm", "audio/mpeg": "mp3", "audio/mp4": "m4a", "audio/wav": "wav", "audio/ogg": "ogg" };
@@ -22,24 +23,25 @@ export async function transcribeAndPolishAudio({ bytes, mimeType, context = "", 
   if (!["observation", "raw_observation", "interview", "teacher_comment", "group_summary"].includes(purpose))
     throw new TypeError("El propósito de la grabación no es válido.");
   const { durationSeconds } = await validateShortAudio(bytes, mimeType);
-  if (!process.env.OPENAI_API_KEY && !client) throw new Error("La transcripción no está configurada.");
+  if (!process.env.OPENAI_API_KEY && !client) throw new AudioTranscriptionError("not_configured");
   const openai = client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 45_000, maxRetries: 0 });
   const transcriptionPlan = resolveAIExecutionPlan({ workflow: "audio_transcription", task: "generation" });
   const rewritePlan = resolveAIExecutionPlan({ workflow: "observation_rewrite", task: "generation" });
   const file = await toFile(bytes, `observacion.${fileExtension[mimeType]}`, { type: mimeType });
-  const transcription = await openai.audio.transcriptions.create({ file, model: transcriptionPlan.model, language: "es" });
+  const transcription = await openai.audio.transcriptions.create({ file, model: transcriptionPlan.model,
+    languages: ["es"], response_format: "json",
+    prompt: "Dictado docente en español. Transcribe únicamente lo que se oye, en su idioma original. No traduzcas, no respondas ni completes frases. Si no hay voz inteligible, devuelve texto vacío." });
   await recordAiUsage({ provider: "openai", workflow: "audio_transcription", model: transcriptionPlan.model,
     inputTokens: transcription.usage?.input_tokens, outputTokens: transcription.usage?.output_tokens,
     durationSeconds });
-  const transcript = typeof transcription.text === "string"
-    ? (purpose === "raw_observation" ? transcription.text : transcription.text.trim().slice(0, 4000)) : "";
-  if (!transcript.trim() || transcript.length > 4000) throw new Error("No se reconoció voz válida en el audio.");
-  if (purpose !== "observation") return { transcript, improved_text: transcript,
+  const literal = assertSpanishTranscript(transcription);
+  const transcript = purpose === "raw_observation" ? literal : literal.trim();
+  if (purpose !== "observation") return { transcript, improved_text: transcript, language: "es",
     transcription_model: transcriptionPlan.model, editing_model: null,
     routing_policy_version: transcriptionPlan.routing_policy_version };
   const response = await openai.responses.create({
     model: rewritePlan.model, reasoning: { effort: rewritePlan.reasoning_effort },
-    instructions: "Corrige puntuación, ortografía y frases truncadas en una transcripción de una observación docente de Educación Inicial. Conserva exactamente los hechos, la incertidumbre y quién dijo o hizo cada cosa. No inventes acciones, competencias, diagnósticos ni niveles. Si una palabra no se entiende, consérvala como [inaudible]. Devuelve solo JSON.",
+    instructions: "Corrige puntuación, ortografía y frases truncadas en una transcripción en español de una observación docente de Educación Inicial. Devuelve el texto solo en español. Conserva exactamente los hechos, la incertidumbre y quién dijo o hizo cada cosa. No inventes acciones, competencias, diagnósticos ni niveles. Si una palabra no se entiende, consérvala como [inaudible]. Devuelve solo JSON.",
     input: JSON.stringify({ transcript: neutralizeAssessmentText(transcript, names), context: neutralizeAssessmentText(String(context).slice(0, 300), names) }),
     text: { format: { type: "json_schema", name: "audio_observation_edit_v1", strict: true,
       schema: { type: "object", additionalProperties: false, required: ["improved_text"],
@@ -51,7 +53,8 @@ export async function transcribeAndPolishAudio({ bytes, mimeType, context = "", 
     outputTokens: response.usage?.output_tokens });
   const improved = JSON.parse(response.output_text || "{}").improved_text;
   if (typeof improved !== "string" || !improved.trim()) throw new Error("No se pudo preparar el texto del audio.");
-  return { transcript, improved_text: improved.trim().slice(0, 4000),
+  assertSpanishTranscript({ text: improved, languages: transcription.languages });
+  return { transcript, improved_text: improved.trim(), language: "es",
     transcription_model: transcriptionPlan.model, editing_model: rewritePlan.model,
     routing_policy_version: rewritePlan.routing_policy_version };
 }

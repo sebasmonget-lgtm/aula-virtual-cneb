@@ -23,21 +23,24 @@ test("un audio de un minuto se acepta y uno más largo se rechaza desde el servi
 test("transcribe y propone redacción con Luna sin guardar ni alterar el audio", async () => {
   const calls = [];
   const client = { audio: { transcriptions: { create: async (request) => {
-    calls.push(request.model); return { text: "Camila conto tres vasos y dijo falta uno" };
+    assert.deepEqual(request.languages, ["es"]);
+    assert.equal(request.language, undefined);
+    assert.match(request.prompt, /No traduzcas/);
+    calls.push(request.model); return { text: "Camila conto tres vasos y dijo falta uno", languages: [{ code: "es" }] };
   } } }, responses: { create: async (request) => {
     calls.push(request.model);
     assert.match(request.input, /Camila/);
     return { output_text: JSON.stringify({ improved_text: "Contó tres vasos y dijo que faltaba uno." }) };
   } } };
   const result = await transcribeAndPolishAudio({ bytes: wav(1), mimeType: "audio/wav", context: "Lonchera", names: ["Camila"], client });
-  assert.deepEqual(calls, ["gpt-4o-mini-transcribe", "gpt-6-luna"]);
+  assert.deepEqual(calls, ["gpt-transcribe", "gpt-6-luna"]);
   assert.match(result.transcript, /Camila/);
   assert.match(result.improved_text, /Contó/);
 });
 
 test("la entrevista conserva las palabras de la familia sin reescritura ni inferencia", async () => {
   let rewriteCalls = 0;
-  const client = { audio: { transcriptions: { create: async () => ({ text: "En casa conversamos en quechua y castellano." }) } },
+  const client = { audio: { transcriptions: { create: async () => ({ text: "En casa conversamos en quechua y castellano.", languages: [{ code: "es" }] }) } },
     responses: { create: async () => { rewriteCalls++; throw new Error("No debe reescribir una entrevista"); } } };
   const result = await transcribeAndPolishAudio({ bytes: wav(1), mimeType: "audio/wav", purpose: "interview", client });
   assert.equal(result.improved_text, result.transcript);
@@ -49,7 +52,7 @@ for (const purpose of ["teacher_comment", "group_summary"]) {
   test(`${purpose} transcribe literalmente y no genera recomendaciones`, async () => {
     let transcriptions = 0;
     const client = { audio: { transcriptions: { create: async () => {
-      transcriptions++; return { text: "Quiero seguir observando cómo expresan sus ideas." };
+      transcriptions++; return { text: "Quiero seguir observando cómo expresan sus ideas.", languages: [{ code: "es" }] };
     } } }, responses: { create: async () => { throw new Error("No debe interpretar el comentario docente"); } } };
     const result = await transcribeAndPolishAudio({ bytes: wav(1), mimeType: "audio/wav", purpose, client });
     assert.equal(transcriptions, 1);
@@ -62,7 +65,7 @@ for (const purpose of ["teacher_comment", "group_summary"]) {
 test("raw_observation conserva exactamente la transcripción sin reescritura ni identidad inferida", async () => {
   const literal = "  Ana dijo: soy Bruna.\n[Anha]  ";
   let rewrites = 0;
-  const client = { audio: { transcriptions: { create: async () => ({ text: literal }) } },
+  const client = { audio: { transcriptions: { create: async () => ({ text: literal, languages: [{ code: "es" }] }) } },
     responses: { create: async () => { rewrites++; throw new Error("No debe reescribir raw"); } } };
   const result = await transcribeAndPolishAudio({ bytes: wav(1), mimeType: "audio/wav", purpose: "raw_observation", client });
   assert.equal(result.transcript, literal);
@@ -73,4 +76,15 @@ test("raw_observation conserva exactamente la transcripción sin reescritura ni 
 test("un propósito de audio desconocido no llama al proveedor", async () => {
   await assert.rejects(transcribeAndPolishAudio({ bytes: wav(1), mimeType: "audio/wav", purpose: "automatic_assessment",
     client: { audio: { transcriptions: { create: async () => { throw new Error("No debe enviar audio"); } } } } }), TypeError);
+});
+
+test("todos los dictados rechazan otro idioma sin traducirlo, reescribirlo ni devolverlo", async () => {
+  for (const purpose of ["observation", "raw_observation", "interview", "teacher_comment", "group_summary"]) {
+    let rewrites = 0;
+    await assert.rejects(transcribeAndPolishAudio({ bytes: wav(1), mimeType: "audio/wav", purpose,
+      client: { audio: { transcriptions: { create: async () => ({ text: "пожалуйста,", languages: [{ code: "ru" }] }) } },
+        responses: { create: async () => { rewrites++; throw Error("No debe reescribir"); } } } }),
+    error => error.reason === "language_not_spanish");
+    assert.equal(rewrites, 0);
+  }
 });

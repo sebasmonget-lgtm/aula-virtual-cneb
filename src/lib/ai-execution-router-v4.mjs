@@ -1,12 +1,12 @@
 export const AI_ROUTING_POLICY = Object.freeze({
-  version: "4.0.0",
+  version: "4.0.1",
   tiers: Object.freeze({
     structured_light: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "low" }),
     routine_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6-luna", reasoning_effort: "medium" }),
     focused_writing: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6.1-sol", reasoning_effort: "low" }),
     judgment_generation: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6.1-sol", reasoning_effort: "medium" }),
     global_planning: Object.freeze({ execution: "generation", provider: "openai", model: "gpt-6.1-sol", reasoning_effort: "high" }),
-    transcription: Object.freeze({ execution: "transcription", provider: "openai", model: "gpt-4o-mini-transcribe", reasoning_effort: null }),
+    transcription: Object.freeze({ execution: "transcription", provider: "openai", model: "gpt-transcribe", reasoning_effort: null }),
   }),
   workflows: Object.freeze({
     diagnostic: Object.freeze({ execution: "code" }),

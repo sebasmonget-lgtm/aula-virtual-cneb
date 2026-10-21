@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## 2026-10-20 — Validar español antes de aceptar un dictado
+
+Por petición expresa, todos los dictados requieren español detectado y texto español antes de devolver un éxito al cliente. `gpt-transcribe` aporta metadatos `languages`, solicitados con `[es]`; sustituye exclusivamente el tier de transcripción. Idioma distinto, mixto o incierto no se traduce ni reescribe para fingir una respuesta válida. La entrevista y RAW conservan el texto aceptado; permanece la edición de observación ya existente. Una llamada por intento, sin clasificador adicional; sin fallback que elimine la validación. Los errores tienen códigos fijos sin audio/transcripción en logs; una respuesta rechazada no llega al autoguardado. Tarifa nueva por duración sin recalcular consumo histórico. Ver `docs/qa/QA_DICTADO_ESPANOL_2026-10-20.md`.
+
 ## 2026-10-20 — Cumpleaños derivados de matrícula
 
 Calendario y Hoy derivan cumpleaños de `birth_date` de la matrícula activa del aula autorizada. No hay módulo, tabla de eventos o recordatorios guardados. El servidor determina hoy y mañana con el reloj pedagógico; las respuestas compactas de matrícula recalculan la proyección local con esa misma fecha. Solo la respuesta docente del calendario agrega nombres, sin ampliar `loadEffectiveCalendar` ni el contexto de IA. En años no bisiestos se recuerda febrero 29 el día 28 con una aclaración visible, conservando la fecha real. Sin migración. Alcance, pruebas y rollback en `docs/qa/QA_CUMPLEANOS_Y_MATRICULA_2026-10-20.md`.

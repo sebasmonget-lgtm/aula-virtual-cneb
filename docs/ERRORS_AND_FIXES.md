@@ -1,5 +1,13 @@
 # Errores y soluciones
 
+## 2026-10-20 — Transcripción extranjera aceptada en dictado español
+
+Síntoma: dos 503 genéricos; al reintentar la misma grabación de entrevista, respuesta rusa guardada como borrador aunque la persona usuaria había leído opciones en español. El parámetro `language: es` del modelo anterior era una indicación, sin comprobación del idioma del resultado. El borrador incorrecto se limpió por UI y no se confirmó la entrevista.
+
+Corrección local: modelo de transcripción con idiomas detectados, solicitud `[es]`, validación antes de responder, rechazo explícito de idioma extranjero/mixto/incierto y control de escritura compatible. Sin traducción ni reemplazo inventado; audio retenido por cliente cuando falla. Códigos de recuperación y causas operativas acotadas, sin mensajes crudos o contenido privado en logs. La causa de los dos 503 antiguos no puede determinarse con la telemetría previa; no declarar solucionado un fallo del proveedor sin probarlo.
+
+Validación: 49 pruebas PASS, HTTP con proveedor simulado y casos extranjero/español sin guardar entrevistas, dos voces sintéticas reales en el servicio modificado; typecheck/lint/Vinext/Next PASS. En el barrido se corrigió un fallo previo del test de RLS: regex sin dígitos truncaba `preparation_jobs_v2`, cuya migración ya tiene RLS. Sin migración ni despliegue. Prevención: exigir metadatos de idioma y probar rechazos antes del autoguardado; no confundir texto no vacío con transcripción fiel. Detalle y rollback: `docs/qa/QA_DICTADO_ESPANOL_2026-10-20.md`.
+
 ## 2026-10-20 — Logo guardado con URL local en QA
 
 Síntoma: la vista previa del PNG funciona al configurar el aula, pero aparece una imagen rota al volver al perfil en la Preview. Causa comprobada: el tablero y la respuesta inicial construyen `logo_url` con `http://127.0.0.1:8788`, aunque la imagen está correctamente vinculada y se puede leer desde Storage privado. Solución local: origen compartido según Auth; ruta relativa del mismo host para Supabase y origen absoluto para el API local separado. Sin migración ni cambios a archivos/RLS.

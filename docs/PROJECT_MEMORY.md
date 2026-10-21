@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-20 — Dictado con detección y salida en español
+
+Dos fallos HTTP 503 de audio sin causa registrada; un reintento posterior devolvió ruso en una entrevista, aunque la persona usuaria había leído opciones en español. Se retiró solo esa respuesta incorrecta del borrador por UI: 0/8, sin confirmar entrevista. Por pedido explícito, el tier de audio pasa a `gpt-transcribe` con `languages: [es]` y validación del idioma detectado antes de entregar texto. Otros idiomas/mezclas/incertidumbre se rechazan sin traducir, completar ni guardar respuesta. Errores tipificados en mensajes y logs sin contenido privado. Sigue una llamada por intento y consumo nuevo estimado por duración, conservando históricos.
+
+49 pruebas PASS, voz sintética española aceptada e inglesa rechazada en servicio real modificado, typecheck/lint/Vinext/Next PASS. Corrección de regex de test RLS para nombres con dígitos, sin modificar migraciones. No desplegado; QA continúa en `fabda4b`, cumpleaños sigue en commit local `a9e9fdd`. Diagnóstico pedagógico sin generar. Alcance, límites de exactitud, fuentes y rollback en `docs/qa/QA_DICTADO_ESPANOL_2026-10-20.md`.
+
 ## 2026-10-20 — Diez niños con retratos y cumpleaños integrados
 
 Por autorización posterior a la entrega del logo, la matrícula QA ahora contiene diez niños con nombres naturales y diez retratos genéricos generados, verificados tras recargar. Capturas y procedencia fuera de Git en `outputs/ayni-recorrido-20261020/`. Entrevistas abiertas sin rellenar, cero observaciones y diagnóstico nuevo; siguiente paso pendiente de revisión con usuario. No se ha generado video.

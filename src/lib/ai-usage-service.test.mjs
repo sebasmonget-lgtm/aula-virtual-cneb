@@ -17,6 +17,8 @@ test("precios estimados usan tokens, caché y duración sin almacenar contenido"
   assert.equal(estimateTextCost({ model: "gpt-6-luna", inputTokens: 300000, cachedInputTokens: 100000, cacheWriteTokens: 150000, outputTokens: 1000 }), 0.05025);
   assert.equal(estimateTextCost({ model: "gpt-6-luna", inputTokens: 100, cachedInputTokens: 50, cacheWriteTokens: 51, outputTokens: 1 }), null);
   assert.equal(estimateTranscriptionCost(60), 0.003);
+  assert.equal(estimateTranscriptionCost(60, "gpt-transcribe"), 0.0045);
+  assert.equal(estimateTranscriptionCost(60, "unknown"), null);
   assert.equal(estimateJevCost(1_000_000), 0.042);
   assert.equal(estimateTextCost({ model: "unknown", inputTokens: 1, outputTokens: 1 }), null);
 });
@@ -44,6 +46,14 @@ test("transcripción prioriza usage real; conserva estimación por duración si 
   });
   assert.deepEqual(writes.map(row => row[9]), [0.00066, 0.0015, 0.0007]);
   assert.deepEqual(writes.map(row => row[10]), ["estimate", "estimate", "provider"]);
+});
+
+test("transcripción con idiomas usa su tarifa por duración sin recalcular históricos", async () => {
+  const writes = [], db = { async query(_sql, values) { writes.push(values); return { rows: [] }; } };
+  await withAiUsageContext({ teacherId: teacherA, db }, () => recordAiUsage({ provider: "openai", workflow: "audio_transcription",
+    model: "gpt-transcribe", durationSeconds: 30, inputTokens: 300, outputTokens: 57 }));
+  assert.equal(writes[0][9], 0.00225);
+  assert.equal(writes[0][10], "estimate");
 });
 
 test("resumen usa el mes de Lima y filtra por docente en servidor", async () => {

@@ -108,6 +108,7 @@ import { loadClassroomSettings, saveClassroomSettings } from "../src/lib/classro
 import { createLocalPrivateEvidenceStorage, createSupabasePrivateEvidenceStorage } from "../src/lib/private-evidence-storage.mjs";
 import { createSupabasePrivateObservationStorage } from "../src/lib/private-observation-storage.mjs";
 import { validateShortAudio, transcribeAndPolishAudio, AUDIO_MIME_TYPES } from "../src/lib/audio-note-service.mjs";
+import { audioTranscriptionFailure } from "../src/lib/audio-transcription-result.mjs";
 import { buildClassifierOptions } from "../src/lib/openai-competency-classifier.mjs";
 import { createJevCompetencySuggester, anonymousDecisionText } from "../src/lib/jev-competency-suggestion.mjs";
 import { jevFeatureEnabled } from "../src/lib/jev-openrouter-decision.mjs";
@@ -812,11 +813,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           .flatMap((row) => [row.first_name,row.last_name,row.preferred_name]).filter(Boolean) : [];
         const result = await transcribeAndPolishAudio({ bytes: media.bytes, mimeType: media.mimeType,
           context: body.context, names, purpose });
-        send(response, 200, { transcript: result.transcript, improved_text: result.improved_text }, origin);
+        send(response, 200, { transcript: result.transcript, improved_text: result.improved_text, language: result.language }, origin);
       } catch (error) {
-        recordOperationalEvent("audio_transcription_failed", { requestId, workflow: "audio" });
-        send(response, error instanceof TypeError ? 422 : 503,
-          { error: error instanceof TypeError ? error.message : "No se pudo transcribir el audio. Puedes escribir la observación." }, origin);
+        const failure = audioTranscriptionFailure(error);
+        recordOperationalEvent("audio_transcription_failed", { requestId, workflow: "audio", status: failure.status, reason: failure.reason });
+        send(response, failure.status, { error: failure.message, reason: failure.reason }, origin);
       }
       return;
     }

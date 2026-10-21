@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 
 // Standard API prices verified on 2026-10-09. Existing events keep their calculated cost.
 // Cache writes replace the uncached-input rate; they are not an additive charge.
-export const AI_USAGE_PRICING_VERSION = "2026-10-10-standard-cache-writes-asr-usage";
+export const AI_USAGE_PRICING_VERSION = "2026-10-20-spanish-transcription";
 const OPENAI_TEXT_RATES = Object.freeze({
   "gpt-6.1-sol": { short: [2, 0.1, 10], long: [4, 0.2, 15] },
   "gpt-6-sol": { short: [2, 0.2, 10], long: [4, 0.4, 15] },
@@ -26,9 +26,10 @@ export function estimateTextCost({ model, inputTokens, cachedInputTokens = 0, ca
   return money(((input - cached - writes) * inputRate + cached * cachedRate + writes * inputRate * 1.25 + output * outputRate) / 1_000_000);
 }
 
-export function estimateTranscriptionCost(durationSeconds) {
+export function estimateTranscriptionCost(durationSeconds, model = "gpt-4o-mini-transcribe") {
+  const rate = model === "gpt-transcribe" ? 0.0045 : model === "gpt-4o-mini-transcribe" ? TRANSCRIPTION_PER_MINUTE : null;
   return Number.isFinite(durationSeconds) && durationSeconds > 0
-    ? money(durationSeconds * TRANSCRIPTION_PER_MINUTE / 60) : null;
+    && rate !== null ? money(durationSeconds * rate / 60) : null;
 }
 
 export function estimateTranscriptionTokenCost({ inputTokens, outputTokens }) {
@@ -58,8 +59,9 @@ export async function recordAiUsage({ provider, workflow, model, inputTokens = n
   const duration = Number.isFinite(durationSeconds) && durationSeconds > 0 ? durationSeconds : null;
   let cost = Number.isFinite(providerCostUsd) && providerCostUsd >= 0 ? money(providerCostUsd) : null;
   let costSource = cost === null ? "unpriced" : "provider";
-  if (cost === null && provider === "openai" && model === "gpt-4o-mini-transcribe") {
-    cost = estimateTranscriptionTokenCost({ inputTokens: input, outputTokens: output }) ?? estimateTranscriptionCost(duration);
+  if (cost === null && provider === "openai" && ["gpt-4o-mini-transcribe", "gpt-transcribe"].includes(model)) {
+    cost = model === "gpt-transcribe" ? estimateTranscriptionCost(duration, model)
+      : estimateTranscriptionTokenCost({ inputTokens: input, outputTokens: output }) ?? estimateTranscriptionCost(duration, model);
     if (cost !== null) costSource = "estimate";
   } else if (cost === null && provider === "openai") {
     cost = estimateTextCost({ model, inputTokens: input, cachedInputTokens: cached ?? 0, cacheWriteTokens, outputTokens: output });
