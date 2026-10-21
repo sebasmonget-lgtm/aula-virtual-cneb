@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## 2026-10-21 — Candidata de piloto sin promocionar Producción
+
+Preparar un alias Preview propio desde checkout limpio y commit identificado, con reloj de QA desactivado, sin agregar cambios de aplicación para pasar verificaciones. Mantener protección Vercel y explicitar que comparte la base QA; antes del piloto externo, separar datos/configuración y resolver accesos. Una restauración PGlite valida consistencia de datos y archivos, no recuperación de los servicios cloud. No convertir guardas de cierre en errores ni completar notas para obtener un video: mostrar pendientes y conservar confirmación docente. Montaje de capturas y voz local se identifica como demostración; móvil físico se prueba posteriormente con la usuaria. Detalle en QA_PILOTO_Y_VIDEO_2026-10-21.md.
+
 ## 2026-10-20 — API temporal de QA para Sol, conservando Luna y dictado
 
 Por petición expresa se habilita un gateway de texto opcional con tres variables servidor AYNI_TEXT_API_PROFILE, AYNI_TEXT_API_BASE_URL y AYNI_TEXT_API_KEY. El perfil mirai admite exclusivamente https://api.miraiapi.com/v1 y exige clave propia; solo Sol/Astra usan ese destino. Luna conserva modelo, endpoint y clave existentes; audio continúa independiente. Sin modificar política curricular, schemas, razonamiento ni permisos. Rollback: quitar las tres variables y volver a desplegar; el endpoint no debe cambiarse con la clave del proveedor anterior.

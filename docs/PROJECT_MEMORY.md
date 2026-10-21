@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-21 — Candidata interna para piloto y videos montados
+
+Candidata separada en ayni-aula-piloto-20261021.vercel.app, commit limpio 46a918f, Preview dpl_GEHfLmemBk3mh6EXgHejERxFmvLr, reloj QA desactivado. No se cambia aplicación, modelos, prompts, plantillas, Producción ni alias QA. 149 checks reales de aislamiento con dos Auth, 66 tablas y 13 archivos; 92 de release/renovación/logout; 14 pruebas de seguridad y 65 de cierre PASS. Typecheck/build PASS; lint 0 errores y una advertencia existente. Restauración local comprobada de 86 tablas/770 filas y 13 archivos, no recuperación de servicios cloud. Hashes originales coinciden; solo fixture adicional de segunda docente QA. Protección Vercel y base QA compartida permanecen: no presentar como piloto externo listo antes de separar datos y resolver accesos.
+
+Tutorial MP4 2:31 y presentación 0:42, voz local en español, subtítulos, catorce capítulos y aviso de datos/imágenes generados. Capturas cubren diagnóstico a revisión previa al cierre, incluyendo dictado, proyecto y celular. El cierre actual tiene pendientes: no hay captura nueva de cierre confirmado ni se inventan valoraciones para producirla. Celular físico pendiente con usuaria. USD 0 de IA nuevos; acumulado anterior 2,63755482/111 con precio y siete intentos históricos sin precio conservado. Entrega outputs/Ayni-piloto-y-video-2026-10-21; evidencia, límites y rollback en QA_PILOTO_Y_VIDEO_2026-10-21.md. Reemplaza la nota histórica «video sin montar» de la revisión móvil.
+
 ## 2026-10-20 — API temporal de QA para Sol, conservando Luna y dictado
 
 Por petición expresa se habilita un gateway de texto opcional con tres variables servidor AYNI_TEXT_API_PROFILE, AYNI_TEXT_API_BASE_URL y AYNI_TEXT_API_KEY. El perfil mirai admite exclusivamente https://api.miraiapi.com/v1 y exige clave propia; solo Sol/Astra usan ese destino. Luna conserva modelo, endpoint y clave existentes; audio continúa independiente. Sin modificar política curricular, schemas, razonamiento ni permisos. Rollback: quitar las tres variables y volver a desplegar; el endpoint no debe cambiarse con la clave del proveedor anterior.
