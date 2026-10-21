@@ -17,6 +17,16 @@ test('digital activity requires explicit availability before it can be recommend
   assert.equal(JSON.stringify(experiences),original);
 });
 
+test('an open child picker keeps its order while coverage updates, including search and another record',()=>{
+  const students=[{id:'ana',name:'Ana'},{id:'beto',name:'Beto'}];
+  const order=guidedStudentsByCoverage(students,'oral',{'ana:oral':2,'beto:oral':0}).map(row=>row.student.id);
+  const updated={'ana:oral':0,'beto:oral':3};
+  assert.deepEqual(order,['beto','ana']);
+  assert.deepEqual(guidedStudentsByCoverage(students,'oral',updated,'',order).map(row=>[row.student.id,row.count]),[['beto',3],['ana',0]]);
+  assert.deepEqual(guidedStudentsByCoverage(students,'oral',updated,'ana',order).map(row=>row.student.id),['ana']);
+  assert.deepEqual(guidedStudentsByCoverage(students,'oral',updated).map(row=>row.student.id),['ana','beto']);
+});
+
 test('legacy nature IDs remain valid while overlapping interests are presented once',()=>{
   const details={interest_tags:['nature','plants','drawing']};
   assert.ok(interviewInterestOptions.some(option=>option.id==='nature'));

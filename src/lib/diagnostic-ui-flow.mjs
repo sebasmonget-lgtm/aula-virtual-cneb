@@ -73,10 +73,13 @@ export function experiencePriorityLabel(item) {
   return 'Con registros en todas sus competencias';
 }
 
-export function guidedStudentsByCoverage(students, competencyId, coverage, query='') {
+export function guidedStudentsByCoverage(students, competencyId, coverage, query='', order=[]) {
+  const positions=new Map(order.map((id,index)=>[id,index]));
   return students.filter(student=>student.name.toLocaleLowerCase('es').includes(query.trim().toLocaleLowerCase('es')))
     .map(student=>({student,count:coverage[`${student.id}:${competencyId}`]??0}))
-    .sort((a,b)=>a.count-b.count||a.student.name.localeCompare(b.student.name,'es'));
+    .sort((a,b)=>order.length
+      ? (positions.get(a.student.id)??Infinity)-(positions.get(b.student.id)??Infinity)||a.student.name.localeCompare(b.student.name,'es')
+      : a.count-b.count||a.student.name.localeCompare(b.student.name,'es'));
 }
 
 export const guidedExperienceIllustrations = {
