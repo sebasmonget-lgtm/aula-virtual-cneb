@@ -18,3 +18,27 @@ test('teacher removals are not restored and long omitted text stays verbatim',()
   assert.equal(result.map(item=>item.text).join(''),text);
   assert.ok(result.every(item=>item.source_turn===1&&item.text.length<=500));
 });
+
+test('app-only turns stay out of planning while omitted pedagogical decisions are preserved',()=>{
+  const texts=['Tenemos bloques y cajas.','Guarda el documento y continúa.','Quiero explorar las sombras.','Descarga el informe en Word.'];
+  const items=[{text:'Tenemos bloques y cajas.',source_turn:0,support_text:texts[0]}];
+  const result=completeContextSources(items,texts,[],[1,3]);
+  assert.deepEqual(result.map(item=>item.source_turn),[0,2]);
+  assert.equal(result[1].text,texts[2]);
+  assert.equal(texts.length,4,'the original conversation is not rewritten');
+});
+
+test('a mixed turn preserves its pedagogical span and an explicit child project is not banned by its title',()=>{
+  const texts=['Las familias podrán contar relatos sin compras. Ahora crea Mi año.','Quiero un proyecto llamado Mi año donde cada niño elija qué contar de sí.'];
+  const items=[{text:'Las familias podrán contar relatos sin compras.',source_turn:0,support_text:'Las familias podrán contar relatos sin compras.'}];
+  const result=completeContextSources(items,texts);
+  assert.deepEqual(result.map(item=>item.text),[items[0].text,texts[1]]);
+});
+
+test('invalid or contradictory turn exclusions fail before discarding context',()=>{
+  const texts=['Hay un patio pequeño.'];
+  const items=[{text:texts[0],support_text:texts[0],source_turn:0}];
+  for(const invalid of [[-1],[1],[0,0],['0'],null])assert.throws(()=>completeContextSources([],texts,[],invalid),/decisiones pedagógicas/);
+  assert.throws(()=>completeContextSources(items,texts,[],[0]),/decisiones pedagógicas/);
+  assert.deepEqual(completeContextSources([],texts,[],[0]),[]);
+});

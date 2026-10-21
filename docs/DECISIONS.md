@@ -1574,3 +1574,7 @@ El generador diario no debe añadir prohibiciones de explorar ausentes del mapa:
 ### Revisión móvil sin rediseño · 2026-10-21
 
 Asistencia conserva las cuatro categorías y su confirmación explícita; antes de `sm` las distribuye en dos columnas para que las etiquetas quepan. La X compartida conserva el icono y gana área de interacción de 44 px. El detalle de una propuesta conserva la posición del calendario anual, también antes de desarrollar el proyecto. No cambiar fuentes pedagógicas ni regenerar IA para comprobar adaptación móvil. Capturas de navegador redimensionado se identifican como tales; pruebas de cámara, micrófono, teclado y gestos requieren dispositivo real. Ver QA_MOVIL_2026-10-21.md.
+
+### Órdenes de aplicación y decisiones pedagógicas · 2026-10-21
+
+Generar, guardar, descargar, abrir o continuar son operaciones del producto cuando se refieren al uso de Ayni; no se convierten en intereses, temas o proyectos. La conversación conserva esos mensajes y clasifica explícitamente los turnos sin contenido pedagógico para que la recuperación literal no los importe como contexto. Los mensajes mixtos conservan sus fragmentos pedagógicos y su procedencia. No usar listas de palabras prohibidas: un nombre de pantalla puede coincidir con un proyecto válido si existe intención pedagógica explícita. No reescribir históricos ni eliminar decisiones docentes por inferencia. Validar exclusiones y mantener CAS, permisos y recuperación. Ver QA_DESDE_CERO_Y_TUTORIAL_2026-10-21.md.

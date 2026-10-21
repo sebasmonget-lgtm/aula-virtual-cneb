@@ -119,8 +119,8 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
   const context={id:student.classroom_id,age:5,year:2026,starts_on:"2026-03-02",ends_on:"2026-12-31",annual_planning_context:{resources:"Sin piscina"}},calendar={blocks:[],days:[]};
   const brief=buildAnnualPlanningBrief({context,snapshot,curriculum,calendar});
   await t.test("AnnualPlanningBrief retains negation/subject/source, unknowns and institutional context, uses Luna",()=>{assert.equal(brief.sources[0].support_text,"No le interesa el agua.");assert.equal(brief.sources[0].subject,"child_1");assert.equal(brief.sources[0].kind,"family_report");assert.deepEqual(brief.unknowns,[ids[0]]);assert.equal(brief.classroom.institutional_context.resources,"Sin piscina");assert.equal(resolveAIExecutionPlan({workflow:"annual_journey_conversation",task:"generation"}).model,"gpt-6-luna");});
-  let calls=0,lastBundle,failNext=false;
-  const createProvider=plan=>({generate:async request=>{assert.equal(plan.model,"gpt-6-luna");calls++;lastBundle=request.ai_context_bundle;if(failNext){failNext=false;throw new Error('provider interrupted');}const decisions=lastBundle.teacher_decisions;return {output:{status:decisions.length&&decisions[0]!=="Quiero comunidad"?"ready":"needs_clarification",message:"Ya revisé los registros disponibles.",question:"¿Hay alguna experiencia que quieras realizar?",chips:["No tengo una idea todavía"],context_items:decisions.map((text,index)=>({text,source_turn:index,support_text:text}))}};}});
+  let calls=0,lastBundle,failNext=false,nextAnswer=null;
+  const createProvider=plan=>({generate:async request=>{assert.equal(plan.model,"gpt-6-luna");calls++;lastBundle=request.ai_context_bundle;if(failNext){failNext=false;throw new Error('provider interrupted');}if(nextAnswer){const output=nextAnswer;nextAnswer=null;return {output};}const decisions=lastBundle.teacher_decisions;return {output:{status:decisions.length&&decisions[0]!=="Quiero comunidad"?"ready":"needs_clarification",message:"Ya revisé los registros disponibles.",question:"¿Hay alguna experiencia que quieras realizar?",chips:["No tengo una idea todavía"],context_items:decisions.map((text,index)=>({text,source_turn:index,support_text:text}))}};}});
   async function conversation(method,body={},owner=teacher){sent=null;await handlePlanningConversation({request:{method},response,url:new URL('http://localhost/api/annual-journey/conversation'),db,context,teacherId:owner,snapshot,curriculum,calendar,sources:{names:["Camila"]},send,readJson:async()=>body,createProvider});return sent.value;}
   await t.test("context draft saves recover through GET, respect owner/CAS and add zero AI calls",async()=>{
    let c=await conversation("POST");
@@ -185,6 +185,25 @@ test("initial journey: atomic decisions, private photos/invitations and bounded 
    assert.equal(c.messages.at(-1).text,"Ya revisé los registros disponibles.","no sustituye la respuesta al cuarto aporte por el cierre genérico");
    assert.match(c.teacherIdeas,/Sin pedir compras/);assert.ok(c.contextItems.some(item=>item.source_turn===3&&item.text.includes('compras')));
    const oldId=c.id;snapshot.source_fingerprint="changed";await assert.rejects(conversation("GET"));c=await conversation("POST");assert.notEqual(c.id,oldId);
+  });
+  await t.test("app-only and mixed replies preserve the transcript without turning commands into planning context",async()=>{
+   await db.query(`update ai_pending_generations set expires_at=now() where workflow='annual_journey_conversation'`);
+   let c=await conversation("POST");
+   const operation='Descarga el informe y continúa.';
+   nextAnswer={status:'ready',message:'Puedes continuar.',question:'',chips:[],context_items:[],non_context_turns:[0]};
+   c=await conversation('POST',{id:c.id,expectedRevision:c.revision,text:operation});
+   assert.deepEqual(c.contextItems,[]);assert.equal(c.teacherIdeas,operation);
+   assert.equal(c.messages.filter(m=>m.role==='teacher').length,1);
+   const decision='Quiero un proyecto llamado Mi año donde los niños elijan qué contar de sí.';
+   nextAnswer={status:'ready',message:'Conservo esa propuesta.',question:'',chips:[],context_items:[{text:decision,source_turn:1,support_text:decision}],non_context_turns:[0]};
+   c=await conversation('POST',{id:c.id,expectedRevision:c.revision,text:decision+' Después guarda el documento.'});
+   assert.deepEqual(c.contextItems.map(item=>item.text),[decision]);
+   const before=calls;assert.deepEqual((await conversation('GET')).contextItems,c.contextItems);assert.equal(calls,before);
+   const revision=c.revision;
+   nextAnswer={status:'ready',message:'No debe guardarse.',question:'',chips:[],context_items:[{text:decision,source_turn:1,support_text:decision}],non_context_turns:[1]};
+   await assert.rejects(conversation('POST',{id:c.id,expectedRevision:c.revision,text:'Hay papel disponible.'}),/decisiones pedagógicas/);
+   const kept=await conversation('GET');assert.equal(kept.revision,revision);assert.deepEqual(kept.contextItems,c.contextItems);
+   assert.equal(kept.messages.at(-1).text,'Hay papel disponible.','a rejected classification does not lose the teacher reply');
   });
  }finally{await db.close();}
 });
