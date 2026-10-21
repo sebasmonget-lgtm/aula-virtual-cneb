@@ -20,7 +20,7 @@ Rollback: conservar el lector recuperable mientras existan respuestas en curso; 
 
 ## Estado
 
-Implementación y validación en curso. No se declara mejora de tiempos, capacidad masiva ni publicación hasta obtener recibos.
+Finalizado y publicado solo en QA, código `5a6f81634fb22ebabc5c845d5fa2ed54b4c3b90f`, deployment `dpl_8BEetmESi7yxa63UeMPVnWEQyiAB`. Producción conserva `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf`. Las anotaciones de pendientes siguientes describen etapas anteriores; el cierre comprobado está al final.
 
 ## Implementación comprobada localmente
 
@@ -59,3 +59,17 @@ Se verificaron estudiantes y doce grupos de registros en las columnas comunes de
 La conversación adjunta plantea riesgos razonables, pero veinte docentes simuladas no prueban la capacidad real de Vercel, Supabase o la organización de IA. No se verificaron los límites contratados ni se elevó concurrencia automáticamente. Las claves de una misma organización/proyecto no multiplican por sí solas las cuotas. Se preserva el pool y el hosting: no hay medición que justifique sustituirlos o subir sus límites.
 
 Fuentes oficiales consultadas: [OpenAI: background](https://developers.openai.com/api/docs/guides/background), [límites y Retry-After](https://developers.openai.com/api/docs/guides/rate-limits), [latencia](https://developers.openai.com/api/docs/guides/latency-optimization), [Vercel: vida de funciones y waitUntil](https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package), [Supabase: conexiones](https://supabase.com/docs/guides/database/connecting-to-postgres). El almacenamiento temporal de respuestas background permite su consulta; se mantiene `store:false` y la proyección anónima existente, sin medios.
+
+## Cierre de QA y prueba real del editor principal
+
+Commit identificado, push, checkout limpio y gates finales PASS: typecheck 7,692 s; lint 34,734 s; build 20,451 s; 41 pruebas focalizadas 23,786 s. Estas últimas se solapan con las 168 regresiones distintas: no se suman como 209. Publicación final 193,275 s y smoke 62,676 s, 66 comprobaciones correctas entre Preview y alias QA. El primer staging se detuvo por una expectativa incorrecta del smoke; los dos previews anteriores nunca sustituyeron el alias. Producción no se movió.
+
+Segundo ensayo real desde el botón del editor principal publicado: aviso pendiente visible a los 683 ms desde el clic (incluye automatización UI, no HTTP puro). Se escribió y guardó una nota, se salió del editor y se volvió. Ayni ofreció el resultado sin reemplazar esa nota ni confirmar el diagnóstico. Nueva solicitud al terminar reutilizó la propuesta: una creación y un único evento de consumo. Dieciocho consultas al proveedor, once lecturas válidas. Resultado persistido aproximadamente a los 179,6 s; el verificador lo detectó a los 186,808 s. La reconsulta HTTP desde un segundo cliente tardó 423,681 ms; no es la solicitud inicial. El proceso completo de ensayo, incluida preparación y espera de la interacción, duró 216,590 s.
+
+La comprobación posterior comparó hashes de 64 tablas, los tres diagnósticos anteriores completos y el historial de consumo. Todo anterior intacto; única adición pedagógica deliberada: borrador v4 sin confirmar, con nota docente y propuesta lista separada. Trece archivos privados conservados. La comparación de fechas de PostgreSQL normaliza solo su representación Date/ISO, sin cambiar valores. No se aplicó la propuesta ni se enviaron medios a IA. El Word confirmado sigue leyendo v3.
+
+Dos creaciones reales de un máximo total de seis: US$0,098631 en copia aislada y US$0,1111735 en QA, total estimado US$0,2098045; cero costos nuevos desconocidos. Acumulado con auditoría anterior: 96 llamadas con precio, US$1,14970942, más siete intentos históricos sin precio. Las consultas de recuperación no cuentan como nuevas generaciones. No se afirma ahorro de duración de la IA: 130 s y unos 180 s siguen siendo esperas largas.
+
+Se comprobó recuperación al navegar y reutilización; no se acredita una prueba prolongada sin ningún cliente consultando. El verificador secundario pausó 80 s, pero la interfaz estuvo abierta parte de ese intervalo. No hay cron configurado en QA: se conserva continuación firmada y reactivación al consultar, sin crear cron ni cambiar infraestructura. Capacidad masiva real y cuotas contratadas siguen sin medirse. Sin nuevas migraciones, permisos, modelos, prompts o variables de concurrencia cloud.
+
+Capturas finales de escritorio `013a` y `013b`, tomadas después de publicar y verificar, añadidas al recorrido para video; dictado en español conserva su segmento. No se montó video. El intento de cambiar viewport no produjo píxeles móviles y no se declara una nueva revisión móvil. Entrega: `outputs/Ayni-optimizaciones-2026-10-21/`, reporte Word, mediciones, costos y verificación; fuentes privadas y recibos permanecen fuera de Git.
