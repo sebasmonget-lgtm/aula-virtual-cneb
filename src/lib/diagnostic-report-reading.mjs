@@ -55,7 +55,22 @@ export function diagnosticStudentFollowup(child){
   const next=sentences.filter(sentence=>future.test(sentence));
   return {comment:next.length?sentences.filter(sentence=>!future.test(sentence)).join(' '):text,nextStep:next.join(' ')};
 }
-export function diagnosticReportFollowups(document){
-  const children=document?.content?.report_snapshot?.children;
-  return (Array.isArray(children)?children:[]).map(child=>({studentId:child.student_id,name:child.name,...diagnosticStudentFollowup(child)}));
+export function diagnosticReportFollowups(document,cards=document?.competencies??[]){
+  const snapshot=document?.content?.report_snapshot??{},children=snapshot.children;
+  const names=new Map(cards.map(card=>[card.id,card.name||card.official_name]));
+  return (Array.isArray(children)?children:[]).map(child=>{
+    const followup=diagnosticStudentFollowup(child),seen=new Set();
+    const records=(snapshot.observations??[]).filter(item=>{
+      if(item.student_id!==child.student_id||!String(item.observation_text??'').trim())return false;
+      if(!item.id)return true;
+      const key=`${item.student_id}:${item.source_type??''}:${item.id}`;
+      if(seen.has(key))return false;seen.add(key);return true;
+    }).sort((a,b)=>diagnosticObservedDay(a.observed_at).localeCompare(diagnosticObservedDay(b.observed_at))||String(a.id??'').localeCompare(String(b.id??'')));
+    const selected=records.length>1?[records[0],records.at(-1)]:records;
+    const excerpts=selected.map(item=>`${names.get(item.competency_id)||'Observación'}: “${diagnosticRecordExcerpt(item.observation_text)}”`);
+    const situation=[followup.comment&&`Docente: ${followup.comment}`,
+      !String(child.teacher_comment??'').trim()&&excerpts.length&&`En el aula: ${excerpts.join('; ')}${records.length>selected.length?` (Se muestran ${selected.length} de ${records.length} registros; consultar los demás en Ayni).`:''}`,
+      String(child.family_context?.adaptation_context??'').trim()&&`Familia informa: ${child.family_context.adaptation_context.trim()}`].filter(Boolean).join(' ')||'Información insuficiente.';
+    return {studentId:child.student_id,name:child.name,...followup,situation,records:records.length};
+  });
 }

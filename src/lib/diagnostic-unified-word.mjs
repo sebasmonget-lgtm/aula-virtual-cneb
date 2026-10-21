@@ -1,7 +1,7 @@
 import path from "node:path";
 import { insertCoverQuickView, renderUnifiedWord, removeParagraphsContaining, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
-import {diagnosticCompetencyReading,diagnosticRecordExcerpt,diagnosticReportPurpose,diagnosticObservedDay,diagnosticReportPeriod,diagnosticStudentFollowup} from './diagnostic-report-reading.mjs';
+import {diagnosticCompetencyReading,diagnosticRecordExcerpt,diagnosticReportPurpose,diagnosticReportPeriod,diagnosticReportFollowups} from './diagnostic-report-reading.mjs';
 
 const templateUrl = path.join(process.cwd(), "assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx");
 const competencyFields = [
@@ -39,10 +39,6 @@ function replaceFromParagraphToTable(xml, startText, endText, body) {
   if (!start || !end) throw new Error(`No se encontró el bloque ${startText} en la plantilla diagnóstica.`);
   return xml.slice(0, start.index) + body + xml.slice(end.index);
 }
-
-// Civil dates are already local. Instants must be projected into the school's
-// time zone before being used as calendar dates in a teacher-facing document.
-const observedDay=diagnosticObservedDay;
 
 function uniqueObservations(observations) {
   const seen = new Set();
@@ -162,23 +158,8 @@ function valuesFor(document, context, cards) {
   };
   // The teacher's confirmed comments are the nominal interpretation. No model
   // invents a child-specific diagnosis or a future observation for this table.
-  const followups = children.map((child) => {
-    const followup=diagnosticStudentFollowup(child);
-    const childObservations = observations.filter((item) => item.student_id === child.student_id && clean(item.observation_text));
-    const chronological = uniqueObservations(childObservations).sort((a, b) => observedDay(a.observed_at).localeCompare(observedDay(b.observed_at))||String(a.id??'').localeCompare(String(b.id??'')));
-    const selected = chronological.length > 1 ? [chronological[0], chronological.at(-1)] : chronological;
-    const excerpts = selected.map((item) =>
-      `${competencyNames.get(item.competency_id) || "Observación"}: “${diagnosticRecordExcerpt(item.observation_text)}”`);
-    return {
-      name: child.name,
-      situation: [clean(followup.comment) && `Docente: ${clean(followup.comment)}`,
-        !clean(child.teacher_comment) && excerpts.length && `En el aula: ${excerpts.join("; ")}${chronological.length > selected.length ? ` (Se muestran ${selected.length} de ${chronological.length} registros; consultar los demás en Ayni).` : ""}`,
-        clean(child.family_context?.adaptation_context) && `Familia informa: ${clean(child.family_context.adaptation_context)}`].filter(Boolean).join(" ") || "Información insuficiente.",
-      support: followup.nextStep,
-      records: chronological.length,
-      date: "Durante las próximas experiencias",
-    };
-  });
+  const followups = diagnosticReportFollowups(document,cards).map(child=>({name:child.name,situation:child.situation,
+    support:child.nextStep,records:child.records,date:"Durante las próximas experiencias"}));
   return { values, followups };
 }
 

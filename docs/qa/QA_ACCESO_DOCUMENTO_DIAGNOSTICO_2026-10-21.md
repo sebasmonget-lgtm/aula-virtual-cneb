@@ -19,3 +19,9 @@ Abrir la pantalla solo consulta. Recuperar un borrador escrito, un trabajo activ
 ## Prevención y reversión
 
 Al simplificar una ruta, revisar por interfaz que cada documento conserve una entrada visible desde cero y desde una cuenta con año confirmado. Probar el acceso y una recuperación sin otra generación. Reversión acotada: retirar el botón y el componente nuevo; los documentos y trabajos persistidos siguen disponibles en servidor y no se borran ni se migran. Producción no se modifica en esta ronda.
+
+## Comprobación por interfaz
+
+Publicado solo en QA como 2c3d36a, con 24 comprobaciones HTTP y fuentes conservadas. Pantallas de escritorio 1366 y móvil 390 sin desbordamiento horizontal. Un diagnóstico se prepara por UI; entre la solicitud y el evento de uso transcurren unos 150 s, no incluye el tiempo posterior de lectura. Costo estimado del evento USD 0,0960885. Se sale a otra pantalla y se recupera la propuesta, se revisan once lecturas por competencia, se edita una frase, se guarda para después y se recupera exactamente esa corrección sin nueva IA. Confirmar abre el documento canónico. Descarga Word real, render de catorce páginas iniciado y revisión visual en curso. Fechas de registros y recojo inicial coinciden del 16 al 27 de marzo.
+
+Dos detalles encontrados durante la comprobación: al guardar para después hay que refrescar la lista de Documentos; el seguimiento individual del lector solo mostraba nombres cuando no había comentarios opcionales, aunque el Word sí mostraba extractos observados. Se refresca la lista al volver y se comparte la misma proyección literal de seguimiento entre lector y Word. No se inventan interpretaciones ni recomendaciones individuales para llenar el espacio.

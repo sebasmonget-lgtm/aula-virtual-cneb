@@ -36,6 +36,19 @@ test('el seguimiento separa solo propuestas explícitas de cada comentario confi
 });
 
 const record='00000000-0000-4000-8000-000000000001';
+
+test('sin comentario individual, pantalla y Word comparten extractos literales con alcance y procedencia',()=>{
+ const doc={competencies:[{id:'MAT_CANTIDAD',name:'Cantidad'}],content:{report_snapshot:{children:[{student_id:'a',name:'Ana',family_context:{adaptation_context:'Prefiere conversar primero en pareja.'}},{student_id:'b',name:'Luis'}],observations:[
+  {id:'last',student_id:'a',competency_id:'MAT_CANTIDAD',observation_text:'Añadió un vaso.',observed_at:'2026-03-20'},
+  {id:'first',student_id:'a',competency_id:'MAT_CANTIDAD',observation_text:'Repartió vasos.',observed_at:'2026-03-16'},
+  {id:'first',student_id:'a',competency_id:'COM_ORAL',observation_text:'Repartió vasos.',observed_at:'2026-03-16'},
+  {id:'middle',student_id:'a',competency_id:'MAT_CANTIDAD',observation_text:'Contó dos cajas.',observed_at:'2026-03-18'}]}}},before=structuredClone(doc);
+ const [ana,luis]=diagnosticReportFollowups(doc);
+ assert.equal(ana.records,3);assert.equal(ana.nextStep,'');assert.equal(ana.comment,'');
+ assert.match(ana.situation,/Cantidad: “Repartió vasos\.”.*Cantidad: “Añadió un vaso\.”/);
+ assert.match(ana.situation,/Se muestran 2 de 3 registros/);assert.match(ana.situation,/Familia informa: Prefiere conversar primero en pareja\./);
+ assert.equal(luis.situation,'Información insuficiente.');assert.equal(luis.records,0);assert.deepEqual(doc,before);
+});
 const sources={known_names:[],comments:[],family_reported_context:[{source_id:'child_1_family_v1',child:'child_1',source_type:'family_reported_context'}],
  observed_records:[{child:'child_1',notes:[{source_id:'child_1_observation_1',record_id:record,source_type:'direct_observation',competency_ids:['MAT_CANTIDAD'],text:'Repartió un vaso a cada muñeco.'}]}]};
 const output=()=>({strengths:'Un niño comprobó un reparto.',needs:'Falta conocer otros repartos.',planning_priorities:'Preparar pedidos para el juego.',

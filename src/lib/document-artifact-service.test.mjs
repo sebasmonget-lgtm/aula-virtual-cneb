@@ -96,6 +96,25 @@ test("F10 conserva pending tras fallo y reintento materializa una sola versión"
   } finally { await f.db.close();await rm(f.root,{recursive:true,force:true}); }
 });
 
+test('un cambio o retiro del logo crea otro archivo sin alterar la fuente ni el archivo anterior',async()=>{
+ const f=await fixture();let renders=0;
+ const render=async(_db,_teacher,_kind,_id,_cards,options)=>{renders++;return {buffer:Buffer.from('PK:logo:'+String(options.logo??'ninguno'))};};
+ try{
+  const before=(await f.db.query('select proposal from annual_plans where id=$1',[f.plan])).rows[0].proposal;
+  const one=await prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,'annual_plan',f.plan,{render,logo:Buffer.from('colegio uno')});
+  const same=await prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,'annual_plan',f.plan,{render,logo:Buffer.from('colegio uno')});
+  assert.equal(one.id,same.id);assert.equal(renders,1);
+  const two=await prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,'annual_plan',f.plan,{render,logo:Buffer.from('colegio dos')});
+  assert.notEqual(one.id,two.id);assert.equal(renders,2);
+  const none=await prepareConfirmedDocumentArtifact(f.db,f.storage,teacher,'annual_plan',f.plan,{render});
+  assert.notEqual(none.id,two.id);assert.equal(renders,3);
+  assert.equal((await readConfirmedDocumentArtifact(f.db,f.storage,teacher,one.id)).bytes.toString(),'PK:logo:colegio uno');
+  assert.equal((await readConfirmedDocumentArtifact(f.db,f.storage,teacher,two.id)).bytes.toString(),'PK:logo:colegio dos');
+  assert.deepEqual((await f.db.query('select proposal from annual_plans where id=$1',[f.plan])).rows[0].proposal,before);
+  assert.equal(await readConfirmedDocumentArtifact(f.db,f.storage,foreign,two.id),null);
+ }finally{await f.db.close();await rm(f.root,{recursive:true,force:true});}
+});
+
 test("F10 renderiza y congela un DOCX real de proyecto confirmado",async()=>{
   const f=await fixture();
   try {

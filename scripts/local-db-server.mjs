@@ -2504,7 +2504,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           metadata: safeAnnualGenerationMetadata(generated.internalMetadata), createdAt: Date.now() });
         send(response, 200, { proposal: inheritedActivityEnabled() ? { ...generated.proposal, teacher_context: cleanText(body.context, 1000) } : generated.proposal, workshop_proposal: workshop?.proposal ?? null,
           workshop_error: workshopError,
-          generation_id: generationId }, origin); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la actividad.",...(error.reason==='insufficient_quota'?{provider_reason:'insufficient_quota'}:{}) }, origin); } return;
+          generation_id: generationId }, origin); } catch (error) { send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error) || "No se pudo generar la actividad.",...(error.reason==='insufficient_quota'?{provider_reason:'insufficient_quota'}:{}),...(jobClassroomId&&typeof error.reason==='string'&&/^[a-z][a-z0-9_]{0,79}$/.test(error.reason)?{preparation_failure_code:error.reason}:{}) }, origin); } return;
     }
     if (request.method === "POST" && url.pathname === "/api/activities") {
       const context = await annualPlanningContext(); const body = await readJson(request); const experience = context && await activeLearningExperience(body.experienceId, context.id); const pending = await pendingAIGenerations.get(body.generationId);
@@ -3052,7 +3052,7 @@ async function preparationDomainRequest(job,pathname,body,method="POST",extra={}
   const response={writeHead(value){status=value;},end(value){result=JSON.parse(value);},setHeader(){},hasHeader(){return false;}};
   await withPedagogicalClock(previewQAClockForJob(job,process.env,currentPedagogicalClock()),()=>requestDatabaseScope.run(activeDb,()=>withAiUsageContext({teacherId:job.teacher_id,db:activeDb},()=>handleAuthenticatedRequest({teacherId:job.teacher_id,
     requestId:job.id,db:activeDb,jobClassroomId:job.classroom_id,preparationItemId:extra.preparationItemId,masterExecution:extra.masterExecution,acceptedBlock:extra.acceptedBlock===true&&job.payload?.acceptance?.policy==="accepted-project-complete-v1"},request,response))));
-  if(status>=400 || !status)throw Object.assign(new Error(result?.message ?? result?.error ?? "Preparation step failed"),{status,provider_reason:result?.provider_reason});
+  if(status>=400 || !status)throw Object.assign(new Error(result?.message ?? result?.error ?? "Preparation step failed"),{status,reason:result?.preparation_failure_code,provider_reason:result?.provider_reason});
   return result;
 }
 async function runPreparationWorker() {

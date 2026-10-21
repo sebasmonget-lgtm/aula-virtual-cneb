@@ -7,4 +7,4 @@ export function diagnosticObservedDay(value:unknown):string;
 export type DiagnosticReportPeriod={kind:'undated'|'cut'|'initial'|'update'|'prior'|'mixed';title:string;from:string;to:string;plannedStart:string;plannedEnd:string;periodLabel:string;startsOn:string;endsOn:string;recordsLabel:string;initialPeriodLabel:string;scopeNote:string};
 export function diagnosticReportPeriod(document:unknown,context?:unknown):DiagnosticReportPeriod;
 export function diagnosticStudentFollowup(child:unknown):{comment:string;nextStep:string};
-export function diagnosticReportFollowups(document:unknown):{studentId:string;name:string;comment:string;nextStep:string}[];
+export function diagnosticReportFollowups(document:unknown,cards?:{id:string;name?:string;official_name?:string}[]):{studentId:string;name:string;comment:string;nextStep:string;situation:string;records:number}[];

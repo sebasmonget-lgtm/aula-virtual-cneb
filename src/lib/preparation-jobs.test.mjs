@@ -75,6 +75,20 @@ test("lease, llamada incierta y firma privada impiden duplicación silenciosa",a
   }finally{await db.close();}
 });
 
+test('la pausa conserva solo códigos privados acotados sin publicar ni guardar mensajes de excepción',async()=>{
+ const {db,teacher,project}=await fixture();try{
+  const job=await enqueueActivityBlock(db,teacher,project);
+  const result=await runPreparationStep(db,async()=>{throw Object.assign(new Error('private secret and prompt content'),{reason:'structured_output_invalid',status:422});});
+  const stored=await ownedPreparationJob(db,teacher,job.id);
+  assert.deepEqual(stored.payload.failure_diagnostic,{code:'structured_output_invalid',provider_code:null,http_status:422});
+  assert.doesNotMatch(JSON.stringify(stored.payload),/private secret|prompt content/);
+  assert.doesNotMatch(JSON.stringify(result),/structured_output_invalid|failure_diagnostic|private secret/);
+  await retryPreparation(db,teacher,job.id);assert.equal((await ownedPreparationJob(db,teacher,job.id)).payload.failure_diagnostic,null);
+  await runPreparationStep(db,async()=>{throw Object.assign(new Error('still private'),{reason:'sk-secret-value',provider_reason:'raw text with spaces',status:999});});
+  assert.deepEqual((await ownedPreparationJob(db,teacher,job.id)).payload.failure_diagnostic,{code:null,provider_code:null,http_status:null});
+ }finally{await db.close();}
+});
+
 test("repreparar un borrador distingue su revisión y rechaza contexto, propiedad o CAS incorrectos",async()=>{
   const {db,teacher,project}=await fixture();try{
     const planId=randomUUID(),proposalId=randomUUID();

@@ -97,7 +97,7 @@ export async function retryPreparation(db,teacherId,id,acceptPotentialRepeat=fal
     if(row.status==="running" && new Date(row.lease_until).getTime()>Date.now())throw new VersionConflictError("La preparación sigue en curso.");
     if(row.status==="succeeded"&&!needsAcceptedProjectContinuation(row))return row;
     if((row.status==="uncertain"||needsAcceptedProjectContinuation(row)&&row.payload.attempt_pending===true) && acceptPotentialRepeat!==true)throw new VersionConflictError("No se pudo comprobar si la última llamada terminó. Confirma el reintento; podría repetir esa llamada.");
-    const payload={...row.payload,error:null,failure_reason:null,attempt_pending:false,resumption_attempts:0};
+    const payload={...row.payload,error:null,failure_reason:null,failure_diagnostic:null,attempt_pending:false,resumption_attempts:0};
     if(row.payload.failure_reason==='insufficient_quota'){
       const provider=payload.project_provider_checkpoint;
       if(provider)provider.provider_responses=Object.fromEntries(Object.entries(provider.provider_responses??{}).filter(([key])=>provider.completed_calls?.[key]));
@@ -160,6 +160,10 @@ export async function runPreparationStep(db,execute,{limits=preparationLimits()}
     }
     job.payload.failure_reason=quota?'insufficient_quota':error.name==='VersionConflictError'?'source_conflict':error.name==='ReferenceError'?'internal_reference':error.reason==='resources_confirmation_missing'?'resources_confirmation_missing':'preparation_step_failed';
     job.payload.failure_stage=job.payload.stage;
+    // Private, bounded machine codes only; never store exception text, prompts or credentials.
+    const safeCode=value=>typeof value==='string'&&/^[a-z][a-z0-9_]{0,79}$/.test(value)?value:null;
+    job.payload.failure_diagnostic={code:safeCode(error.reason),provider_code:safeCode(error.provider_reason),
+      http_status:Number.isInteger(error.status)&&error.status>=400&&error.status<=599?error.status:null};
     job.payload.error=quota?"El servicio de IA no tiene saldo disponible. El avance está guardado. Después de recargar el saldo puedes retomar lo pendiente.":uncertain?"Tu avance está guardado. Necesitamos confirmar el último paso antes de continuar.":"La preparación está guardada y necesita una revisión para continuar.";
     await db.query(`update preparation_jobs_v2 set status=$1,payload=$2::jsonb,lease_until=null,updated_at=now()
       where id=$3 and lease_token=$4 and status='running'`,[uncertain?"uncertain":"failed",JSON.stringify(job.payload),job.id,job.lease_token]);
