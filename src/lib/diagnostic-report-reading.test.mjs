@@ -29,6 +29,9 @@ test('el seguimiento separa solo propuestas explícitas de cada comentario confi
  assert.equal(result[1].nextStep,'Se le ofrecerán telas para probar otra representación.');
  assert.equal(result[2].nextStep,'');assert.equal(result[2].comment,'Sara miró el cuento.');
  assert.equal(result[3].nextStep,'Se mantendrán pasos amplios y pausas.');
+ for(const nextStep of ['Se propondrá otro recorrido y se escuchará su explicación.','Se le ofrecerá otra caja.','Se les invitará a representar su idea.']){
+  assert.deepEqual(diagnosticStudentFollowup({teacher_comment:`Explicó su idea. ${nextStep}`}),{comment:'Explicó su idea.',nextStep});
+ }
  assert.deepEqual(diagnosticStudentFollowup({}),{comment:'',nextStep:''});assert.deepEqual(doc,before);
 });
 

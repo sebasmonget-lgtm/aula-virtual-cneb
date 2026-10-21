@@ -229,10 +229,10 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
         : "Preparar una oportunidad de observación pertinente antes de concluir sobre esta competencia.");
       return paragraph(name, true) + paragraph("Ejemplos de los registros", true) + evidence +
         (rest > 0 ? paragraph(`${rest} registros más disponibles en Ayni.`, false, true) : "") +
-        paragraph(`Lectura inicial: ${reading}`, false, false, true) + paragraph(`Decisión inicial: ${decision}`, true, false, false);
+        paragraph(`Lectura de este corte: ${reading}`, false, false, true) + paragraph(`Siguiente paso: ${decision}`, true, false, false);
     }).join("");
   output = replaceSectionBody(output, "VI. ANÁLISIS POR COMPETENCIAS", "VII. PRIORIDADES Y DECISIONES PEDAGÓGICAS",
-    paragraph("VI. ANÁLISIS POR COMPETENCIAS", true) + paragraph("Cada bloque muestra hechos registrados y una decisión inicial; no asigna un nivel de logro.") + competencies);
+    paragraph("VI. ANÁLISIS POR COMPETENCIAS", true) + paragraph("Cada bloque muestra hechos registrados y un siguiente paso; no asigna un nivel de logro.") + competencies);
   const individual = followups.map((child) => [
     paragraph(child.name, true),
     paragraph(`Registros y contexto: ${child.situation}`, false, true, true),
@@ -244,7 +244,11 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
   const period=diagnosticReportPeriod({content:{report_snapshot:snapshot}},context);
   output = replaceWordText(output, "Periodo de recojo", period.periodLabel);
   output = replaceWordText(output, "Periodo diagnóstico", period.periodLabel);
-  if(period.kind==='update')output=replaceWordText(output,'EVALUACIÓN','ACTUALIZACIÓN');
+  if(period.kind==='update'){
+    output=replaceWordText(output,'EVALUACIÓN','ACTUALIZACIÓN');
+    output=replaceWordText(output,'Para la planificación anual','Para ajustar la planificación');
+    output=replaceWordText(output,'Para las primeras experiencias','Para las próximas experiencias');
+  }
   output = replaceWordText(output, "Conocer cómo inicia el grupo para acompañar mejor sus aprendizajes.", diagnosticReportPurpose);
   if (Number(context.school_year) !== 2026) output = removeParagraphsContaining(output, ["Orientaciones para el inicio del año escolar 2026"]);
   // Preserve the original heading runs/icons, but use a native paragraph so
@@ -267,7 +271,7 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
     while(true){const first=/^\s*(<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>)/.exec(remaining);if(!first||xmlText(first[1]).trim()||/<w:(?:drawing|pict|fldChar|sectPr)\b/.test(first[1]))break;remaining=remaining.slice(first[0].length);}
     return heading+remaining;
   });
-  return output;
+  return output.replace(/<w:t>/g,'<w:t xml:space="preserve">');
 }
 
 export async function renderDiagnosticUnifiedWord(document, context, cards = [], { logo = null } = {}) {
@@ -279,6 +283,6 @@ export async function renderDiagnosticUnifiedWord(document, context, cards = [],
     ["Qué falta observar", clean(group.needs).split(/(?<=[.!?])\s+/u)[0]],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl, values, logo, compactTrailingSpace: true,
-    transformPart:(_part,xml)=>diagnosticReportPeriod(document,context).kind==='update'?replaceWordText(xml,'EVALUACIÓN DIAGNÓSTICA','ACTUALIZACIÓN DIAGNÓSTICA'):xml,
+    transformPart:(_part,xml)=>diagnosticReportPeriod(document,context).kind==='update'?replaceWordText(xml,'EVALUACIÓN DIAGNÓSTICA','ACTUALIZACIÓN DIAGNÓSTICA').replace(/<w:t>/g,'<w:t xml:space="preserve">'):xml,
     transform: (xml) => retainCoverPageBreak(insertCoverQuickView(transformDiagnostic(xml, { ...context, competencyCards: cards }, snapshot, followups, values), "El diagnóstico en una mirada", overview)) });
 }

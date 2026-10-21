@@ -51,7 +51,7 @@ export function diagnosticReportPeriod(document,context={}){
 export function diagnosticStudentFollowup(child){
   const text=typeof child?.teacher_comment==='string'?child.teacher_comment.trim():'';
   const sentences=[...new Intl.Segmenter('es',{granularity:'sentence'}).segment(text)].map(row=>row.segment.trim()).filter(Boolean);
-  const future=/^(?:Conviene\b|Se (?:le |les )?(?:ofrecer[aá]n?|propondr[aá]n?|mantendr[aá]n?|invitar[aá]n?)\b|(?:Ofreceremos|Propondremos|Mantendremos|Invitaremos)\b)/iu;
+  const future=/^(?:Conviene\b|Se (?:le |les )?(?:ofrecer[aá]n?|propondr[aá]n?|mantendr[aá]n?|invitar[aá]n?)(?=\s|[.,;:]|$)|(?:Ofreceremos|Propondremos|Mantendremos|Invitaremos)\b)/iu;
   const next=sentences.filter(sentence=>future.test(sentence));
   return {comment:next.length?sentences.filter(sentence=>!future.test(sentence)).join(' '):text,nextStep:next.join(' ')};
 }
