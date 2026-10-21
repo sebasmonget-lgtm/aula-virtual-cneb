@@ -98,9 +98,17 @@ test("Preview QA clock works before onboarding, validates Origin, and reloads si
     const reloadedDashboard = await (await fetch(`${instance.base}/api/dashboard`, { headers: qaHeaders })).json();
     assert.equal(reloadedDashboard.profile.logo_url, firstDashboard.profile.logo_url);
     const imported = await fetch(`${instance.base}/api/students/import`, { method: "POST", headers: qaHeaders,
-      body: JSON.stringify({ students: [{ firstName: "Niña", lastName: "Ficticia QA", birthDate: "2021-03-01" }] }) });
+      body: JSON.stringify({ students: [{ firstName: "Niña", lastName: "Ficticia QA", birthDate: "2020-12-18" },
+        { firstName: "Abril", lastName: "Paredes", birthDate: "2020-12-19" }] }) });
     assert.equal(imported.status, 201, await imported.clone().text());
-    const student = (await imported.json()).dashboard.students[0];
+    const importedDashboard = (await imported.json()).dashboard;
+    const student = importedDashboard.students.find(item => item.first_name === "Niña");
+    assert.equal(importedDashboard.today.birthdays.today[0].student_id, student.id);
+    assert.equal(importedDashboard.today.birthdays.tomorrow[0].name, "Abril Paredes");
+    const birthdayCalendar = await fetch(`${instance.base}/api/school-calendar?birthdayYear=2026`, { headers: qaHeaders });
+    assert.equal(birthdayCalendar.status, 200);
+    assert.equal((await birthdayCalendar.json()).birthdays.filter(item => item.date.startsWith("2026")).length, 2);
+    assert.equal((await fetch(`${instance.base}/api/school-calendar?birthdayYear=invalid`, { headers: qaHeaders })).status, 422);
     const captured = await fetch(`${instance.base}/api/ordinary-observations`, { method: "POST", headers: qaHeaders,
       body: JSON.stringify({ studentId: student.id, clientRequestId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
         sourceKind: "spontaneous", rawText: "Agrupó tres bloques en esta prueba ficticia." }) });
@@ -318,10 +326,14 @@ test("the HTTP boundary protects every route and local PGlite remains usable", {
     assert.equal((await call(`/api/ai/annual-plan/context?classroomId=${contextB.id}`, "token-a")).status, 403);
     const imported = await call("/api/students/import", "token-b", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ students: [{ firstName: "Alumna", lastName: "Ficticia" }] }),
+      body: JSON.stringify({ students: [{ firstName: "Alumna", lastName: "Ficticia", birthDate: "2020-12-19" }] }),
     });
     assert.equal(imported.status, 201);
     const studentB = (await imported.json()).dashboard.students[0].id;
+    const birthdayCalendarA = await (await call("/api/school-calendar?birthdayYear=2026", "token-a")).json();
+    const birthdayCalendarB = await (await call("/api/school-calendar?birthdayYear=2026", "token-b")).json();
+    assert.deepEqual(birthdayCalendarA.birthdays, []);
+    assert.ok(birthdayCalendarB.birthdays.some(item => item.student_id === studentB && item.date === "2026-12-19"));
     const inactiveB=await call("/api/students/inactive","token-b");assert.equal(inactiveB.status,200);assert.deepEqual((await inactiveB.json()).students,[]);
     assert.equal((await call(`/api/students/${studentB}/enrollment`,"token-a",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({status:"inactive",expectedStatus:"active"})})).status,404);
     const spontaneousB = await call("/api/diagnostics/spontaneous-observations", "token-b", {

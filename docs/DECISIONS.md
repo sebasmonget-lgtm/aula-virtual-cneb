@@ -1,5 +1,9 @@
 # Decisiones de arquitectura
 
+## 2026-10-20 — Cumpleaños derivados de matrícula
+
+Calendario y Hoy derivan cumpleaños de `birth_date` de la matrícula activa del aula autorizada. No hay módulo, tabla de eventos o recordatorios guardados. El servidor determina hoy y mañana con el reloj pedagógico; las respuestas compactas de matrícula recalculan la proyección local con esa misma fecha. Solo la respuesta docente del calendario agrega nombres, sin ampliar `loadEffectiveCalendar` ni el contexto de IA. En años no bisiestos se recuerda febrero 29 el día 28 con una aclaración visible, conservando la fecha real. Sin migración. Alcance, pruebas y rollback en `docs/qa/QA_CUMPLEANOS_Y_MATRICULA_2026-10-20.md`.
+
 ## 2026-10-19 — Referentes oficiales explícitos sin reclasificar históricos
 
 El KB v4.1 recibe un suplemento de desempeños del PCI 2016 fijado por hash; su corpus semántico anterior permanece intacto. Referencias por ID estable, competencia, edad y página. En generaciones nuevas cada criterio selecciona referentes por sentido pedagógico; servidor valida edad/competencia y la guía hereda sin selección adicional. Ausencias oficiales usan lista vacía y referente de ciclo, respetando aplicabilidad. Se conserva en JSONB y criterios existentes, sin migraciones ni nueva lógica de evidencia. Word distingue selección oficial de paráfrasis histórica; no se deducen referencias de palabras coincidentes. Revisión y rollback: `docs/qa/QA_DESEMPENOS_OFICIALES_2026-10-19.md`.

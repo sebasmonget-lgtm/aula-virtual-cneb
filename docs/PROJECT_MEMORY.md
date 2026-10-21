@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-20 — Diez niños con retratos y cumpleaños integrados
+
+Por autorización posterior a la entrega del logo, la matrícula QA ahora contiene diez niños con nombres naturales y diez retratos genéricos generados, verificados tras recargar. Capturas y procedencia fuera de Git en `outputs/ayni-recorrido-20261020/`. Entrevistas abiertas sin rellenar, cero observaciones y diagnóstico nuevo; siguiente paso pendiente de revisión con usuario. No se ha generado video.
+
+Cumpleaños implementados localmente dentro de Calendario (tortita/nombre y detalle completo) y Hoy (hoy/mañana), sin nuevo menú ni eventos persistidos. Fuente única: nacimiento de niños activos autorizados; reloj servidor, cambios de matrícula reflejados, nombres fuera del calendario de contexto de IA. Febrero 29 se recuerda el 28 en años no bisiestos con aclaración, sin cambiar el nacimiento. Dieciséis pruebas PASS, typecheck/lint/Vinext/Next PASS, revisión visual escritorio/móvil y detector sin hallazgos. No publicado aún; enlace QA conserva el logo `fabda4b`. Ver `docs/qa/QA_CUMPLEANOS_Y_MATRICULA_2026-10-20.md`.
+
 ## 2026-10-20 — Logo corregido en la última versión QA
 
 Entrega de producto `fabda4b4e3507163bb515102a231102f57afd7c5`, hijo de `9bc5b26` y subido a la misma rama, con árbol limpio al publicar. Preview `dpl_7XdPSs2PuS6qShZ1Gf4uzquYH1wM` en gru1 y alias QA actualizado tras smoke; 32 comprobaciones PASS, huellas de datos iguales y Producción `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf` intacta. 53 regresiones conservan informes/carátula/asistencia recientes; typecheck/lint/Vinext/Next PASS. Perfil QA recargado: logo PNG visible, 384×384, ruta relativa y mismo archivo privado. Primera captura corregida en `outputs/ayni-recorrido-20261020/capturas/001-configura-tu-aula.jpg`, secuencia actualizada. No añadir niños ni generar el diagnóstico todavía. Recibo: `.local/logo-release-20261020/release.json`; detalle: `docs/qa/QA_LOGO_Y_CAPTURAS_2026-10-20.md`. Cierre documental posterior sin cambio al producto publicado.

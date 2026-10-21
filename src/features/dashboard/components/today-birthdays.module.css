@@ -1,0 +1,9 @@
+.panel{padding:20px;border:1px solid #dfd3ee;border-radius:16px;background:#f6f1fb;color:#30214c}
+.panel h2{font-size:1.125rem;font-weight:800;line-height:1.4}
+.list{display:grid;gap:14px;margin-top:12px;list-style:none;padding:0}
+.list li{display:flex;align-items:flex-start;gap:12px;min-width:0}
+.list p{min-width:0;line-height:1.6;overflow-wrap:anywhere}
+.list strong{font-weight:750}.list svg{width:22px;height:22px;flex-shrink:0;margin-top:2px}
+.cake{color:#884161}.reminder{color:#075d70}
+.note{display:block;margin-top:2px;font-size:.875rem;color:#59476d}
+@media(max-width:540px){.panel{padding:16px}.list{gap:12px}}

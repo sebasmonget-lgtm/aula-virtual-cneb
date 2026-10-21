@@ -19,6 +19,7 @@ import {TodayEmptyState} from "./today-empty-state";
 import {teacherGreeting,todayBlockLabel} from "@/src/lib/daily-dashboard-display.mjs";
 import overview from "./daily-overview.module.css";
 import {WorkshopLibrary} from './workshop-library';
+import {TodayBirthdays} from './today-birthdays';
 
 type Block = LocalDashboard["today"]["blocks"][number];
 type Execution = { scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current" | "set_step"; stepIndex?: number; closureType?: "as_planned" | "note"; closureNote?: string };
@@ -124,6 +125,7 @@ export function TodayHome({ dashboard, refreshKey = 0, onCalendar, onConsultActi
   if(choosingWorkshop&&profile.classroom_id)return <WorkshopLibrary classroomId={profile.classroom_id} onBack={()=>{setChoosingWorkshop(false);onWorkshopPickerClose?.();}} onOpen={id=>{setChoosingWorkshop(false);onWorkshopPickerClose?.();onConsultActivity(id);}} onAdded={async id=>{await onActivitiesChanged?.();setChoosingWorkshop(false);onWorkshopPickerClose?.();onConsultActivity(id);}}/>;
   return <div className="mx-auto max-w-5xl space-y-6">
     <header className={overview.todayHeader}><div><div className={overview.greeting}><h1>{greeting.text}, {teacher}</h1><GreetingIcon aria-hidden="true" className={overview.greetingIcon}/></div><p className="mt-2 text-[#526b87]">{profile.age_label} · {profile.section} · {metrics.students_total} estudiantes</p></div><section className={overview.attendance} aria-label="Asistencia opcional"><Users aria-hidden="true"/><div><strong>Asistencia</strong><p>Opcional · {today.attendance.recorded_count} de {metrics.students_total} registrados</p></div><Button onClick={openAttendance}>Tomar asistencia</Button></section></header>
+    <TodayBirthdays birthdays={today.birthdays}/>
     {profile.classroom_id&&<section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#c9e4df] bg-[#eef8f2] p-5"><div><h2 className="text-lg font-extrabold text-[#172b52]">Talleres para tu aula</h2><p className="mt-1 text-sm text-[#365b73]">Elige por edad, tipo o competencia y añádelo a una jornada.</p></div><Button onClick={()=>setChoosingWorkshop(true)}><BookOpen size={19}/>Elegir taller</Button></section>}
     {!modern&&bimester && <section className="rounded-[1.5rem] bg-[#e9f8f2] p-5"><h2 className="text-lg font-extrabold text-[#1c2e50]">{bimester.adjusted ? "✓ Plan reajustado" : bimester.final && bimester.closed ? "✓ Período final cerrado" : `Cierre de ${bimester.label}`}</h2>
       <p className="mt-1 text-sm text-[#526681]">{bimester.adjusted ? "Tu planificación actualizada está lista para continuar." : bimester.final && bimester.closed ? "El cierre del año quedó guardado." : bimester.ready ? bimester.final ? "Tus evaluaciones están listas para cerrar el año." : "Tus evaluaciones están listas. Revisemos qué conviene ajustar para el siguiente período." : "Revisa las valoraciones pendientes para cerrar el período."}</p>

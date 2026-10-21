@@ -1,4 +1,5 @@
 import { apiFetch, apiJson } from "./ayni-api-fetch";
+import { todayBirthdayNotices } from "./student-birthdays.mjs";
 export type LocalStudent = { first_name?: string; last_name?: string; preferred_name?: string | null; birth_date?: string | null; age_years?: number; id: string; name: string; full_name?: string; evidence_count?: number; competency_count?: number; last_observed_at?: string | null };
 export type TeacherConfirmedAssessment = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; evidence_overview: string; strengths_and_advances: string[]; support_needs: string[]; next_opportunities: string[]; teacher_confirmed_at: string };
 export type TeacherConfirmedConclusion = { id: string; period_start: string; period_end: string; information_status: "sufficient" | "insufficient"; conclusion_text: string; support_or_conditions: string[]; next_steps: string[]; teacher_confirmed_at: string };
@@ -47,6 +48,7 @@ export type LocalDashboard = {
   students: LocalStudent[];
   metrics: { students_total: number; evidences_week: number; students_observed: number };
   today: {
+    birthdays?: { today: StudentBirthday[]; tomorrow: StudentBirthday[] };
     past_pending?: {id:string;title:string;date:string;display_status:string}[];
     qa_clock?: { date: string; time: string };
     date: string; now: string;
@@ -62,6 +64,8 @@ export type LocalDashboard = {
     ugel: string | null; director_name: string | null; logo_url: string | null;
   };
 };
+
+export type StudentBirthday = { student_id: string; name: string; short_name?: string; date: string; leap_day_adjusted: boolean };
 
 export type DiagnosticWorkspace = {
   classroom: { id: string; section: string; age_years: number };
@@ -202,7 +206,8 @@ export async function savePilotSetup(input: { submissionId?: string; teacherName
 }
 
 export function mergeDashboardRoster(dashboard: LocalDashboard, students: LocalStudent[]): LocalDashboard {
-  return { ...dashboard, students, metrics: { ...dashboard.metrics, students_total: students.length } };
+  return { ...dashboard, students, metrics: { ...dashboard.metrics, students_total: students.length },
+    today: { ...dashboard.today, birthdays: todayBirthdayNotices(students, dashboard.today.date) } };
 }
 export async function importPilotStudents(input: { csv: string } | { students: { firstName: string; lastName: string; preferredName?: string; birthDate?: string }[] }, clientRequestId: string, dashboard?: LocalDashboard): Promise<LocalDashboard> {
   const response = await apiFetch(`${apiUrl}/api/students/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...input, clientRequestId, compact: Boolean(dashboard) }) });

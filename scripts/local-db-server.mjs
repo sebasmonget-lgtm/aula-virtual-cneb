@@ -74,6 +74,7 @@ import { handleDocumentExportRoutes } from "./document-export-routes.mjs";
 import { saveWordToLocalDownloads } from "../src/lib/local-word-save.mjs";
 import { buildInstitutionInitialsLogo, loadInstitutionLogoForDocuments, normalizeInstitutionLogoUpload } from "../src/lib/institution-logo.mjs";
 import { displayPersonName } from "../src/lib/person-name.mjs";
+import { loadClassroomBirthdays, todayBirthdayNotices } from "../src/lib/student-birthdays.mjs";
 import { validateLearningExperienceProposal } from "../src/lib/learning-experience-validation.mjs";
 import { assertResourceReadiness } from "../src/lib/project-resource-readiness.mjs";
 import { inheritedActivityCriterion, routeItemFor, saveActivityDetails, saveExperienceDetails } from "../src/lib/experience-lineage.mjs";
@@ -535,6 +536,7 @@ async function dashboard() {
     classroom_id: classroomId,
     activity: activityResult.rows[0] ? { ...activityResult.rows[0], criteria: normalizeCriteria(activityResult.rows[0].criteria ?? []) } : null,
     today: {
+      birthdays: todayBirthdayNotices(studentsResult.rows, today),
       past_pending: await pendingPastActivities(db,teacherId,today),
       date: today, now, ...(qaDailyClock ? { qa_clock: qaDailyClock } : {}), blocks, attendance: { records:attendanceResult.rows[0]?.records??[],recorded: attendanceRecorded, recorded_count: Number(attendanceResult.rows[0]?.recorded_count ?? 0) },
       calendar_exception: calendarException,
@@ -1861,7 +1863,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     }
     if(request.method==="GET"&&url.pathname==="/api/school-calendar"){
       try{const classroom=await annualPlanningContext();if(!classroom){send(response,404,{error:"Aula no disponible."},origin);return;}
-        const data=await loadEffectiveCalendar(db,{teacherId,classroomId:classroom.id,from:url.searchParams.get("from"),to:url.searchParams.get("to")});send(response,200,{...data,today:limaToday()},origin);}
+        const data=await loadEffectiveCalendar(db,{teacherId,classroomId:classroom.id,from:url.searchParams.get("from"),to:url.searchParams.get("to")});
+        const birthdays=await loadClassroomBirthdays(db,{teacherId,classroomId:classroom.id,year:Number(url.searchParams.get("birthdayYear")??data.classroom.year)});
+        send(response,200,{...data,birthdays,today:limaToday()},origin);}
       catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}return;
     }
     if(request.method==="PUT"&&url.pathname==="/api/school-calendar/override"){
