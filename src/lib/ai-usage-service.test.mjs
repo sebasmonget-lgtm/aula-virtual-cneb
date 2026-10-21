@@ -8,6 +8,14 @@ import { estimateJevCost, estimateTextCost, estimateTranscriptionCost,
 const teacherA = "00000000-0000-4000-8000-000000000001";
 const teacherB = "00000000-0000-4000-8000-000000000002";
 
+test('consultar una respuesta background no duplica su evento; docentes distintos conservan aislamiento',async()=>{
+ const ids=[];const db={query:async(_sql,values)=>{ids.push(values[0]);return{rows:[]};}};
+ const input={provider:'openai',workflow:'diagnostic_group_synthesis',model:'gpt-6.1-sol',inputTokens:100,outputTokens:50,responseId:'resp_unique_background'};
+ await withAiUsageContext({teacherId:teacherA,db},async()=>{await recordAiUsage(input);await recordAiUsage(input);});
+ await withAiUsageContext({teacherId:teacherB,db},()=>recordAiUsage(input));
+ assert.equal(ids[0],ids[1]);assert.notEqual(ids[0],ids[2]);assert.match(ids[0],/^[0-9a-f-]{36}$/);
+});
+
 test("precios estimados usan tokens, caché y duración sin almacenar contenido", () => {
   assert.equal(estimateTextCost({ model: "gpt-6-sol", inputTokens: 1_000_000, cachedInputTokens: 200_000, outputTokens: 100_000 }), 4.78);
   assert.equal(estimateTextCost({ model: "gpt-6-sol", inputTokens: 10_000, cachedInputTokens: 2000, outputTokens: 1000 }), 0.0264);

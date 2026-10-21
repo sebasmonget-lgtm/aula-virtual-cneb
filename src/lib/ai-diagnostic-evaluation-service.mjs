@@ -86,25 +86,7 @@ function safeFailure(error) {
 }
 
 /** Returns editable text only. Confirmation and DOCX creation remain separate teacher actions. */
-export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
-  resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan,
-  loadSkill = loadDiagnosticEvaluationSkill, loadSources = diagnosticGroupProposalSources,
-} = {}) {
-  const started = performance.now(), timing = {};
-  const sources = await loadSources(db, teacherId, draftId);
-  timing.sources_before_ms = performance.now() - started;
-  const old=(await db.query(`select ai_snapshot from diagnostic_group_reviews
-    where id=$1 and created_by=$2 and status='draft'`,[draftId,teacherId])).rows[0]?.ai_snapshot;
-  if(old?.output&&old.contract_version==='diagnostic-reading-v3'&&sameDiagnosticSources(old.source_snapshot,sources.source_snapshot))return {details:old.output,cached:true};
-  const lease=randomUUID();
-  const claimed=await db.query(`update diagnostic_group_reviews set ai_snapshot=$3::jsonb
-    where id=$1 and created_by=$2 and status='draft' and
-    (ai_snapshot->>'status' is distinct from 'processing' or (ai_snapshot->>'expires_at')::timestamptz<now()) returning id`,
-      [draftId,teacherId,JSON.stringify({status:'processing',lease_token:lease,expires_at:new Date(Date.now()+210_000).toISOString(),source_snapshot:sources.source_snapshot})]);
-  if(!claimed.rows.length)throw new DiagnosticSuggestionError('in_progress');
-  try {
-    const plan = resolvePlan({ workflow: "diagnostic_group_synthesis", task: "generation" });
-    const provider = createProvider(plan, { timeoutMs: 180_000 });
+export function diagnosticGroupProviderRequest(sources, plan, skill) {
     const period=diagnosticReportPeriod({content:{report_snapshot:{observations:(sources.observed_records??[]).flatMap(child=>child.notes)}}});
     const bundle = { workflow: "diagnostic_group_synthesis", context: { age: sources.age, student_count: sources.student_count,
       observation_period:{starts_on:period.from,ends_on:period.to,meaning:'Fechas de los registros recibidos; no se presupone que corresponden al inicio del año.'},
@@ -122,7 +104,31 @@ export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
         must_not: ["Inventar observaciones o niveles de logro.", "Nombrar o identificar a niños y familias.",
           "Concluir que todos los niños necesitan el mismo apoyo por una prioridad grupal."] },
       provenance: { source_type: "diagnostic_facts_and_optional_confirmed_comments", source_count: sources.comments.length + (sources.observed_records?.length ?? 0) } };
-    const request = buildProviderRequest("diagnostic_group_synthesis", bundle, plan, OUTPUT_SCHEMA, await loadSkill());
+    return buildProviderRequest("diagnostic_group_synthesis", bundle, plan, OUTPUT_SCHEMA, skill);
+}
+
+export async function suggestDiagnosticGroupReview(db, teacherId, draftId, {
+  resolvePlan = resolveAIExecutionPlan, createProvider = createAIProviderForPlan,
+  loadSkill = loadDiagnosticEvaluationSkill, loadSources = diagnosticGroupProposalSources,
+} = {}) {
+  const started = performance.now(), timing = {};
+  const sources = await loadSources(db, teacherId, draftId);
+  timing.sources_before_ms = performance.now() - started;
+  const old=(await db.query(`select ai_snapshot from diagnostic_group_reviews
+    where id=$1 and created_by=$2 and status='draft'`,[draftId,teacherId])).rows[0]?.ai_snapshot;
+  if(old?.output&&old.contract_version==='diagnostic-reading-v3'&&sameDiagnosticSources(old.source_snapshot,sources.source_snapshot))return {details:old.output,cached:true};
+  if(old?.job_version==='diagnostic-recoverable-v1'&&['queued','processing','uncertain'].includes(old.status))
+    throw new DiagnosticSuggestionError('in_progress');
+  const lease=randomUUID();
+  const claimed=await db.query(`update diagnostic_group_reviews set ai_snapshot=$3::jsonb
+    where id=$1 and created_by=$2 and status='draft' and
+    (ai_snapshot->>'status' is distinct from 'processing' or (ai_snapshot->>'expires_at')::timestamptz<now()) returning id`,
+      [draftId,teacherId,JSON.stringify({status:'processing',lease_token:lease,expires_at:new Date(Date.now()+210_000).toISOString(),source_snapshot:sources.source_snapshot})]);
+  if(!claimed.rows.length)throw new DiagnosticSuggestionError('in_progress');
+  try {
+    const plan = resolvePlan({ workflow: "diagnostic_group_synthesis", task: "generation" });
+    const provider = createProvider(plan, { timeoutMs: 180_000 });
+    const request = diagnosticGroupProviderRequest(sources, plan, await loadSkill());
     const providerStarted = performance.now();
     const response = await provider.generate(request);
     timing.provider_step_ms = performance.now() - providerStarted;

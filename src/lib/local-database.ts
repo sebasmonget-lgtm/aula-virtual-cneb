@@ -358,8 +358,8 @@ async function diagnosticRequest<T>(path: string, method = "GET", body?: unknown
   const response = await apiFetch(`${apiUrl}/api/diagnostics/${path}`, {
     method, cache: "no-store", ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
   });
-  const payload = await response.json() as T & { error?: string };
-  if (!response.ok) throw new Error(payload.error ?? "No se pudo completar la revisión diagnóstica.");
+  const payload = await apiJson<T & { error?: string; reason?: string }>(response);
+  if (!response.ok) throw Object.assign(new Error(payload.error ?? "No se pudo completar la revisión diagnóstica."),{status:response.status,reason:payload.reason});
   return payload;
 }
 export const loadDiagnosticReview = () => diagnosticRequest<DiagnosticReviewWorkspace>("reviews");
@@ -372,6 +372,9 @@ export const saveDiagnosticStudentReview = (id: string, details: DiagnosticStude
 export const confirmDiagnosticStudentReview = (id: string) => diagnosticRequest(`student-reviews/${encodeURIComponent(id)}/confirm`, "POST");
 export const prepareDiagnosticGroup = () => diagnosticRequest<{ id: string; details: DiagnosticGroupDetails }>("group-review/prepare", "POST");
 export const suggestDiagnosticGroup = (draftId: string) => diagnosticRequest<{ details: DiagnosticGroupDetails }>("group-review/suggest", "POST", { draftId });
+export type DiagnosticGeneration = { draftId: string; status: string; message: string; retryAfterMs: number; requiresRepeatConsent: boolean; canRetry: boolean; details?: DiagnosticGroupDetails };
+export const startRecoverableDiagnostic = (draftId: string, acceptPotentialRepeat = false) => diagnosticRequest<DiagnosticGeneration>("group-review/suggest", "POST", { draftId, recoverable: true, acceptPotentialRepeat });
+export const loadDiagnosticGeneration = (draftId: string) => diagnosticRequest<DiagnosticGeneration>(`group-review/${encodeURIComponent(draftId)}/suggestion`);
 export const saveDiagnosticGroup = (id: string, details: DiagnosticGroupDetails) => diagnosticRequest(`group-review/${encodeURIComponent(id)}`, "PUT", { details });
 export const confirmDiagnosticGroup = (id: string) => diagnosticRequest(`group-review/${encodeURIComponent(id)}/confirm`, "POST");
 export const prepareDiagnosticPriorities = () => diagnosticRequest<{ id: string; group_review_id: string; details: DiagnosticPriorityDetails }>("priorities/prepare", "POST");

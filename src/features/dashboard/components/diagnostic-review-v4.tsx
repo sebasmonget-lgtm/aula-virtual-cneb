@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   confirmDiagnosticGroup, confirmDiagnosticStudentReview, loadDiagnosticReview, loadFamilyInterview,
   prepareDiagnosticGroup, prepareDiagnosticStudentReview, saveDiagnosticGroup, saveDiagnosticStudentReview,
-  suggestDiagnosticGroup,
   prepareDiagnosticPriorities, suggestDiagnosticPriorities, saveDiagnosticPriorities, confirmDiagnosticPriorities,
   saveMatrixDiagnosticObservation, spontaneousObservationMediaUrl, guidedObservationMediaUrl,
   type DiagnosticGroupDetails, type DiagnosticPriorityDetails, type DiagnosticReviewWorkspace, type DiagnosticStudentReviewDetails,
@@ -21,6 +20,7 @@ import { AsyncButton, LoadingState } from "./workflow-ui";
 import { diagnosticReviewProgress } from "@/src/lib/diagnostic-review-progress.mjs";
 import { DictationRecorder } from "./dictation-recorder";
 import {DiagnosticCompetencyReadings} from './diagnostic-competency-readings';
+import {DiagnosticGenerationControl} from './diagnostic-generation-control';
 import { displayPersonName } from "@/src/lib/person-name.mjs";
 
 function DiagnosticNavigation({ backLabel, onBack, disabled, children }: {
@@ -301,7 +301,7 @@ export function DiagnosticReview({ onObserve, onPlan, onGroupConfirmed, onObserv
         }}>{groupReview ? "Continuar borrador del aula" : groupConfirmed ? "Corregir resumen del aula" : "Escribir resumen del aula"}</Button>
       </div>}
       {groupDraft && <div className="space-y-5 rounded-2xl border border-[#c7e4ec] bg-[#f8fcfd] p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-3"><h4 className="text-lg font-bold">Tu resumen del aula</h4>
-        {!groupDraftDirty && !hasGroupText && groupReview && <AsyncButton variant="outline" className="min-h-11 whitespace-normal" busy={busy} disabled={audioBusy} busyLabel="Preparando propuesta..." onClick={() => void action(async () => { const suggestion = await suggestDiagnosticGroup(groupReview.id); setGroupDraft(suggestion.details); setGroupDraftDirty(true); setMessage("Revisa la propuesta de Ayni antes de continuar."); })}>Sugerir resumen con Ayni</AsyncButton>}</div>
+        {!groupDraftDirty && !hasGroupText && groupReview && <DiagnosticGenerationControl key={groupReview.id} draftId={groupReview.id} disabled={busy||audioBusy} onReady={details=>{setGroupDraft(details);setGroupDraftDirty(true);setMessage("Revisa la propuesta de Ayni antes de continuar.");}}/>}</div>
         {groupSummaryPrompts.map(([field, label, example]) => <div key={field} className="space-y-2"><label className="block text-lg font-semibold">{label}<Textarea disabled={busy || audioBusy} className="mt-2 min-h-28 bg-white placeholder:italic placeholder:text-[#8292a8]" maxLength={3000} placeholder={example} value={groupDraft[field]} onChange={(event) => { setGroupDraft({ ...groupDraft, [field]: event.target.value }); setGroupDraftDirty(true); }} /></label><DictationRecorder classroomScope purpose="group_summary" context={label} currentText={groupDraft[field]} disabled={busy || (audioBusy && groupAudioField !== field)} onBusyChange={(recording) => { setAudioBusy(recording); setGroupAudioField(recording ? field : null); }} onTranscribed={(text) => { setGroupDraft((current) => current ? { ...current, [field]: text } : current); setGroupDraftDirty(true); }} /></div>)}
         <DiagnosticCompetencyReadings readings={groupDraft.competency_readings} coverage={workspace.group_coverage} disabled={busy||audioBusy} onChange={readings=>{setGroupDraft({...groupDraft,competency_readings:readings});setGroupDraftDirty(true);}}/>
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--ayni-panel-border)] pt-4"><Button variant="ghost" className="min-h-11 whitespace-normal" disabled={busy || audioBusy} onClick={() => { setGroupDraft(null); setGroupDraftDirty(false); setError(""); }}>{groupDraftDirty ? "Descartar cambios" : "Cerrar editor"}</Button><AsyncButton variant="outline" className="min-h-11 whitespace-normal" busy={busy} busyLabel="Guardando..." disabled={audioBusy || !groupReview || !hasGroupText} onClick={() => void action(async () => { await saveDiagnosticGroup(groupReview!.id, groupDraft); setGroupDraft(null); setGroupDraftDirty(false); setMessage("Resumen guardado como borrador."); })}>Guardar para después</AsyncButton></div>

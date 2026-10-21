@@ -1,6 +1,7 @@
 import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
 import { currentPedagogicalClock } from "./pedagogical-clock.mjs";
+import {preparationLimits} from './preparation-limits.mjs';
 
 export const preparationFingerprint = value => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const LEASE_SECONDS=360;
@@ -110,11 +111,14 @@ export async function retryPreparation(db,teacherId,id,acceptPotentialRepeat=fal
 }
 
 /** One bounded domain step per invocation. No provider IO occurs in the claim transaction. */
-export async function runPreparationStep(db,execute) {
+export async function runPreparationStep(db,execute,{limits=preparationLimits()}={}) {
+  const concurrent=Number.isInteger(limits.concurrent)&&limits.concurrent>=1&&limits.concurrent<=6?limits.concurrent:2;
+  const perTeacher=Number.isInteger(limits.perTeacher)&&limits.perTeacher>=1&&limits.perTeacher<=concurrent?limits.perTeacher:Math.min(2,concurrent);
   const job=await versionTransaction(db,"preparation:dispatch",async tx=>{
-    if(Number((await tx.query(`select count(*) as n from preparation_jobs_v2 where status='running' and lease_until>now()`)).rows[0].n)>=2)return null;
-    const candidate=(await tx.query(`select * from preparation_jobs_v2 where status='queued' or status='running' and lease_until<=now()
-      order by created_at limit 1 for update skip locked`)).rows[0];
+    if(Number((await tx.query(`select count(*) as n from preparation_jobs_v2 where status='running' and lease_until>now()`)).rows[0].n)>=concurrent)return null;
+    const candidate=(await tx.query(`select j.* from preparation_jobs_v2 j where (j.status='queued' or j.status='running' and j.lease_until<=now())
+      and (select count(*) from preparation_jobs_v2 active where active.teacher_id=j.teacher_id and active.status='running' and active.lease_until>now())<$1
+      order by j.created_at limit 1 for update of j skip locked`,[perTeacher])).rows[0];
     if(!candidate)return null;
     const token=randomUUID();
     return (await tx.query(`update preparation_jobs_v2 set status='running',lease_token=$2,lease_until=now()+$3*interval '1 second',updated_at=now()

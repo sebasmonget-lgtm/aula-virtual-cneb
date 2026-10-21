@@ -45,6 +45,8 @@ import { preparePersonalization, confirmPersonalization, currentPersonalization,
 import { persistAnnualProjectSlots } from "../src/lib/annual-project-slots.mjs";
 import { developConfirmedAnnualPlan } from "../src/lib/annual-formal-service.mjs";
 import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "../src/lib/ai-diagnostic-evaluation-service.mjs";
+import {DiagnosticGenerationError,startDiagnosticGeneration,readDiagnosticGeneration,runDiagnosticGenerationStep,diagnosticGenerationPending,claimDiagnosticDrain,releaseDiagnosticDrain} from '../src/lib/diagnostic-group-jobs.mjs';
+import {drainDiagnosticWork} from '../src/lib/diagnostic-generation-background.mjs';
 import { DiagnosticPriorityError, prepareDiagnosticPriorities, suggestDiagnosticPriorities, saveDiagnosticPriorities, confirmDiagnosticPriorities } from "../src/lib/diagnostic-priority-service.mjs";
 import { generateTeacherLearningExperience } from "../src/lib/ai-learning-experience-ui-service.mjs";
 import { generateProjectPreview, generateProjectDependents, generateProjectMaster, generateProjectFormal,
@@ -1240,7 +1242,16 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           catch { recordOperationalEvent("student_context_refresh_failed", { workflow: "diagnostic_student" }); }
         }
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/group-review/prepare") result = await prepareDiagnosticGroupReview(db, teacherId);
-        else if (request.method === "POST" && url.pathname === "/api/diagnostics/group-review/suggest") result = await suggestDiagnosticGroupReview(db, teacherId, (await readJson(request)).draftId);
+        else if (request.method === "POST" && url.pathname === "/api/diagnostics/group-review/suggest") {
+          const body=await readJson(request);
+          if(body.recoverable===true){
+            result=await startDiagnosticGeneration(db,teacherId,body.draftId,{acceptPotentialRepeat:body.acceptPotentialRepeat===true});
+            if(['queued','processing'].includes(result.status))response.scheduleDiagnostic?.();
+          }else result=await suggestDiagnosticGroupReview(db,teacherId,body.draftId);
+        }
+        else if(request.method==='GET'&&parts.length===6&&parts[3]==='group-review'&&parts[5]==='suggestion'){
+          result=await readDiagnosticGeneration(db,teacherId,parts[4]);
+        }
         else if (request.method === "PUT" && parts.length === 5 && parts[3] === "group-review") result = await saveDiagnosticGroupReview(db, teacherId, parts[4], (await readJson(request)).details);
         else if (request.method === "POST" && parts.length === 6 && parts[3] === "group-review" && parts[5] === "confirm") result = await confirmDiagnosticGroupReview(db, teacherId, parts[4]);
         else if (request.method === "POST" && url.pathname === "/api/diagnostics/priorities/prepare") result = await prepareDiagnosticPriorities(db, teacherId);
@@ -1251,7 +1262,9 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
         else { send(response, 404, { error: "Ruta de diagnóstico no encontrada." }, origin); return; }
         send(response, 200, result, origin);
       } catch (error) {
-        if (error instanceof DiagnosticSuggestionError) {
+        if(error instanceof DiagnosticGenerationError){
+          send(response,error.reason==='not_found'?404:error.reason==='stale_sources'?409:422,{error:publicErrorMessage(error),reason:error.reason},origin);
+        } else if (error instanceof DiagnosticSuggestionError) {
           send(response, httpStatusForError(error, 422), { error: publicErrorMessage(error), reason: error.reason }, origin);
         } else if (error instanceof DiagnosticPriorityError) {
           send(response, error.reason === "not_found" ? 404 : error.reason === "stale" ? 409 : 422,
@@ -3068,6 +3081,29 @@ export async function drainPreparationQueue(origin,oidcToken=null){
   finally{if(dbMode==='postgres')await workerDb.close();}
 }
 
+export async function drainDiagnosticQueue(origin,oidcToken=null){
+  const workerDb=database.requestDb();
+  let drainLease;
+  try{
+    if(!await diagnosticGenerationPending(workerDb))return;
+    drainLease=await claimDiagnosticDrain(workerDb);if(!drainLease)return;
+    await requestDatabaseScope.run(workerDb,()=>drainDiagnosticWork({
+    step:()=>runDiagnosticGenerationStep(workerDb),hasPending:()=>diagnosticGenerationPending(workerDb),
+    continueWork:async()=>{
+      const secret=preparationDispatchSecret();
+      const deploymentOrigin=process.env.VERCEL_URL?`https://${process.env.VERCEL_URL}`:origin;
+      if(!secret||!deploymentOrigin||!allowedOrigins.has(deploymentOrigin))return;
+      await releaseDiagnosticDrain(workerDb,drainLease);drainLease=null;
+      const reply=await fetch(deploymentOrigin+'/api/internal/diagnostics/run',{method:'POST',headers:{...preparationDispatchHeaders(secret),
+        ...(process.env.VERCEL==='1'&&oidcToken?{'x-vercel-trusted-oidc-idp-token':oidcToken}:{})},redirect:'error',signal:AbortSignal.timeout(12000)});
+      if(!reply.ok)recordOperationalEvent('diagnostic_continuation_failed',{status:reply.status});
+    }}));}catch{recordOperationalEvent('diagnostic_background_interrupted',{status:503});}
+  finally{
+    try{if(drainLease)await releaseDiagnosticDrain(workerDb,drainLease);}
+    finally{if(dbMode==='postgres')await workerDb.close();}
+  }
+}
+
 export async function handleApiRequest(request, response) {
   const origin = request.headers.origin;
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
@@ -3092,14 +3128,17 @@ export async function handleApiRequest(request, response) {
     send(response, 200, { ok: true, engine: dbMode, ...(dbMode === "local" ? { storage: ".local/pgdata" } : {}) }, origin);
     return;
   }
-  if(url.pathname==="/api/internal/preparation/run") {
+  if(['/api/internal/preparation/run','/api/internal/diagnostics/run'].includes(url.pathname)) {
     const workerDb=database.requestDb();
     try { await requestDatabaseScope.run(workerDb,async()=>{
       if(request.method!=="POST" || !await acceptPreparationDispatch(workerDb,request.headers,preparationDispatchSecret())){
         send(response,401,{error:"Acceso no autorizado."});return;
       }
-      if(response.schedulePreparation){response.schedulePreparation();send(response,202,{scheduled:true});}
-      else{const job=await runPreparationWorker();send(response,200,{processed:!!job});}
+      if(response.schedulePreparation){
+        if(url.pathname==='/api/internal/preparation/run')response.schedulePreparation();
+        response.scheduleDiagnostic?.();send(response,202,{scheduled:true});
+      }
+      else{const job=url.pathname==='/api/internal/diagnostics/run'?await runDiagnosticGenerationStep(workerDb):await runPreparationWorker();send(response,200,{processed:!!job});}
     }); }catch{send(response,503,{error:"No se pudo procesar la cola."});}
     finally{if(dbMode==="postgres")await workerDb.close();}
     return;
@@ -3288,9 +3327,17 @@ if (process.env.AYNI_SERVERLESS !== "1") {
     finally{preparationRunning=false;}
   },2000);
   preparationTimer.unref();
+  let diagnosticRunning=false;
+  const diagnosticTimer=setInterval(async()=>{
+    if(diagnosticRunning)return;diagnosticRunning=true;
+    try{await runDiagnosticGenerationStep(db);}catch{/* Resume the saved identifier on a later tick. */}
+    finally{diagnosticRunning=false;}
+  },2000);
+  diagnosticTimer.unref();
   for (const signal of ["SIGINT", "SIGTERM"]) {
     process.on(signal, async () => {
       clearInterval(preparationTimer);
+      clearInterval(diagnosticTimer);
       await new Promise((resolve) => server.close(resolve));
       await database.close();
       process.exit(0);

@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 // Standard API prices verified on 2026-10-09. Existing events keep their calculated cost.
 // Cache writes replace the uncached-input rate; they are not an additive charge.
@@ -50,7 +50,7 @@ export function withAiUsageContext({ teacherId, db }, work) {
 
 /** Best-effort billing telemetry: IDs, counts and prices only; never prompts or student data. */
 export async function recordAiUsage({ provider, workflow, model, inputTokens = null,
-  cachedInputTokens = null, cacheWriteTokens = 0, outputTokens = null, durationSeconds = null, providerCostUsd = null }) {
+  cachedInputTokens = null, cacheWriteTokens = 0, outputTokens = null, durationSeconds = null, providerCostUsd = null, responseId = null }) {
   const context = usageContext.getStore();
   if (!context) return false;
   if (!["openai", "openrouter"].includes(provider) || !safeName.test(workflow) || !safeName.test(model))
@@ -71,10 +71,15 @@ export async function recordAiUsage({ provider, workflow, model, inputTokens = n
     if (cost !== null) costSource = "estimate";
   }
   try {
+    // Retrieving the same background response is not another paid generation.
+    // Scope the event to its teacher/provider and keep raw provider IDs out of telemetry.
+    const digest = typeof responseId === 'string' && /^resp_[a-zA-Z0-9_-]{1,240}$/.test(responseId)
+      ? createHash('sha256').update(JSON.stringify([context.teacherId,provider,workflow,responseId])).digest('hex') : null;
+    const eventId = digest ? `${digest.slice(0,8)}-${digest.slice(8,12)}-4${digest.slice(13,16)}-a${digest.slice(17,20)}-${digest.slice(20,32)}` : randomUUID();
     await context.db.query(`insert into ai_usage_events
       (id,teacher_id,provider,workflow,model,input_tokens,cached_input_tokens,output_tokens,duration_seconds,cost_usd,cost_source,pricing_version)
-      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
-    [randomUUID(), context.teacherId, provider, workflow, model, input, cached, output,
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) on conflict(id) do nothing`,
+    [eventId, context.teacherId, provider, workflow, model, input, cached, output,
       duration, cost, costSource, AI_USAGE_PRICING_VERSION]);
     return true;
   } catch {

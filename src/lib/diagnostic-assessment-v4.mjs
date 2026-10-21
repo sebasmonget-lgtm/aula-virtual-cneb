@@ -360,7 +360,7 @@ export async function loadDiagnosticAssessmentWorkspace(db, teacherId) {
   reviews: reviews.map(publicReview), student_reviews: studentReviews.map((row) => publicStudentReview(row,
     sameDiagnosticSources(row.source_snapshot, sourceSnapshots.get(row.student_id)))),
   group_reviews: groupReviews.map((row) => ({ id: row.id, version: row.version, status: row.status, details: row.details,
-    ai_suggestion: row.ai_snapshot?.output ?? null,
+    ai_suggestion: row.ai_snapshot?.output && sameDiagnosticSources(row.ai_snapshot.source_snapshot,optionalGroupSnapshot) ? row.ai_snapshot.output : null,
     ai_state: row.ai_snapshot?.status ?? (row.ai_snapshot?.output ? 'ready' : null),
     ai_expires_at: row.ai_snapshot?.expires_at ?? null,
     teacher_confirmed_at: row.teacher_confirmed_at,

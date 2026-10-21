@@ -50,6 +50,14 @@ function classifyError(error) {
   return "provider_error";
 }
 
+export function providerRetryAfterMs(headers, now = Date.now()) {
+  const value = headers?.get?.('retry-after') ?? headers?.['retry-after'];
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const seconds = Number(value);
+  const ms = Number.isFinite(seconds) && seconds >= 0 ? seconds * 1000 : Date.parse(value) - now;
+  return Number.isFinite(ms) && ms >= 0 ? Math.ceil(ms) : null;
+}
+
 export class OpenAIProvider extends AIProvider {
   constructor({ apiKey, baseURL, client = null, timeoutMs = 30_000, model = null,
     background = false, resumeResponseId = null, onResponseStarted = async () => {} } = {}) {
@@ -127,13 +135,14 @@ export class OpenAIProvider extends AIProvider {
         code: error?.code ?? null,
         param: error?.param ?? null,
         cause_name: error?.cause?.name ?? null,
+        retry_after_ms: providerRetryAfterMs(error?.headers),
       });
     }
     const measuredUsage = this.customConnection ? {} : response.usage;
     await recordAiUsage({ provider: "openai", workflow: request.workflow ?? "generation", model: response.model ?? plan.model,
       inputTokens: measuredUsage?.input_tokens, cachedInputTokens: measuredUsage?.input_tokens_details?.cached_tokens ?? 0,
       cacheWriteTokens: measuredUsage?.input_tokens_details?.cache_write_tokens ?? 0,
-      outputTokens: measuredUsage?.output_tokens });
+      outputTokens: measuredUsage?.output_tokens, responseId: this.background ? response.id : null });
     try {
     if (response.status === "incomplete" || response.incomplete_details) {
       throw new OpenAIProviderError("response_incomplete");
@@ -156,7 +165,7 @@ export class OpenAIProvider extends AIProvider {
       provider_metadata: {
         provider: "openai",
         model: actualModel,
-        response_id: response._request_id ?? response.id ?? null,
+        response_id: this.background ? response.id ?? response._request_id ?? null : response._request_id ?? response.id ?? null,
         duration_ms: providerDurationMs,
         usage: normalizeUsage(this.customConnection && !response.usage?.total_tokens ? {} : response.usage),
       },

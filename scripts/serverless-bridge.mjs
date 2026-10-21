@@ -35,6 +35,11 @@ async function adaptRequest(webRequest, options) {
       await drainPreparationQueue(new URL(webRequest.url).origin,
         process.env.VERCEL === "1" ? webRequest.headers.get("x-vercel-oidc-token") : null);
     }) : undefined,
+    scheduleDiagnostic: options.after ? () => options.after(async () => {
+      const { drainDiagnosticQueue } = await import("./local-db-server.mjs");
+      await drainDiagnosticQueue(new URL(webRequest.url).origin,
+        process.env.VERCEL === "1" ? webRequest.headers.get("x-vercel-oidc-token") : null);
+    }) : undefined,
     setHeader(name, value) {
       headers.delete(name);
       for (const item of Array.isArray(value) ? value : [value]) headers.append(name, String(item));
