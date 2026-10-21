@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-20 — Cumpleaños y control de español publicados en QA
+
+Solicitud expresa de commit/subida atendida. `a9e9fdd` y `58a44df6313d5a222c86c624907b881f68573b84` subidos a la rama QA; Preview `dpl_418kZFSTvnYMSYVAExnfZtDuyQdM` en gru1 y alias habitual actualizado al SHA `58a44df`, con árbol limpio al desplegar. 38 smoke checks PASS, español aceptado/inglés rechazado con voces sintéticas en Preview y alias, cumpleaños correctos, logo privado intacto. Fuentes pedagógicas y cantidades conservadas: diez niños/once imágenes. Cuatro filas de consumo de controles esperadas; histórico intacto. Producción `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf` sin cambio.
+
+Revisión visual real en pestaña aparte confirma tortitas y nombres en Calendario y avisos de hoy/mañana en Hoy. Capturas adicionales en el recorrido, sin aprobar entrevistas ni generar diagnóstico. Pestaña original conserva audio de la profesora pendiente de reintentar; no recargarla ni descartarlo automáticamente. No confundir prueba inglesa con regla limitada a inglés: español es requisito y se rechaza cualquier otro idioma detectado, mixto o incierto; ruso cubierto en regresión. Detalle y recibos en `docs/qa/QA_DICTADO_ESPANOL_2026-10-20.md` y `.local/qa-dictado-cumple-release-20261020/`. Cierre documental posterior, sin cambiar código publicado.
+
 ## 2026-10-20 — Dictado con detección y salida en español
 
 Dos fallos HTTP 503 de audio sin causa registrada; un reintento posterior devolvió ruso en una entrevista, aunque la persona usuaria había leído opciones en español. Se retiró solo esa respuesta incorrecta del borrador por UI: 0/8, sin confirmar entrevista. Por pedido explícito, el tier de audio pasa a `gpt-transcribe` con `languages: [es]` y validación del idioma detectado antes de entregar texto. Otros idiomas/mezclas/incertidumbre se rechazan sin traducir, completar ni guardar respuesta. Errores tipificados en mensajes y logs sin contenido privado. Sigue una llamada por intento y consumo nuevo estimado por duración, conservando históricos.

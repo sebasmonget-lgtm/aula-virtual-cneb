@@ -32,3 +32,11 @@ La revisión independiente termina con `disposition: ship`, limitada a esta inte
 Función validada localmente; pendiente de solicitud expresa de publicación en QA y smoke del despliegue concreto. El enlace QA aún conserva la entrega del logo `fabda4b`. No se ha desplegado esta función ni modificado Producción.
 
 Rollback: revertir exclusivamente la proyección de cumpleaños, sus dos presentaciones y pruebas. Las fechas y retratos de matrícula permanecen guardados; no requiere restauración de datos, borrar niños ni modificar documentos pedagógicos.
+
+## Entrega efectiva
+
+Publicación expresamente autorizada junto con el control de español. Fuente `58a44df6313d5a222c86c624907b881f68573b84`, que incluye `a9e9fdd`; Preview `dpl_418kZFSTvnYMSYVAExnfZtDuyQdM` en gru1 y alias QA actualizado. 38 smoke checks PASS antes/después, fuentes pedagógicas, diez niños y once imágenes privadas conservados; cuatro consumos sintéticos esperados y ledger histórico intacto. Producción sin cambio. Recibo `.local/qa-dictado-cumple-release-20261020/release.json` y detalle en `QA_DICTADO_ESPANOL_2026-10-20.md`.
+
+Calendario del alias muestra diez cumpleaños anuales; Hoy, Mateo el 18 y Abril mañana 19 de diciembre según el reloj QA. Revisión visual real de ambas pantallas, sin alterar entrevistas. Capturas `extra-calendario-cumpleanos-QA-completo.png` y `extra-hoy-cumpleanos-QA.jpg` en `outputs/ayni-recorrido-20261020/capturas/`; son tomas adicionales, no aprobación del paso de entrevistas ni de un video. Se conservan también los encuadres iniciales.
+
+Hallazgo acotado de navegación QA: al abrir Calendario por primera vez sin parámetros, puede seleccionarse la fecha real antes de terminar de cargar el reloj pedagógico del tablero. El botón Hoy lleva correctamente a la fecha QA y permite comprobar los cumpleaños. No se modifican las fechas guardadas ni se altera ese comportamiento anterior en esta entrega; queda pendiente de revisión de navegación.

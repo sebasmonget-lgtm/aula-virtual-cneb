@@ -8,6 +8,8 @@ Corrección local: modelo de transcripción con idiomas detectados, solicitud `[
 
 Validación: 49 pruebas PASS, HTTP con proveedor simulado y casos extranjero/español sin guardar entrevistas, dos voces sintéticas reales en el servicio modificado; typecheck/lint/Vinext/Next PASS. En el barrido se corrigió un fallo previo del test de RLS: regex sin dígitos truncaba `preparation_jobs_v2`, cuya migración ya tiene RLS. Sin migración ni despliegue. Prevención: exigir metadatos de idioma y probar rechazos antes del autoguardado; no confundir texto no vacío con transcripción fiel. Detalle y rollback: `docs/qa/QA_DICTADO_ESPANOL_2026-10-20.md`.
 
+Entrega posterior autorizada: `58a44df` en Preview `dpl_418kZFSTvnYMSYVAExnfZtDuyQdM`, alias QA actualizado tras smoke y repetido allí, 38 comprobaciones PASS y datos pedagógicos intactos. Cuatro llamadas sintéticas de audio esperadas, ledger previo y Producción sin cambio. En el primer smoke faltaba su cookie privada de reloj: se detuvo antes de mover el alias y se corrigió solo el harness para usar la misma fecha QA visible, sin modificar navegador/cuenta. La nueva grabación pendiente de la persona usuaria permanece en la pestaña original para reintentar.
+
 ## 2026-10-20 — Logo guardado con URL local en QA
 
 Síntoma: la vista previa del PNG funciona al configurar el aula, pero aparece una imagen rota al volver al perfil en la Preview. Causa comprobada: el tablero y la respuesta inicial construyen `logo_url` con `http://127.0.0.1:8788`, aunque la imagen está correctamente vinculada y se puede leer desde Storage privado. Solución local: origen compartido según Auth; ruta relativa del mismo host para Supabase y origen absoluto para el API local separado. Sin migración ni cambios a archivos/RLS.

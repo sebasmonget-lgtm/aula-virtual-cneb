@@ -39,3 +39,15 @@ La [tarifa oficial de GPT-Transcribe](https://developers.openai.com/api/docs/mod
 Corrección local preparada sobre `a9e9fdd`, que conserva el logo y cumpleaños. No publicada todavía: el enlace QA sigue en `fabda4b`. La publicación requiere solicitud expresa, commit limpio, Preview aislada y smoke de español/idioma rechazado antes del alias. No se ha modificado Producción.
 
 Rollback del cambio de código/modelo y sus pruebas, sin restaurar datos. No usar un fallback automático al modelo antiguo: perdería el metadato que exige la validación de español. Conservar el registro del incidente y no restaurar la palabra incorrecta como respuesta familiar.
+
+## Publicación efectiva autorizada
+
+La persona usuaria pide expresamente commit y subida para continuar QA. Los commits `a9e9fdd` (cumpleaños) y `58a44df6313d5a222c86c624907b881f68573b84` (español) quedan subidos a `codex/qa-corrections-20261019`, sin sustituir los cambios recientes. Árbol limpio y remoto sincronizado al desplegar. Preview `dpl_418kZFSTvnYMSYVAExnfZtDuyQdM`, región gru1, fuente exacta `58a44df`, base aislada `lqrkhdjdxcejyamzrwoi`.
+
+Antes y después de mover `https://ayni-aula-qa-20261019.vercel.app/`, 38 comprobaciones PASS: acceso, identidad, logo privado, diez niños, calendario, avisos de hoy/mañana, año inválido, español aceptado y voz inglesa rechazada. Dos voces sintéticas en cada host, cuatro llamadas de transcripción en total; no se guardó texto de entrevista ni se reintentó la grabación nueva de la persona usuaria. La política exige español, no solo exclusión de inglés: las regresiones locales cubren también ruso, otros alfabetos, metadatos inciertos y mezclas.
+
+Huellas de todas las fuentes pedagógicas y cantidades iguales: un aula, diez niños y once imágenes privadas. El consumo histórico conserva sus huellas; las únicas cuatro filas nuevas son el consumo esperado de los controles sintéticos del nuevo modelo. Producción conserva `dpl_H19YWzRdGjkgh8y72QAd1qBty7Mf`, fuente `9a0920230350cd6b9050f35683a1f35d459e78c7`. No migraciones ni generación de diagnóstico.
+
+La primera ejecución del smoke no llevaba la cookie del reloj QA y encontró la fecha predeterminada de sus propias peticiones. Se detuvo antes de probar audio o mover el alias. El recibo corregido obtiene por PUT una cookie de reloj solo para esas peticiones, usando la fecha visible de la profesora (18 de diciembre, 16:00); no cambia el reloj del navegador ni fuentes pedagógicas. No se debilitó la comprobación de fecha.
+
+Verificación visual del alias en otra pestaña: tortitas/nombres de Mateo y Abril en Calendario, avisos de hoy y mañana con nombres completos en Hoy. Capturas completas guardadas en el recorrido. La pestaña original de entrevistas conserva el audio pendiente de reintentar; no se recarga ni se descarta para actualizar la página. El API nuevo ya atiende ese mismo enlace. Recibos en `.local/qa-dictado-cumple-release-20261020/`, especialmente `release.json`; cierre documental posterior sin cambios al producto publicado.
