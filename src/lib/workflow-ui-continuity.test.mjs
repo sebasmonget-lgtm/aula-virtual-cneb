@@ -253,7 +253,8 @@ test("el resumen tiene comentarios opcionales debajo del mapa, dictado y navegac
   assert.match(source, /backLabel="Volver a observar"/);
   assert.match(source, /backLabel="Volver al mapa"/);
   assert.match(source, /backLabel="Así está mi grupo"/);
-  assert.match(source, /Sugerir resumen con Ayni/);
+  assert.match(source, /DiagnosticGenerationControl/);
+  assert.match(await component('diagnostic-generation-control'), /Sugerir resumen con Ayni/);
   assert.match(source, /group_information\.interests\.map/);
   assert.match(source, /placeholder="Por ejemplo: Que los niños expresen sus ideas/);
   assert.match(source, /placeholder="Por ejemplo: En la asamblea/);

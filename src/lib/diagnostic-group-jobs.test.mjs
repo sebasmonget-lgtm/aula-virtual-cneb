@@ -4,7 +4,7 @@ import {readFile,readdir} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {createPilotClassroom,importStudentsForTeacher} from './pilot-onboarding-service.mjs';
 import {recordConfirmedSpontaneousObservation} from './diagnostic-sources-v4.mjs';
-import {prepareDiagnosticGroupReview,diagnosticGroupProposalSources} from './diagnostic-assessment-v4.mjs';
+import {prepareDiagnosticGroupReview,diagnosticGroupProposalSources,saveDiagnosticGroupReview} from './diagnostic-assessment-v4.mjs';
 import {suggestDiagnosticGroupReview,diagnosticGroupProviderRequest} from './ai-diagnostic-evaluation-service.mjs';
 import {startDiagnosticGeneration,readDiagnosticGeneration,runDiagnosticGenerationStep,diagnosticGenerationPending,claimDiagnosticDrain,releaseDiagnosticDrain} from './diagnostic-group-jobs.mjs';
 
@@ -39,6 +39,7 @@ test('inicio concurrente, ID durable, recarga y consulta: una creación, texto y
  assert.equal((await runDiagnosticGenerationStep(db,deps)).status,'processing');
  assert.equal((await readDiagnosticGeneration(db,teacher,draft.id)).status,'processing');
  assert.equal((await startDiagnosticGeneration(db,teacher,draft.id)).status,'processing');
+ await saveDiagnosticGroupReview(db,teacher,draft.id,{strengths:'Mi comentario mientras Ayni prepara la propuesta.',needs:'',planning_priorities:'',competency_priorities:[]});
  await assert.rejects(suggestDiagnosticGroupReview(db,teacher,draft.id),{reason:'in_progress'});
  assert.equal(await runDiagnosticGenerationStep(db,deps),null);time+=6000;
  const workers=await Promise.all([runDiagnosticGenerationStep(db,deps),runDiagnosticGenerationStep(db,deps)]);
@@ -48,7 +49,7 @@ test('inicio concurrente, ID durable, recarga y consulta: una creación, texto y
  assert.equal((await startDiagnosticGeneration(db,teacher,draft.id)).status,'ready');
  assert.deepEqual((await suggestDiagnosticGroupReview(db,teacher,draft.id)).details,ready.details);
  const row=(await db.query('select status,details from diagnostic_group_reviews where id=$1',[draft.id])).rows[0];
- assert.equal(row.status,'draft');assert.equal(row.details.strengths,'');assert.equal(creates,1);
+ assert.equal(row.status,'draft');assert.equal(row.details.strengths,'Mi comentario mientras Ayni prepara la propuesta.');assert.equal(creates,1);
  }finally{await db.close();}
 });
 
