@@ -5,6 +5,12 @@ export function projectFlexibilityText(value){
  return value==='Ajustar el acompañamiento y los apoyos según lo observado, conservando la secuencia confirmada.'?projectFlexibilityGuidance:value;
 }
 
+/** The same saved accompanying notes in the project reader and its Word. */
+export function projectMediationNotes(content={}){
+ const route=Array.isArray(content.activity_route)?content.activity_route:[];
+ return [...new Set(route.map(item=>typeof item?.mediation_notes==='string'?item.mediation_notes:'').filter(Boolean))].slice(0,3);
+}
+
 /** Presentation of planning prose only. Never apply to literal child records. */
 export function activityTeacherText(value){
  if(Array.isArray(value))return value.map(activityTeacherText);

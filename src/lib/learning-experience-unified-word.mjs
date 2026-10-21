@@ -1,6 +1,6 @@
-import { retainCoverPageBreak, guideDetails, keepShortTableTogether } from "./teacher-guide-word-layout.mjs";
+import { retainCoverPageBreak, compactCoverSpacers, guideDetails, keepShortTableTogether } from "./teacher-guide-word-layout.mjs";
 import { routeObservationCriteria } from "./activity-observation-plan.mjs";
-import {projectFlexibilityGuidance,projectFlexibilityText} from './activity-teacher-reading.mjs';
+import {projectFlexibilityGuidance,projectFlexibilityText,projectMediationNotes} from './activity-teacher-reading.mjs';
 import { ageReference, compactPlanningTable } from "./pedagogical-word-presentation.mjs";
 import path from "node:path";
 import { insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
@@ -114,13 +114,17 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     ["Preguntas que orientan el recorrido", content.dependents?.guiding_questions?.length ? content.dependents.guiding_questions : values.RETO_PREGUNTA],
     ["Resultado que se espera", values.PRODUCTO_FINAL],
   ]);
+  const childJourney=(content.dependents?.journey??[]).map(item=>[clean(item.title),clean(item.description)].filter(Boolean).join(': ')).filter(Boolean);
+  const mediation=projectMediationNotes(content);
   const preplan = guideDetails([
     ["Primeros pasos", (content.activity_route ?? []).slice(0, 3).map(item => item.title)],
     ["Ruta completa", (content.activity_route?.length ?? 0) > 3 ? `La ruta completa tiene ${content.activity_route.length} actividades; se muestra más adelante.` : ""],
-    ["Cómo acompañará la docente", values.PREPLAN_COMO],
+    ["Qué harán los niños", childJourney.length?childJourney:list((content.possible_pathways || content.proposed_situations)?.map(item=>item.possible_child_actions))],
+    ["Cómo acompañará la docente", mediation.length?mediation:clean(content.formal_content?.methodology)],
     ["Materiales y recursos previstos", content.spaces_and_materials],
     ["Acompañamiento y flexibilidad", values.AJUSTES_FLEXIBILIDAD],
-  ]);
+  ]).replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,row=>xmlText(row).startsWith('Cómo acompañará la docente')&&xmlText(row).length<=1400
+    ?row.replace('<w:tr>','<w:tr><w:trPr><w:cantSplit/></w:trPr>'):row);
   const competencies = competencyRows.map(row => paragraph(row.COMPETENCIA, true) + guideDetails([
     ["Área", row.AREA],
     ["Capacidades de la competencia como referencia", row.CAPACIDADES],
@@ -180,6 +184,6 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
       if(!/^[IVX]+\. (?:DATOS GENERALES|ORIGEN|PREPLANIFICACIÓN|PROPÓSITO|ENFOQUES|ESTRATEGIA|RUTA)/.test(title))return part;
       return replaceWordText(part,title,title.replace(/^[IVX]+/,numerals[section++]));
     });
-    return insertCoverQuickView(output, "El proyecto en una mirada", overview);
+    return compactCoverSpacers(insertCoverQuickView(output, "El proyecto en una mirada", overview));
   } });
 }

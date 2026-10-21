@@ -83,7 +83,8 @@ export function annualJourneyDocumentSections(plan, names = new Map(), subjects 
     `${plan.resolved_calendar.integrity.assigned} de ${plan.resolved_calendar.integrity.eligible} fechas previstas; ${plan.resolved_calendar.integrity.gaps} sin asignar; ${plan.resolved_calendar.integrity.overlaps} solapamientos.`] });
   sections.push({title:'Anexo · Referencias por propuesta',lines:plan.proposed_experiences.map((row,index)=>{
     const slot=plan.resolved_calendar.projects.find(slot=>slot.proposal_id===row.proposal_id);
-    return `${slot?.index??index+1}. ${annualDisplayTitle(row.title)}: ${row.source_fact_keys.map(key=>sources.has(key)?`fuente ${sources.get(key).number}`:'referencia no disponible').join('; ')}.`;
+    const references=row.source_fact_keys.map(key=>sources.has(key)?`fuente ${sources.get(key).number}`:'referencia no disponible').join('; ');
+    return `${slot?.index??index+1}. ${annualDisplayTitle(row.title)}: ${references||'Invitación curricular; sin observaciones citadas'}.`;
   })});
   sections.push({ title: "Anexo · Fuentes del plan y su procedencia", lines: [`Se revisaron ${facts.length} fuentes. ${citedKeys.size?'Aquí se incluyen las citadas en las propuestas e interpretaciones; los demás registros se conservan en Entrevistas y observaciones de Ayni.':'Las fuentes se conservan con su procedencia original.'}`,...facts.flatMap((f,index) => citedKeys.size&&!citedKeys.has(f.key)?[]:[
     `Fuente ${index + 1}. ${sourceKinds[f.kind] ?? "Registro del aula"} · ${scopes[f.scope] ?? "Alcance no precisado"}${/^child_\d+$/i.test(f.subject ?? "") ? ` · ${annualTeacherText(f.subject,subjects)}` : ""} · ${readableDate(f.occurred_at)}. ${sourceText(f)}${f.explicit_tags?.length ? `; selecciones: ${f.explicit_tags.join(", ")}` : ""} ${sourceQualifications[f.uncertainty] ?? "Consultar el registro original para conocer su alcance."}`])] });

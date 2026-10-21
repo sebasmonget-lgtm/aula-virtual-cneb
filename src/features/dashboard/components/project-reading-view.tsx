@@ -4,7 +4,7 @@ import {CalendarDays,Target,Heart,Eye,Package,ListChecks,Lightbulb} from 'lucide
 import {displayDate} from '@/src/lib/display-date';
 import {presentMaterials} from '@/src/lib/annual-proposal-intent.mjs';
 import {projectSituation} from '@/src/lib/project-situation.mjs';
-import {projectFlexibilityText} from '@/src/lib/activity-teacher-reading.mjs';
+import {projectFlexibilityText,projectMediationNotes} from '@/src/lib/activity-teacher-reading.mjs';
 import {AnnualCompetencies} from './annual-project-preview';
 import {ProjectPictogram} from './project-pictogram';
 import type {OpenDocument} from './documents-screen';
@@ -18,7 +18,7 @@ export function ProjectReadingView({document}:{document:OpenDocument}){
   const route=Array.isArray(content.activity_route)?content.activity_route as Record<string,unknown>[]:[];
   const journey=Array.isArray(dependents.journey)?dependents.journey as Record<string,unknown>[]:[];
   const criteria=Array.isArray(dependents.general_criteria)?dependents.general_criteria as Record<string,unknown>[]:[];
-  const mediation=[...new Set(route.map(item=>text(item.mediation_notes)).filter(Boolean))].slice(0,3);
+  const mediation=projectMediationNotes(content);
   const materials=presentMaterials(master.resources??content.spaces_and_materials) as string[];
   const situation=projectSituation(content);
   return <article className={styles.reader} aria-label="Detalle del proyecto">

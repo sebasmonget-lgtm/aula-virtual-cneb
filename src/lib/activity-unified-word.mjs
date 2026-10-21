@@ -169,6 +169,7 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
   output=replaceWordText(output,"VII. SÍNTESIS Y REFLEXIÓN DOCENTE",`${numerals[evidence.length?1:0]}. SÍNTESIS Y REFLEXIÓN DOCENTE`);
   output=replaceWordText(output,"VIII. TALLER",`${numerals[(evidence.length?1:0)+(closure?1:0)]}. TALLER`);
   if(withWorkshop)output=output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,table=>table.includes("{{TALLER_PROPOSITO}}")?keepShortTableTogether(table):table);
+  if(closure)output=output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,table=>table.includes('{{REFLEXION_DOCENTE}}')?keepShortTableTogether(table):table);
   return output;
 }
 

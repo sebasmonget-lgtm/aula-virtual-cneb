@@ -27,7 +27,7 @@ test("el proyecto unificado clona la ruta, usa currículo de la edad y no antici
   assert.match(xml, /Ajusta las preguntas, los apoyos y el tiempo/);
   assert.doesNotMatch(xml,/conservando la secuencia confirmada/);
   assert.doesNotMatch(xml, /ajustar las siguientes actividades/);
-  for (const label of ["Primeros pasos", "Cómo acompañará la docente", "Qué observar", "Evidencia esperada"])
+  for (const label of ["Primeros pasos", "Qué harán los niños", "Qué observar", "Evidencia esperada"])
     assert.match(xml, new RegExp(label));
   assert.doesNotMatch(xml, /¿QUÉ HAREMOS\?|¿CÓMO LO HAREMOS\?|¿QUÉ NECESITAREMOS\?/);
   assert.doesNotMatch(xml, /\{\{/);
@@ -90,6 +90,14 @@ test("el Word V2 usa el mapa confirmado y las fechas reales sin inventar registr
   assert.match(await shortArchive.file('word/document.xml').async('string'),/1 semana lectiva prevista/);
   assert.doesNotMatch(updatedXml,/Exploramos el patio\.|Partimos de preguntas del grupo\./,'No mezcla la situación nueva con el fundamento o texto formal anterior');
   assert.match(xml, /Compartir lo investigado/);
+  const accompanied=structuredClone(document);
+  accompanied.content.activity_route[0].mediation_notes='La docente acerca los materiales y escucha las propuestas.';
+  const accompaniedXml=await (await JSZip.loadAsync(await renderLearningExperienceUnifiedWord(accompanied,cards))).file('word/document.xml').async('string');
+  const preplan=accompaniedXml.slice(accompaniedXml.indexOf('III. PREPLANIFICACIÓN'),accompaniedXml.indexOf('IV. PROPÓSITO'));
+  assert.match(preplan,/Qué harán los niños/);
+  assert.match(preplan,/Cómo acompañará la docente/);
+  assert.match(preplan,/La docente acerca los materiales y escucha las propuestas/);
+  assert.doesNotMatch(preplan,/Jugar, observar y conversar/,'La orientación guardada que muestra la app tiene prioridad sobre el texto formal anterior');
   for (const heading of ["III. PREPLANIFICACIÓN DOCENTE", "IV. PROPÓSITO GENERAL", "V. PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", "VI. ENFOQUES", "VII. ESTRATEGIA GENERAL DE EVALUACIÓN", "VIII. RUTA DE ACTIVIDADES", "Materiales y recursos previstos"])
     assert.ok(xml.includes(heading), `Falta ${heading}`);
   assert.ok(!xml.includes("<w:t>V. PROPÓSITO GENERAL</w:t>"), "No debe saltar el IV");

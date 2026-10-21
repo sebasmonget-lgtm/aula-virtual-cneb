@@ -113,6 +113,8 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.match(literalXml,/Se comunica: escuchar su explicación/,'El texto de planificación usa una etiqueta comprensible');
   assert.ok(literalXml.includes(literal),'La observación literal nunca se reescribe al presentar las competencias');
   assert.match(completedXml, /El grupo propuso nuevos turnos/);
+  const reflectionTable=[...completedXml.matchAll(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g)].find(item=>item[0].includes('El grupo propuso nuevos turnos'))?.[0];
+  assert.match(reflectionTable,/<w:keepNext\/>/,'La reflexión breve se mantiene con su rótulo');
   const closureWithoutEvidence=await JSZip.loadAsync(await renderActivityUnifiedWord({...document,teacher_closure_note:'Mañana ofreceré un espacio más amplio.'},cards));
   const closureXml=await closureWithoutEvidence.file('word/document.xml').async('string');
   assert.match(closureXml,/Mañana ofreceré un espacio más amplio\./,'Una reflexión guardada se conserva aunque no haya observaciones individuales');

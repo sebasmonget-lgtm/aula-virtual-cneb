@@ -17,6 +17,8 @@ test('Word anual conserva fuentes una vez, con referencias y alcance legibles si
  assert.equal(text.split('Ana probó otra ubicación para su caja.').length-1,1);
  assert.equal(sections.filter(s=>s.title==='Registros de referencia').length,0);
  assert.match(text,/Anexo · Referencias por propuesta/);assert.match(text,/1\. Invitación 1: fuente 1; fuente 2/);assert.match(text,/Fuente 2\. Relato de la familia/);
+ const curricular=annualJourneyDocumentSections({...plan,proposed_experiences:[{...plan.proposed_experiences[0],source_fact_keys:[]}]}).find(section=>section.title==='Anexo · Referencias por propuesta');
+ assert.match(curricular.lines[0],/Invitación curricular; sin observaciones citadas\./);assert.doesNotMatch(curricular.lines[0],/: \./);
  assert.ok(sections.some(s=>s.title.includes('pendientes de revisión docente')));
  assert.ok(annualJourneyDocumentSections({...plan,interpretation_review:{status:'reviewed'}}).some(s=>s.title==='Interpretaciones revisadas por la docente'));
  assert.doesNotMatch(text,/quiet_initially|communication_tags/);assert.match(text,/Habla poco al inicio/);
