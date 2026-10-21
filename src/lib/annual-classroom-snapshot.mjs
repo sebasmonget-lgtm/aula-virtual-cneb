@@ -56,6 +56,23 @@ export function buildAnnualClassroomSnapshot(sources, context, curriculum = []) 
     occurred_at: sources.prior.teacher_confirmed_at, competency_id: null,
     source_refs: [{ type: "diagnostic_priority", id: sources.prior.id, version: sources.prior.version }],
   });
+  for(const reading of sources.group?.details?.competency_readings??[]){
+    const linked=sources.observations.filter(row=>reading.source_record_ids?.includes(row.id));
+    const children=[...new Set(linked.map(row=>subjects.get(row.student_id)).filter(Boolean))];
+    const originals=sources.group.details.report_snapshot?.observations;
+    const instant=value=>value?new Date(value).toISOString():'';
+    if(!Array.isArray(originals)||reading.source_record_ids.some(id=>{
+      const current=linked.find(row=>row.id===id),original=originals.find(row=>row.id===id&&row.competency_id===reading.competency_id);
+      return !current||!original||original.observation_text!==current.observation_text||instant(original.observed_at)!==instant(current.observed_at)||
+        !(current.competency_ids??[current.competency_v4_id]).includes(reading.competency_id);
+    })||reading.scope==='individual'&&children.length!==1||reading.scope==='subgroup'&&children.length<2)continue;
+    facts.push({key:`confirmed_diagnostic_${reading.competency_id}`,kind:'teacher_decision',
+      scope:reading.scope==='individual'&&children.length===1?'individual':reading.scope==='subgroup'?'subgroup':'teacher_defined',
+      subject:reading.scope==='individual'&&children.length===1?children[0]:'classroom',
+      uncertainty:'confirmed_teacher_interpretation',support_text:`${reading.summary} Próximo paso propuesto: ${reading.next_step}`,ai_support_text:safe(`${reading.summary} Próximo paso propuesto: ${reading.next_step}`),
+      occurred_at:sources.group.teacher_confirmed_at,competency_id:reading.competency_id,
+      source_refs:[{type:'diagnostic_group',id:sources.group.id,version:sources.group.version,competency_id:reading.competency_id}]});
+  }
   return { version: 2, source_fingerprint: sources.fingerprint, student_count: sources.students.length, facts,
     contradictions: "Preserve literal conflicting accounts; do not resolve without teacher judgment.",
     curriculum_version: context.curriculum_version_id, languages: sources.interviews.flatMap((x) =>

@@ -19,6 +19,7 @@ import type {ChangeProposal} from "./annual-proposal-change-dialog";
 import { DocumentSyncPanel } from "./document-sync-panel";
 
 import {familyReportSectionForReader} from "@/src/lib/family-report-presentation.mjs";
+import {diagnosticReportReadings,diagnosticReportPurpose} from '@/src/lib/diagnostic-report-reading.mjs';
 
 type DocumentKind = "annual_plan" | "diagnostic_summary" | "experience" | "activity" | "family_report" | "period_closure";
 type DocumentEntry = {
@@ -119,8 +120,10 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
     </header>
     <div className="space-y-5 p-5 sm:p-8">
       {document.kind === "diagnostic_summary" && <>
+        <p className="text-sm text-[#526b87]">{diagnosticReportPurpose}</p>
         <Section title="Fortalezas del grupo" value={content.strengths} /><Section title="Dónde acompañar más" value={content.needs} />
         <Section title="Qué tendremos en cuenta al planificar" value={content.planning_priorities} />
+        {diagnosticReportReadings(document).map(reading=><section key={reading.competency_id} className="space-y-3 rounded-xl border border-[var(--ayni-panel-border)] p-4"><h3 className="font-bold">{names.get(reading.competency_id)??reading.competency_id}</h3><Section title="Qué nos muestran los registros" value={reading.summary}/><Section title="Qué haremos después" value={reading.next_step}/></section>)}
       </>}
       {document.kind === "experience" && <>
         <Section title="Para qué la haremos" value={content.purpose} /><Section title="Nuestro punto de partida" value={content.starting_point} />

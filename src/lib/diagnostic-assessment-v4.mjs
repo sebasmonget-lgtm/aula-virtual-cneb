@@ -83,14 +83,24 @@ function validateGroupDetails(details) {
     fail("invalid_details", "Revisa las competencias y motivos del resumen del aula.");
   if (new Set(priorities.map((item) => item.competency_id)).size !== priorities.length)
     fail("invalid_details", "Una competencia solo puede aparecer una vez en las prioridades del aula.");
+  const readings=details.competency_readings;
+  if([strengths,needs,planning,...(Array.isArray(readings)?readings.flatMap(item=>[item?.summary,item?.next_step]):[])].some(text=>/\b(?:nivel\s*(?:AD|A|B|C)|calificaci[oó]n\s*(?:AD|A|B|C)|ranking)\b/i.test(String(text??''))))
+    fail('invalid_details','La lectura diagnóstica no asigna notas ni clasifica a los niños.');
+  if(readings!==undefined&&(!Array.isArray(readings)||readings.length>14||new Set(readings.map(item=>item?.competency_id)).size!==readings.length||readings.some(item=>
+    !/^[A-Z][A-Z0-9_]+$/.test(item?.competency_id??'')||!clean(item.summary,700)||!clean(item.next_step,400)||
+    !['individual','subgroup','information_gap'].includes(item.scope)||!Array.isArray(item.source_refs)||item.source_refs.length>20||
+    item.source_refs.some(ref=>!/^child_\d+_observation_\d+$/.test(ref))||!Array.isArray(item.source_record_ids)||
+    item.source_record_ids.some(id=>!/^[0-9a-f-]{36}$/i.test(id)))))fail('invalid_details','Revisa las lecturas por competencia y sus registros de respaldo.');
   return { strengths, needs, planning_priorities: planning,
+    ...(readings!==undefined?{competency_readings:readings.map(item=>({competency_id:item.competency_id,summary:clean(item.summary,700),next_step:clean(item.next_step,400),scope:item.scope,
+      source_refs:[...new Set(item.source_refs)],source_record_ids:[...new Set(item.source_record_ids)]}))}:{}),
     competency_priorities: priorities.map((item) => ({ competency_id: item.competency_id, emphasis: item.emphasis, reason: clean(item.reason, 500) })) };
 }
 
 async function validateGroupCompetencyIds(details, classroom) {
   const cards = await applicableDiagnosticCompetencies(classroom);
   const allowed = new Set(cards.map((card) => card.id));
-  if (details.competency_priorities.some((item) => !allowed.has(item.competency_id)))
+  if ([...details.competency_priorities,...(details.competency_readings??[])].some((item) => !allowed.has(item.competency_id)))
     fail("invalid_details", "Una competencia no corresponde a esta aula.");
 }
 
@@ -558,7 +568,7 @@ export async function diagnosticGroupProposalSources(db, teacherId, draftId) {
       .filter((item) => item.text).slice(-6);
     const textLimit = Math.min(1200, Math.floor(perChildBudget / Math.max(1, rows.length)));
     return { child: childAliases.get(student.id), notes: rows.map(({ row, text }, index) => ({
-      source_id: `${childAliases.get(student.id)}_observation_${index + 1}`,
+      source_id: `${childAliases.get(student.id)}_observation_${index + 1}`, record_id:row.id,
       text: text.slice(0, textLimit), truncated: text.length > textLimit,
       source_type: "direct_observation", observed_at: row.observed_at,
       context: anonymousDiagnosticText(row.context_label ?? row.aspect_id ?? "", names),
@@ -586,6 +596,16 @@ export async function saveDiagnosticGroupReview(db, teacherId, id, details) {
   const { classroom } = await scope(db, teacherId);
   const validated = validateGroupDetails(details);
   await validateGroupCompetencyIds(validated, classroom);
+  if(validated.competency_readings?.length){
+    const draft=(await db.query("select ai_snapshot,source_snapshot from diagnostic_group_reviews where id=$1 and classroom_id=$2 and created_by=$3 and status='draft'",[id,classroom.id,teacherId])).rows[0];
+    if(!draft)fail('not_editable','Este resumen no es un borrador editable de tu aula.');
+    if(!sameDiagnosticSources(draft.ai_snapshot?.source_snapshot,draft.source_snapshot))fail('stale_sources','Cambió la información del aula. Prepara de nuevo las lecturas antes de confirmarlas.');
+    for(const item of validated.competency_readings){
+      const original=draft.ai_snapshot?.output?.competency_readings?.find(row=>row.competency_id===item.competency_id);
+      if(!original||item.scope!==original.scope||JSON.stringify(item.source_refs)!==JSON.stringify(original.source_refs)||JSON.stringify(item.source_record_ids)!==JSON.stringify(original.source_record_ids))
+        fail('invalid_details','Los registros de respaldo deben corresponder a la propuesta revisada. Puedes editar su lectura y siguiente paso.');
+    }
+  }
   const result = await db.query(`update diagnostic_group_reviews set details = $1::jsonb, updated_at = now()
     where id = $2 and classroom_id = $3 and created_by = $4 and status = 'draft' returning id,version,status,details,teacher_confirmed_at`,
   [JSON.stringify(validated), id, classroom.id, teacherId]);
@@ -630,6 +650,7 @@ async function confirmGroup(db, teacherId, id) {
         observation_text: item.observation_text || "", aspect_prompt: item.aspect_prompt || "",
         observation_status: item.observation_status })),
       competency_coverage: workspace.group_coverage,
+      competency_readings:row.details.competency_readings??[],
     } };
   const confirmed = await db.query(`update diagnostic_group_reviews set status = 'confirmed', details=$2::jsonb,
     teacher_confirmed_at = now(), updated_at = now() where id = $1 and status = 'draft'

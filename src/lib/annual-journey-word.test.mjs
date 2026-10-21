@@ -11,7 +11,9 @@ test('Word anual conserva fuentes una vez, con referencias y alcance legibles si
   proposed_experiences:[1,2].map(n=>({title:'Invitación '+n,rationale:'Invitación docente.',purpose:'Explorar.',invitation:'¿Qué podemos probar?',children_actions:[],planned_start_date:'2026-04-01',planned_end_date:'2026-04-03',duration_weeks:1,planned_instructional_days:3,opportunities:[],materials:[],supports:[],flexibility:'Tiempo para explorar.',source_fact_keys:['observation_123','family_456']})),
   evidence_interpretations:[{scope:'individual',meaning:'ambiguous',interpretation:'No permite concluir un logro.'}],everyday_opportunities:[]};
  for(const key of ['organization_criteria','transversal_approaches','teaching_strategies','assessment_followup','family_collaboration','inclusive_supports'])plan[key]=[];
+ plan.classroom_snapshot.facts.push({key:'uncited',kind:'observed',scope:'individual',subject:'child_1',support_text:'Registro no citado que se conserva en Ayni.'});
  const before=structuredClone(plan),sections=annualJourneyDocumentSections(plan),text=sections.flatMap(s=>[s.title,...s.lines]).join('\n');
+ assert.doesNotMatch(text,/Registro no citado que se conserva en Ayni/);assert.equal(plan.classroom_snapshot.facts.length,3);
  assert.equal(text.split('Ana probó otra ubicación para su caja.').length-1,1);
  assert.equal(sections.filter(s=>s.title==='Registros de referencia').length,2);
  assert.match(text,/Fuente 1: Observación de aula/);assert.match(text,/Fuente 2\. Relato de la familia/);

@@ -6,6 +6,7 @@ import { annualTeacherText } from "./annual-teacher-display.mjs";
 import { Document, HeadingLevel, Paragraph, Packer, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle } from "docx";
 import { familyInterviewQuestionGroups } from "./family-interview-contract.mjs";
 import * as interview from "./family-interview-contract.mjs";
+import {competencyLabels} from './competency-labels.mjs';
 
 const sourceKinds = { observed: "Observación de aula", family_report: "Relato de la familia",
   teacher_context: "Contexto del aula", teacher_decision: "Decisión docente" };
@@ -48,6 +49,7 @@ export function annualJourneyDocumentSections(plan, names = new Map(), subjects 
   if (plan.curriculum_reference) names = new Map(plan.curriculum_reference.map((card) => [card.id, card.name]));
   const facts = plan.classroom_snapshot.facts;
   const sources = new Map(facts.map((fact,index) => [fact.key,{ fact, number: index + 1 }]));
+  const citedKeys=new Set([...plan.proposed_experiences.flatMap(row=>row.source_fact_keys),...plan.evidence_interpretations.flatMap(item=>item.fact_keys??[])]);
   const sections = plan.experience_context ? [] : [{ title: "Ideas y decisiones docentes", lines: [plan.teacher_preferences].filter(Boolean) }];
   if(plan.experience_context){
     sections.push({title:"Contexto aprobado por la profesora",lines:plan.experience_context.context_items.map(item=>item.text)});
@@ -69,7 +71,7 @@ export function annualJourneyDocumentSections(plan, names = new Map(), subjects 
     sections.push({ title: `${slot?.index ?? index + 1}. ${annualDisplayTitle(row.title)}`, lines: [`Situación que da origen: ${row.rationale}`, `Propósito: ${row.purpose}`, `Reto para los niños: ${row.invitation}`,
       ...row.children_actions.map(text=>`Qué harán: ${text}`), `${readableDate(row.planned_start_date)} al ${readableDate(row.planned_end_date)} · ${duration}`] });
     for (const opportunity of row.opportunities) sections.push(opportunitySection(opportunity, names));
-    sections.push({ title: "Materiales, apoyos y flexibilidad", lines: [...row.materials, ...row.supports, row.flexibility] });
+    sections.push({ title: "Materiales, apoyos y flexibilidad", lines: [`Materiales: ${row.materials.join('; ')}`,`Apoyos: ${row.supports.join(' ')}`, row.flexibility] });
     sections.push({ title: "Registros de referencia", lines: row.source_fact_keys.map((key) => {
       const source = sources.get(key);
       return source ? `Fuente ${source.number}: ${sourceKinds[source.fact.kind] ?? "Registro del aula"}. Ver su texto en la procedencia del plan.`
@@ -79,17 +81,17 @@ export function annualJourneyDocumentSections(plan, names = new Map(), subjects 
   for (const opportunity of plan.everyday_opportunities) sections.push({ ...opportunitySection(opportunity, names),
     title: `${opportunity.moment} · ${names.get(opportunity.competency_id) ?? opportunity.competency_id}` });
   sections.push({ title: plan.interpretation_review?.status==="reviewed"?"Interpretaciones revisadas por la docente":"Interpretaciones propuestas por Ayni · pendientes de revisión docente", lines: plan.evidence_interpretations.map((x) =>
-    `${scopes[x.scope] ?? "Alcance no precisado"} · ${interpretationLabels[x.meaning] ?? "Interpretación para revisar"}: ${x.interpretation}`) });
+    `${scopes[x.scope] ?? "Alcance no precisado"} · ${interpretationLabels[x.meaning] ?? "Interpretación para revisar"}: ${x.interpretation}${x.fact_keys?.length?` Fuentes: ${x.fact_keys.map(key=>sources.get(key)?.number).filter(Boolean).join(', ')}.`:''}`) });
   if (plan.insufficient_interpretations?.length) sections.push({title:"Información que todavía necesitamos conocer",lines:[
     `En ${plan.insufficient_interpretations.length} posibles interpretaciones todavía faltaba sustento. Conservamos los registros sin concluir que exista un avance o una dificultad.`]});
   sections.push({ title: "Calendario efectivo", lines: [`Versión: ${plan.resolved_calendar.calendar_version.version}`,
     `${plan.resolved_calendar.integrity.assigned} de ${plan.resolved_calendar.integrity.eligible} fechas previstas; ${plan.resolved_calendar.integrity.gaps} sin asignar; ${plan.resolved_calendar.integrity.overlaps} solapamientos.`] });
-  sections.push({ title: "Lo que sabemos del aula y su procedencia", lines: facts.map((f,index) =>
-    `Fuente ${index + 1}. ${sourceKinds[f.kind] ?? "Registro del aula"} · ${scopes[f.scope] ?? "Alcance no precisado"}${/^child_\d+$/i.test(f.subject ?? "") ? ` · ${annualTeacherText(f.subject,subjects)}` : ""} · ${readableDate(f.occurred_at)}. ${sourceText(f)}${f.explicit_tags?.length ? `; selecciones: ${f.explicit_tags.join(", ")}` : ""} ${sourceQualifications[f.uncertainty] ?? "Consultar el registro original para conocer su alcance."}`) });
+  sections.push({ title: "Lo que sabemos del aula y su procedencia", lines: [`Se revisaron ${facts.length} fuentes. ${citedKeys.size?'Aquí se incluyen las citadas en las propuestas e interpretaciones; los demás registros se conservan en Entrevistas y observaciones de Ayni.':'Las fuentes se conservan con su procedencia original.'}`,...facts.flatMap((f,index) => citedKeys.size&&!citedKeys.has(f.key)?[]:[
+    `Fuente ${index + 1}. ${sourceKinds[f.kind] ?? "Registro del aula"} · ${scopes[f.scope] ?? "Alcance no precisado"}${/^child_\d+$/i.test(f.subject ?? "") ? ` · ${annualTeacherText(f.subject,subjects)}` : ""} · ${readableDate(f.occurred_at)}. ${sourceText(f)}${f.explicit_tags?.length ? `; selecciones: ${f.explicit_tags.join(", ")}` : ""} ${sourceQualifications[f.uncertainty] ?? "Consultar el registro original para conocer su alcance."}`])] });
   return sections.filter(section=>section.lines?.some(line=>typeof line==='string'&&line.trim()));
 }
 function opportunitySection(o, names) {
-  return { title: names.get(o.competency_id) ?? o.competency_id, lines: [`Capacidades: ${o.capacity_names.join(" · ")}`,
+  return { kind:'opportunity',opportunity:o,title: names.get(o.competency_id) ?? o.competency_id, lines: [`Capacidades: ${o.capacity_names.join(" · ")}`,
     `Qué harán: ${o.child_action}`, `Condiciones: ${o.conditions}`, `Cómo acompañar: ${o.mediation}`, `Qué observar: ${o.observation}`, `Apoyos: ${o.supports}`] };
 }
 export async function renderAnnualJourneyWord(document, cards = [], {logo = null} = {}) {
@@ -98,16 +100,25 @@ export async function renderAnnualJourneyWord(document, cards = [], {logo = null
   const age=document.age??document.document_context?.age;
   const names = new Map(cards.map((card) => [card.id, card.official_name ?? card.name]));
   // Direct formatting survives insertion into the original stationery's styles.
-  const heading=(text,title=false)=>new Paragraph({heading:title?HeadingLevel.TITLE:HeadingLevel.HEADING_1,keepNext:true,spacing:{before:title?0:240,after:140},children:[new TextRun({text,font:'Poppins',size:title?32:25,bold:true,color:'173B65'})]});
+  const heading=(text,title=false)=>new Paragraph({heading:title?HeadingLevel.TITLE:HeadingLevel.HEADING_1,keepNext:true,spacing:{before:title?0:180,after:80,line:276},children:[new TextRun({text,font:'Poppins',size:title?32:25,bold:true,color:'173B65'})]});
   const children = [heading(`Mi año ${document.school_year} · versión ${document.version}`,true),
     new Paragraph({ text: [document.document_context?.institution_name, document.document_context?.teacher_name,
       document.document_context?.classroom_section??document.document_context?.section,age?`${age} años`:null,Number.isInteger(document.content.classroom_snapshot.student_count)?`${document.content.classroom_snapshot.student_count} niños`:null].filter(Boolean).join(" · ") })];
-  const cell=(text,width,header=false)=>new TableCell({width:{size:width,type:WidthType.DXA},borders:Object.fromEntries(['top','bottom','left','right'].map(side=>[side,{style:BorderStyle.SINGLE,size:4,color:'C6DFE8'}])),shading:{fill:header?'DDEEF3':'FFFFFF'},margins:{top:100,bottom:100,left:100,right:100},children:[new Paragraph({children:[new TextRun({text,font:'Poppins',color:'173352',bold:header,size:20})]})]});
-  const widths=[550,1900,3300,3550];
-  children.push(heading('Vista general de los quince proyectos'),new Table({width:{size:9300,type:WidthType.DXA},columnWidths:widths,rows:[new TableRow({tableHeader:true,children:['N.º','Fechas','Proyecto','Competencias'].map((text,i)=>cell(text,widths[i],true))}),...document.content.proposed_experiences.map((row,index)=>new TableRow({cantSplit:true,children:[String(document.content.resolved_calendar.projects.find(slot=>slot.proposal_id===row.proposal_id)?.index??index+1),`${readableDate(row.planned_start_date)}\n${readableDate(row.planned_end_date)}`,annualDisplayTitle(row.title),row.opportunities.map(item=>names.get(item.competency_id)??item.competency_id).join('; ')].map((text,i)=>cell(text,widths[i]))}))]}));
-  for (const section of annualJourneyDocumentSections(document.content, names, document.display_subjects)) {
+  const cell=(text,width,header=false,paragraphs=null)=>new TableCell({width:{size:width,type:WidthType.DXA},borders:Object.fromEntries(['top','bottom','left','right'].map(side=>[side,{style:BorderStyle.SINGLE,size:4,color:'C6DFE8'}])),shading:{fill:header?'DDEEF3':'FFFFFF'},margins:{top:85,bottom:85,left:100,right:100},children:paragraphs??[new Paragraph({spacing:{after:30,line:260},children:[new TextRun({text,font:'Poppins',color:'173352',bold:header,size:20})]})]});
+  const widths=[550,1700,4150,2900];
+  children.push(heading('Vista general de los quince proyectos'),new Table({width:{size:9300,type:WidthType.DXA},columnWidths:widths,rows:[new TableRow({tableHeader:true,children:['N.º','Fechas','Proyecto','Competencias'].map((text,i)=>cell(text,widths[i],true))}),...document.content.proposed_experiences.map((row,index)=>new TableRow({cantSplit:true,children:[String(document.content.resolved_calendar.projects.find(slot=>slot.proposal_id===row.proposal_id)?.index??index+1),`${readableDate(row.planned_start_date)}\n${readableDate(row.planned_end_date)}`,annualDisplayTitle(row.title),row.opportunities.map(item=>competencyLabels[item.competency_id]??names.get(item.competency_id)??item.competency_id).join(' · ')].map((text,i)=>cell(text,widths[i]))}))]}));
+  const sections=annualJourneyDocumentSections(document.content,names,document.display_subjects);
+  for (let i=0;i<sections.length;i++) {
+    const section=sections[i];
+    if(section.kind==='opportunity'){
+      const group=[];while(sections[i]?.kind==='opportunity')group.push(sections[i++]);i--;
+      const paragraph=(text,bold=false)=>new Paragraph({spacing:{after:55,line:260},children:[new TextRun({text:annualTeacherText(text,document.display_subjects),font:'Poppins',size:21,color:'173352',bold})]});
+      children.push(new Table({width:{size:9300,type:WidthType.DXA},columnWidths:[3000,6300],rows:[new TableRow({tableHeader:true,children:[cell('Competencia y capacidades',3000,true),cell('Acción, acompañamiento y observación',6300,true)]}),...group.map(item=>{
+        const o=item.opportunity;return new TableRow({cantSplit:true,children:[cell('',3000,false,[paragraph(item.title,true),paragraph(o.capacity_names.join('; '))]),cell('',6300,false,[paragraph(`Qué harán: ${o.child_action}`),paragraph(`Condiciones: ${o.conditions}`),paragraph(`Cómo acompañar: ${o.mediation}`),paragraph(`Qué observar: ${o.observation}`),paragraph(`Apoyo: ${o.supports}`)])]});
+      })]}));continue;
+    }
     children.push(heading(section.title));
-    for (const line of section.lines) children.push(new Paragraph({ children: [new TextRun({text:annualTeacherText(line,document.display_subjects),font:'Poppins',size:22,color:'173352'})], spacing: { after: 140 }, widowControl: true }));
+    for (const line of section.lines) children.push(new Paragraph({ children: [new TextRun({text:annualTeacherText(line,document.display_subjects),font:'Poppins',size:22,color:'173352'})], spacing: { after: 70,line:276 }, widowControl: true }));
   }
   const bodyZip = await JSZip.loadAsync(await Packer.toBuffer(new Document({styles:{default:{document:{run:{font:"Poppins",size:22,color:"173352"}}}},sections:[{children}]})));
   const bodyXml = await bodyZip.file("word/document.xml").async("string");

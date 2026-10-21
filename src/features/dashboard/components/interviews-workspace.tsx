@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { mergeGuidedObservation } from "@/src/lib/guided-observation-flow.mjs";
+import {DiagnosticBriefReview,type SummaryHandle} from './diagnostic-brief-review';
 import { isRecordedObservation, rankGuidedExperiences, experiencePriorityLabel, availableGuidedExperiences } from "@/src/lib/diagnostic-ui-flow.mjs";
 import shell from "./pilot-setup.module.css";
 import styles from "./interviews-workspace.module.css";
@@ -28,7 +29,7 @@ export function InterviewsWorkspace({dashboard,onBack,onProfile,onSignOut,onPlan
   dashboard:LocalDashboard;onBack:()=>void;onProfile:()=>void;onPreparation:()=>void;onPlan:()=>void;onSignOut?:()=>void;
 }) {
   const [error,setError]=useState("");
-  const viewFromLocation=()=>{const params=readWorkspaceParams("Planificar");return params.get("step")!=="3"?"capture":"matrix";};
+  const viewFromLocation=()=>{const params=readWorkspaceParams("Planificar");return params.get("step")!=="3"?"capture":params.get('mode')==='summary'?'summary':'matrix';};
   const [view,setView]=useState(viewFromLocation);
   const [matrix,setMatrix]=useState<{curriculum:{id:string;name:string}[];counts:Record<string,number>;unclassified:number;records:{student_id:string;text:string;date:string;competency_ids:string[]}[]}|null>(null);
   const [observationRevision,setObservationRevision]=useState(0);
@@ -47,6 +48,7 @@ export function InterviewsWorkspace({dashboard,onBack,onProfile,onSignOut,onPlan
   const [navigationBusy,setNavigationBusy]=useState(false);
   const [profileMenu,setProfileMenu]=useState(false);
   const interviewRef=useRef<FamilyInterviewEditorHandle>(null);
+  const summaryRef=useRef<SummaryHandle>(null);
   const {answerCounts,answerTotals,statuses,updateInterview,loaded:progressLoaded,error:progressError}=useFamilyInterviewStatusMap(String(revision));
   const updateInterviewProgress=useCallback((interview:FamilyInterview)=>updateInterview(interview),[updateInterview]);
   const updateObservationProgress=useCallback(()=>setObservationRevision(value=>value+1),[]);
@@ -58,7 +60,7 @@ export function InterviewsWorkspace({dashboard,onBack,onProfile,onSignOut,onPlan
   async function change(work:()=>void){
     if(navigationBusy)return;
     setNavigationBusy(true);
-    try{if(tab==="interviews"&&interviewRef.current){if(!await interviewRef.current.flush())return;}else if(!canLeaveWorkspace())return;work();}
+    try{if(view==='summary'&&summaryRef.current){if(!await summaryRef.current.flush())return;}else if(tab==="interviews"&&interviewRef.current){if(!await interviewRef.current.flush())return;}else if(!canLeaveWorkspace())return;work();}
     finally{setNavigationBusy(false);}
   }
   function destination(nextTab:"interviews"|"observations",nextMode:"free"|"guided"=mode){setView("capture");setTab(nextTab);setMode(nextMode);writeWorkspaceLocation("Planificar",{tab:"diagnostic",step:nextTab==="interviews"?"1":"2",mode:nextMode==="guided"?"guided":"spontaneous"},true);}
@@ -102,7 +104,8 @@ export function InterviewsWorkspace({dashboard,onBack,onProfile,onSignOut,onPlan
       </div>
       {tab==="interviews"&&allConfirmed&&<section className={styles.completedInterviews} role="status"><h2>¡Buen trabajo! Todas las entrevistas están confirmadas.</h2><p>Puedes seguir conociendo a tus niños con las observaciones.</p><Button className={styles.primary} disabled={navigationBusy} onClick={()=>void change(()=>destination("observations","free"))}>Continuar con observaciones</Button></section>}
       </>}
-      {view==="matrix"&&data&&(matrix?<ObservationCoverageMatrix data={data} counts={matrix.counts} unclassified={matrix.unclassified} competencies={matrix.curriculum} records={matrix.records} onRecord={(studentId,competencyId)=>setCell({studentId,competencyId})} onGuided={(_id,experienceId)=>{setExperienceId(experienceId);destination("observations","guided");}} onBack={()=>openView("capture")} onContinue={()=>void change(onPlan)}/>:error?<WorkflowFeedback tone="error">{error}<Button onClick={updateObservationProgress}>Reintentar</Button></WorkflowFeedback>:<LoadingState label="Abriendo el resumen de observaciones…"/>)}
+      {view==='summary'&&<section className={styles.workspace}><DiagnosticBriefReview ref={summaryRef} onBack={()=>openView('matrix')} onContinue={onPlan}/></section>}
+      {view==="matrix"&&data&&(matrix?<><ObservationCoverageMatrix data={data} counts={matrix.counts} unclassified={matrix.unclassified} competencies={matrix.curriculum} records={matrix.records} onRecord={(studentId,competencyId)=>setCell({studentId,competencyId})} onGuided={(_id,experienceId)=>{setExperienceId(experienceId);destination("observations","guided");}} onBack={()=>openView("capture")} onContinue={()=>void change(onPlan)}/><div className="mt-4"><Button variant="outline" disabled={navigationBusy} onClick={()=>void change(()=>openView('summary'))}>Preparar diagnóstico del aula</Button></div></>:error?<WorkflowFeedback tone="error">{error}<Button onClick={updateObservationProgress}>Reintentar</Button></WorkflowFeedback>:<LoadingState label="Abriendo el resumen de observaciones…"/>)}
       <Dialog open={!!cell} onOpenChange={value=>{if(!value&&canLeaveWorkspace())setCell(null);}}><DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-3xl"><DialogHeader><DialogTitle>Anotar una observación</DialogTitle><DialogDescription>Registra lo ocurrido para el niño y la competencia elegidos en el resumen.</DialogDescription></DialogHeader>{cell&&<SpontaneousDiagnostic embedded formOnly students={dashboard.students} initialStudentId={cell.studentId} initialCompetencyId={cell.competencyId} initialDate={dashboard.today.date} onBack={()=>setCell(null)} onSaved={()=>{setCell(null);updateObservationProgress();}}/>}</DialogContent></Dialog>
       <footer className={styles.footer}>{view==="capture"&&<><Button variant="outline" disabled={navigationBusy} onClick={()=>void change(onBack)}><ArrowLeft/>Volver</Button><Button className={styles.primary} disabled={navigationBusy} onClick={()=>void change(()=>openView("matrix"))}>Continuar al resumen de observaciones</Button></>}</footer>
     </main>

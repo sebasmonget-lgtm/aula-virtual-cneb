@@ -32,6 +32,7 @@ Incluye evidence_interpretations solo si orientan materialmente una decisión o 
 Una necesidad material debe exponerse como interpretación pendiente de revisión docente; no como hecho ni nivel. No exijas productos finales.
 Todas las decisiones pedagógicas deben aparecer ahora, antes de confirmar. Los documentos posteriores solo renderizan este contenido.
 Respeta la versión del calendario y todos los campos protegidos. Lenguaje sencillo, conciso, acciones realizables y participación infantil.
+flexibility describe únicamente qué se podrá ajustar según lo que ocurra: no repitas fechas, semanas, bimestre ni frases como «sin ejecución acreditada». El sistema ya presenta el calendario y distingue las previsiones del trabajo realizado. Evita esas repeticiones también en los demás textos docentes.
 La tarjeta anual es una previsión breve, no el desarrollo del proyecto. Por propuesta: rationale hasta 30 palabras, purpose hasta 20, invitation una pregunta, children_actions entre 2 y 4 acciones breves, supports entre 1 y 2 y flexibility hasta 25 palabras. En cada oportunidad usa una frase breve por campo y solo las capacidades oficiales pertinentes. Evita repetir el calendario, las competencias o el fundamento en la prosa. Conserva toda la cobertura y el sustento; el desarrollo detallado se prepara después en el proyecto.`;
 
 const providerSnapshot = (snapshot) => ({ ...snapshot, source_fingerprint: undefined,

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { insertCoverQuickView, renderUnifiedWord, removeParagraphsContaining, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
+import {diagnosticCompetencyReading,diagnosticRecordExcerpt,diagnosticReportPurpose} from './diagnostic-report-reading.mjs';
 
 const templateUrl = path.join(process.cwd(), "assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx");
 const competencyFields = [
@@ -136,9 +137,9 @@ function valuesFor(document, context, cards) {
     N_OBSERVADOS: String(observedIds.size),
     N_ENTREVISTAS_COMPLETADAS: String(children.filter((item) => item.has_confirmed_interview).length),
     N_EVIDENCIAS_REVISADAS: String(records.length),
-    PROPOSITO_DIAGNOSTICO: "Conocer cómo inicia el grupo para decidir cómo acompañar sus aprendizajes.",
+    PROPOSITO_DIAGNOSTICO: diagnosticReportPurpose,
     CONTEXTO_PERIODO_DIAGNOSTICO: dates.length
-      ? `Registros revisados: del ${observedFrom} al ${observedTo}${commentCount ? ", junto con comentarios confirmados de la docente" : ""}.${datesOutsidePeriod ? ` Revisar fechas: hay registros fuera del período previsto (${dateLabel(plannedStart)} al ${dateLabel(plannedEnd)}).` : ""}`
+      ? `Registros revisados: del ${observedFrom} al ${observedTo}${commentCount ? ", junto con comentarios confirmados de la docente" : ""}.${datesOutsidePeriod ? ` Actualización del diagnóstico con registros posteriores o anteriores al recojo previsto. Revisar fechas: hay registros fuera del período previsto (${dateLabel(plannedStart)} al ${dateLabel(plannedEnd)}).` : ""}`
       : "Aún faltan observaciones fechadas del aula; se continuará recogiendo información.",
     FOCOS_DIAGNOSTICOS: "El juego, la expresión, la convivencia, la exploración y las necesidades que aparecen en el aula.",
     CONDICIONES_RECOJO: "Las entrevistas describen el contexto familiar. Las observaciones docentes muestran lo ocurrido en el aula; una ausencia de registro no indica una dificultad.",
@@ -181,7 +182,7 @@ function valuesFor(document, context, cards) {
     const chronological = uniqueObservations(childObservations).sort((a, b) => String(a.observed_at ?? "").localeCompare(String(b.observed_at ?? "")));
     const selected = chronological.length > 1 ? [chronological[0], chronological.at(-1)] : chronological;
     const excerpts = selected.map((item) =>
-      `${competencyNames.get(item.competency_id) || "Observación"}: “${clean(item.observation_text).slice(0, 180)}”`);
+      `${competencyNames.get(item.competency_id) || "Observación"}: “${diagnosticRecordExcerpt(item.observation_text)}”`);
     return {
       name: child.name,
       situation: [clean(child.teacher_comment) && `Docente: ${clean(child.teacher_comment)}`,
@@ -234,13 +235,14 @@ function transformDiagnostic(xml, context, snapshot, followups, values) {
       const notes = snapshot.observations.filter((item) => item.competency_id === id);
       if (!card && !notes.length) return "";
       const name = clean(card?.name || card?.official_name) || id;
-      const excerpts = notes.filter((item) => clean(item.observation_text)).slice(0, 3)
-        .map((item) => paragraph(`${children.get(item.student_id) || "Niño del aula"}: “${clean(item.observation_text)}”`, false, true)).join("");
-      const rest = notes.filter((item) => clean(item.observation_text)).length - Math.min(3, notes.filter((item) => clean(item.observation_text)).length);
+      const analysis=diagnosticCompetencyReading(snapshot,id);
+      const examples=notes.filter(item=>clean(item.observation_text)&&(!analysis?.source_record_ids.length||analysis.source_record_ids.includes(item.id))).slice(0,2);
+      const excerpts = examples.map((item) => paragraph(`${children.get(item.student_id) || "Niño del aula"}: “${diagnosticRecordExcerpt(item.observation_text,360)}”`, false, true)).join("");
+      const rest = notes.filter((item) => clean(item.observation_text)).length - examples.length;
       const evidence = excerpts || paragraph(notes.length ? `${countLabel(notes.length, "registro", "registros")} sin nota descriptiva.` : "Información insuficiente: aún no hay observaciones vinculadas.", false, true);
-      const reading = notes.length ? `Hay registros de ${countLabel(new Set(notes.map((item) => item.student_id)).size, "niño", "niños")}. Son un punto de partida, no una valoración final.` : "Información insuficiente para interpretar esta competencia en el grupo.";
-      const decision = notes.length ? "Observar esta competencia en otras situaciones antes de ajustar las actividades." : "Mantenerla en observación antes de tomar una decisión específica.";
-      return paragraph(name, true) + paragraph("Evidencias observadas", true) + evidence +
+      const reading = analysis?.summary??(notes.length ? `Hay registros de ${countLabel(new Set(notes.map((item) => item.student_id)).size, "niño", "niños")}. La lectura pedagógica de esta competencia está pendiente de revisión docente.` : "Información insuficiente para interpretar esta competencia en el grupo.");
+      const decision = analysis?.next_step??(notes.length ? "Revisar estas actuaciones para decidir una oportunidad o ayuda concreta." : "Preparar una oportunidad de observación pertinente antes de concluir sobre esta competencia.");
+      return paragraph(name, true) + paragraph("Ejemplos de los registros", true) + evidence +
         (rest > 0 ? paragraph(`${rest} registros más disponibles en Ayni.`, false, true) : "") +
         paragraph(`Lectura inicial: ${reading}`, false, false, true) + paragraph(`Decisión inicial: ${decision}`, true, false, false);
     }).join("");

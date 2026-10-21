@@ -122,7 +122,7 @@ export function removePageBreakBeforeTable(xml, tableText) {
 export function compactWordDocumentEnd(xml) {
   const sectionAt = xml.lastIndexOf("<w:sectPr");
   if (sectionAt < 0) return xml;
-  let body = xml.slice(0, sectionAt);
+  let body = xml.slice(0, sectionAt).replace(/<w:p(?:\s[^>]*)?\/>\s*$/, '');
   while (true) {
     const last = [...body.matchAll(paragraphPattern)].at(-1);
     if (!last || body.slice(last.index + last[0].length).trim()) break;

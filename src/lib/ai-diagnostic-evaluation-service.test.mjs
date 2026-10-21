@@ -5,7 +5,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { createPilotClassroom, importStudentsForTeacher } from "./pilot-onboarding-service.mjs";
 import { loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservation } from "./diagnostic-experiences-v4.mjs";
 import { prepareDiagnosticStudentReview, saveDiagnosticStudentReview, confirmDiagnosticStudentReview,
-  prepareDiagnosticGroupReview, diagnosticGroupProposalSources, loadDiagnosticAssessmentWorkspace } from "./diagnostic-assessment-v4.mjs";
+  prepareDiagnosticGroupReview, diagnosticGroupProposalSources, loadDiagnosticAssessmentWorkspace,saveDiagnosticGroupReview,confirmDiagnosticGroupReview } from "./diagnostic-assessment-v4.mjs";
 import { DiagnosticSuggestionError, suggestDiagnosticGroupReview } from "./ai-diagnostic-evaluation-service.mjs";
 import { neutralizeAssessmentText } from "./assessment-v4-service.mjs";
 
@@ -13,6 +13,30 @@ const cited = (output, refs=[]) => ({...output,claims:["strengths","needs","plan
 
 const teacher = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const otherTeacher = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+
+test('lectura por competencia: propuesta editable, referencias autorizadas y copia confirmada inmutable',async()=>{
+ const db=await database();try{
+  await createPilotClassroom(db,teacher,{teacherName:'Docente',institutionName:'Escuela',section:'A',age:5,year:2026,startsOn:'2026-03-01',endsOn:'2026-12-18'});
+  await importStudentsForTeacher(db,teacher,[{firstName:'Ana',lastName:'Rojas'}]);
+  const workspace=await loadDiagnosticExperienceWorkspace(db,teacher),student=workspace.students[0];
+  await recordDiagnosticExperienceObservation(db,teacher,{studentId:student.id,experienceId:workspace.experiences[0].id,aspectId:workspace.experiences[0].aspects[0].id,observationStatus:'observed_without_judgment',observationText:'Eligió construir y explicó qué quería hacer con los bloques.'});
+  const draft=await prepareDiagnosticGroupReview(db,teacher);
+  const suggestion=await suggestDiagnosticGroupReview(db,teacher,draft.id,{createProvider:()=>({generate:async request=>{
+   const note=request.ai_context_bundle.context.observed_records[0].notes[0];assert.equal(note.record_id,undefined,'el identificador de base de datos no se envía al modelo');
+   const base={strengths:'Un niño expresó una elección.',needs:'Falta observar otras elecciones.',planning_priorities:'Mantener opciones de juego accesibles.'};
+   return {output:{...cited(base,[note.source_id]),competency_readings:[{competency_id:note.competency_ids[0],summary:'En un registro, un niño elige construir y explica qué desea hacer.',next_step:'Ofrecer otra elección y escuchar cómo la expresa.',scope:'individual',source_refs:[note.source_id]}]}};
+  }})});
+  const details=suggestion.details,reading=details.competency_readings[0];assert.equal(reading.source_record_ids.length,1);
+  const forged=structuredClone(details);forged.competency_readings[0].source_record_ids=['00000000-0000-4000-8000-000000000099'];
+  await assert.rejects(()=>saveDiagnosticGroupReview(db,teacher,draft.id,forged),e=>e.reason==='invalid_details');
+  const revised={...details,competency_readings:[{...reading,next_step:'Dar tiempo para elegir entre dos juegos y escuchar su explicación.'}]};
+  await saveDiagnosticGroupReview(db,teacher,draft.id,revised);const confirmed=await confirmDiagnosticGroupReview(db,teacher,draft.id);
+  assert.equal(confirmed.details.report_snapshot.competency_readings[0].next_step,revised.competency_readings[0].next_step);
+  await assert.rejects(()=>saveDiagnosticGroupReview(db,otherTeacher,draft.id,revised));
+  const snapshot=structuredClone(confirmed.details.report_snapshot);await prepareDiagnosticGroupReview(db,teacher);
+  assert.deepEqual((await db.query('select details from diagnostic_group_reviews where id=$1',[draft.id])).rows[0].details.report_snapshot,snapshot);
+ }finally{await db.close();}
+});
 
 async function database() {
   const db = await PGlite.create();
@@ -54,7 +78,7 @@ test("Skill diagnóstica sugiere un borrador editable con texto docente íntegro
     assert.equal(requests.length, 1);
     const cached=await suggestDiagnosticGroupReview(db,teacher,group.id,{createProvider:()=>({generate:async()=>{throw Error('duplicate provider request');}})});
     assert.equal(cached.cached,true);assert.deepEqual(cached.details,suggestion.details);
-    assert.equal(requests[0].request.output_schema.id, "diagnostic-group-suggestion-v3");
+    assert.equal(requests[0].request.output_schema.id, "diagnostic-group-suggestion-v4");
     assert.match(requests[0].request.skill_instructions, /Skill crear-evaluacion-diagnostica/);
     const bundle = requests[0].request.ai_context_bundle;
     assert.equal(bundle.context.confirmed_teacher_comments.length, 2);
