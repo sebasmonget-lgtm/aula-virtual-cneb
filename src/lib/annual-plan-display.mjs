@@ -4,6 +4,10 @@ export function hasSavedAnnualYear(plan) {
   return Boolean(proposal?.journey_version===2 && proposal.resolved_calendar &&
     (proposal.editor_version===3 && Array.isArray(proposal.resolved_calendar.projects) || proposal.proposed_experiences?.length));
 }
+/** An explicit conversation never discards or regenerates the saved year. */
+export function annualConversationEntry(plan,explicitConversationStart=false) {
+  return explicitConversationStart || !plan || plan.proposal?.journey_version===2&&!hasSavedAnnualYear(plan);
+}
 export function selectSavedAnnualPlan(plans,requestedId) {
   const all=[plans?.draft,plans?.active,...(plans?.archived??[])].filter(Boolean);
   return all.find(plan=>plan.id===requestedId)??plans?.draft??plans?.active??all[0]??null;

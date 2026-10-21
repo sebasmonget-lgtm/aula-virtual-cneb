@@ -14,7 +14,6 @@ import { DiagnosticProgress } from "./diagnostic-progress";
 import { initialDiagnosticProgress } from "@/src/lib/initial-diagnostic-progress.mjs";
 
 import { DiagnosticReview } from "./diagnostic-review-v4";
-import { DiagnosticBriefReview } from "./diagnostic-brief-review";
 import { FamilyInterviewEditor, FamilyInterviewStatusBadge, useFamilyInterviewStatusMap } from "./family-interview-v4";
 import { SpontaneousDiagnostic } from "./spontaneous-diagnostic-v4";
 import { displayPersonName } from "@/src/lib/person-name.mjs";
@@ -51,7 +50,6 @@ export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan
   const [matrixCompetencies,setMatrixCompetencies]=useState<{id:string;name:string}[]>([]);
   const [matrixCoverage,setMatrixCoverage]=useState<{counts:Record<string,number>;unclassified:number;observed_students:number;records?:{student_id:string;text:string;date:string;competency_ids:string[]}[]}|null>(null);
   const [matrixError,setMatrixError]=useState("");
-  const [briefReview,setBriefReview]=useState(false);
   const [freeStudentId,setFreeStudentId]=useState("");
   const [freeCompetencyId,setFreeCompetencyId]=useState("");
   async function refreshObservationProgress(){await refreshPendingSpontaneous();try{setData(await loadDiagnostics());setError("");}catch{setFeedback("Observación guardada. El resumen se actualizará al abrir la matriz.");}}
@@ -83,8 +81,8 @@ export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan
   function openMatrix(){if(!canLeaveWorkspace())return;setMatrixCoverage(null);setMatrixError("");setMatrixOpen(true);}
   function goToStep(next: 0 | 1 | 2 | 3) {
     if(!canLeaveWorkspace())return;
-    if (next === 3) { setBriefReview(true); return; }
-    setMatrixOpen(false); setBriefReview(false); setStep(next);
+    if (next === 3) { onPlan?.(); return; }
+    setMatrixOpen(false); setStep(next);
   }
   const experience = data?.experiences.find((item) => item.id === experienceId);
   const observedPairs = initialObservedPairs(data?.experience_observations ?? [], spontaneousRecords ?? []);
@@ -154,15 +152,14 @@ export function GuidedDiagnostic({ initialPreparation = false, dashboard, onPlan
         {progressReady && progress.interviewed === progress.total && <div className="border-t border-[var(--ayni-panel-border)] pt-4"><p className="text-sm text-[#526b87]">Ya conversaste con todas las familias. Sigue conociendo a tus niños mientras juegan.</p><Button variant="outline" className="mt-3 min-h-11" onClick={() => goToStep(2)}>Continuar con las observaciones<ArrowRight/></Button></div>}
       </>}
     </>}
-    {briefReview&&<DiagnosticBriefReview onBack={()=>setBriefReview(false)} onContinue={()=>onPlan?.()}/>}
-    {step === 2 && !briefReview && <>
+    {step === 2 && <>
     <DiagnosticProgress label="Niños con observaciones iniciales" count={progress.observed} total={progress.total} loading={spontaneousRecords === null} error={observationsError}/>
     <p className="text-sm text-[#526b87]">Esta barra muestra a cuántos niños observaste inicialmente. Seguirás observando durante todo el año.</p>
     {error && <p role="alert" className="rounded-xl bg-[#fff1d6] p-3 text-sm">{error}</p>}
     {feedback && <p role="status" className="rounded-xl bg-[#edf8fc] p-3 text-sm">{feedback}</p>}
 
     {matrixOpen && matrixCoverage && <ObservationCoverageMatrix data={data} counts={matrixCoverage.counts} unclassified={matrixCoverage.unclassified} competencies={matrixCompetencies} records={matrixCoverage.records}
-      onBack={()=>setMatrixOpen(false)} onContinue={initialPreparation ? undefined : ()=>setBriefReview(true)}
+      onBack={()=>setMatrixOpen(false)} onContinue={onPlan}
       onRecord={(id,competencyId)=>{setMatrixOpen(false);setExperienceId(null);setFreeStudentId(id);setFreeCompetencyId(competencyId);setObservationMode("spontaneous");}}
       onGuided={(_id,experience)=>{setMatrixOpen(false);setObservationMode("guided");selectExperience(experience);}} />}
     {matrixOpen && !matrixCoverage && <section className="diagnostic-panel space-y-4 p-5">{matrixError?<p role="alert">{matrixError}</p>:<LoadingState label="Consultando las observaciones de tu aula…" />}<Button variant="outline" onClick={()=>setMatrixOpen(false)}>Volver a observar</Button>{!initialPreparation && <Button onClick={()=>onPlan?.()}>Continuar de todas formas →</Button>}</section>}

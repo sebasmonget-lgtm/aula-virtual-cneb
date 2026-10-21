@@ -24,7 +24,7 @@ import { AyniMascot } from "./initial-journey-ui";
 import { AnnualProjectPreview } from "./annual-project-preview";
 import yearStyles from "./annual-plan.module.css";
 import { annualTeacherText, annualTeacherProposalView } from "@/src/lib/annual-teacher-display.mjs";
-import { hasSavedAnnualYear, selectSavedAnnualPlan, currentAnnualPeriod, annualPeriodNumber } from "@/src/lib/annual-plan-display.mjs";
+import { hasSavedAnnualYear, annualConversationEntry,selectSavedAnnualPlan, currentAnnualPeriod, annualPeriodNumber } from "@/src/lib/annual-plan-display.mjs";
 import {CompleteProjectWorkspace} from "./complete-project-workspace";
 import {ActivityConsultation} from "./activity-consultation";
 
@@ -79,7 +79,7 @@ function OpportunityDetails({ value, names }: { value: Opportunity; names: Map<s
   </div>;
 }
 
-export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,onGoToday }: {
+export function AnnualJourneyWorkspace({ explicitConversationStart=false,onConfirmed, onGoDiagnostic, onLegacy,onGoToday }: {
   explicitConversationStart?: boolean; onConfirmed?: () => void; onGoDiagnostic?: () => void; onDevelop?: (id: string) => void; onLegacy: () => void;onGoToday?:()=>void;
 }) {
   const [plans, setPlans] = useState<Plans | null>(null), [start, setStart] = useState<Start | null>(null);
@@ -163,7 +163,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,o
     } finally { runningJobRef.current = false; setBusy(null); }
   }, [reload]);
   useEffect(() => { let live = true;
-    Promise.resolve().then(() => Promise.all([reload(), loadStart()])).then(([next]) => { if (live) { setPreparing(!next || next.proposal.journey_version === 2 && !hasSavedAnnualYear(next));
+    Promise.resolve().then(() => Promise.all([reload(), loadStart()])).then(([next]) => { if (live) { setPreparing(annualConversationEntry(next,explicitConversationStart));
       setIdeas(next?.proposal.teacher_preferences ?? "");
       if(next?.proposal.experience_context) seedContext({contextItems:next.proposal.experience_context.context_items,historicalProjects:next.proposal.experience_context.historical_projects});
       if (next?.proposal.generation_job_id&&!hasSavedAnnualYear(next)) void api<Job>(`/api/annual-journey/jobs/${next.proposal.generation_job_id}`).then(async value => {
@@ -174,7 +174,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,o
       }).catch(() => { if(live)setError("No pudimos consultar el avance. Tu preparación sigue guardada; vuelve a abrirla para continuar."); });
     } }).catch((e) => { if (live) setError(e.message); });
     return () => { live = false; };
-  }, [reload, loadStart, continueSavedJob, seedContext]);
+  }, [reload, loadStart, continueSavedJob, seedContext,explicitConversationStart]);
   useEffect(() => { let live = true;
     void api<AnnualMapEffectiveCalendar>("/api/school-calendar").then(value => { if (live) setEffectiveCalendar(value); }).catch(() => { if (live) setCalendarUnavailable(true); });
     return () => { live = false; };
@@ -244,7 +244,7 @@ export function AnnualJourneyWorkspace({ onConfirmed, onGoDiagnostic, onLegacy,o
   const names = new Map((proposal?.curriculum_reference ?? start?.curriculum ?? []).map((c) => [c.id, c.name]));
   const snapshot = preparing ? start?.snapshot : proposal?.classroom_snapshot;
   const disabled = !!busy || audioBusy || generating;
-  const awaitingSavedJob = preparing && !job && !!proposal?.generation_job_id && !revisingPreparation;
+  const awaitingSavedJob = preparing && !complete && !job && !!proposal?.generation_job_id && !revisingPreparation;
   if(consultId)return <ActivityConsultation key={consultId} id={consultId} onActivity={setConsultId} onBack={()=>setConsultId('')}/>;
   const proposalDetails=complete&&!toolsOnly?<div className={listOpen?'space-y-4':'space-y-5'}>{(listOpen?visibleProposals:selectedProposal?[selectedProposal]:[]).map(row=>selected?.status==='archived'?<AnnualProjectPreview key={row.proposal_id} row={row} index={(proposal!.resolved_calendar?.projects?.findIndex(slot=>slot.proposal_id===row.proposal_id)??0)+1} names={names} disabled canChange={false} onChange={()=>{}}/>:<CompleteProjectWorkspace key={`${selected?.id}:${row.proposal_id}`} embedded planId={selected?.id} proposalId={row.proposal_id} onGoToday={onGoToday}
     onRequireConfirmation={()=>{setPrepareAfterConfirm(row.proposal_id);setReviewOpen(true);}} onConfirmed={()=>{void reload().then(()=>onConfirmed?.()).catch(cause=>setError(cause.message));}} onPlanChanged={async id=>{await reload(id);}}/>)}{!visibleProposals.length&&<p className="rounded-xl bg-white p-5 text-[#47658b]">No hay proyectos registrados en este bimestre. Puedes consultar otro bimestre o Todo el año.</p>}</div>:null;

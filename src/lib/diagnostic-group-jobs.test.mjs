@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile,readdir} from 'node:fs/promises';
+import {readFile,readdir,mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join,resolve} from 'node:path';
 import {PGlite} from '@electric-sql/pglite';
 import {createPilotClassroom,importStudentsForTeacher} from './pilot-onboarding-service.mjs';
 import {recordConfirmedSpontaneousObservation} from './diagnostic-sources-v4.mjs';
@@ -9,8 +11,8 @@ import {suggestDiagnosticGroupReview,diagnosticGroupProviderRequest} from './ai-
 import {startDiagnosticGeneration,readDiagnosticGeneration,runDiagnosticGenerationStep,diagnosticGenerationPending,claimDiagnosticDrain,releaseDiagnosticDrain} from './diagnostic-group-jobs.mjs';
 
 const teacher='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',other='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
-async function fixture(){
- const db=await PGlite.create(),dir=new URL('../../local-db/migrations/',import.meta.url);
+async function fixture(target){
+ const db=await PGlite.create(target),dir=new URL('../../local-db/migrations/',import.meta.url);
  for(const name of (await readdir(dir)).filter(n=>n.endsWith('.sql')).sort())await db.exec(await readFile(new URL(name,dir),'utf8'));
  await createPilotClassroom(db,teacher,{teacherName:'Docente',institutionName:'Escuela',section:'A',age:5,year:2026,startsOn:'2026-03-01',endsOn:'2026-12-18'});
  await importStudentsForTeacher(db,teacher,[{firstName:'Ana',lastName:'Rojas'}]);
@@ -26,6 +28,31 @@ function valid(request){
  provider_metadata:{usage:{input_tokens:100,cached_input_tokens:0,output_tokens:80},response_id:'resp_recoverable_test'}};
 }
 const failure=reason=>Object.assign(new Error(reason),{reason});
+
+test('reiniciar proceso con ID guardado y lease vencida recupera tras cinco minutos sin otra creación',async()=>{
+ const target=await mkdtemp(join(tmpdir(),'ayni-diagnostic-restart-'));let db;
+ try{
+  const setup=await fixture(target);db=setup.db;const draft=setup.draft;let time=Date.now(),creates=0,retrievals=0;
+  await startDiagnosticGeneration(db,teacher,draft.id,{}, {now:()=>time});
+  await runDiagnosticGenerationStep(db,{now:()=>time,createProvider:(_plan,options)=>({generate:async()=>{
+   creates++;await options.onResponseStarted('resp_restart_saved');throw failure('response_pending');
+  }})});
+  await saveDiagnosticGroupReview(db,teacher,draft.id,{strengths:'Mi texto antes de salir.',needs:'',planning_priorities:'',competency_priorities:[]});
+  await db.query(`update diagnostic_group_reviews set ai_snapshot=ai_snapshot||$1::jsonb where id=$2`,[JSON.stringify({phase:'polling',worker_token:'old-process',worker_until:new Date(time+30000).toISOString()}),draft.id]);
+  await db.close();db=null;time+=5*60000;
+  db=await PGlite.create(target);
+  const result=await runDiagnosticGenerationStep(db,{now:()=>time,createProvider:(_plan,options)=>({generate:async request=>{
+   assert.equal(options.resumeResponseId,'resp_restart_saved');retrievals++;return valid(request);
+  }})});
+  assert.equal(result.status,'ready');assert.equal(creates,1);assert.equal(retrievals,1);
+  const row=(await db.query('select status,details,teacher_confirmed_at from diagnostic_group_reviews where id=$1',[draft.id])).rows[0];
+  assert.equal(row.details.strengths,'Mi texto antes de salir.');assert.equal(row.status,'draft');assert.equal(row.teacher_confirmed_at,null);
+ }finally{
+  if(db)await db.close();
+  if(!resolve(target).startsWith(resolve(tmpdir())+'\\ayni-diagnostic-restart-')&&!resolve(target).startsWith(resolve(tmpdir())+'/ayni-diagnostic-restart-'))throw Error('Unsafe temporary cleanup');
+  await rm(target,{recursive:true,force:true});
+ }
+});
 
 test('inicio concurrente, ID durable, recarga y consulta: una creación, texto y confirmación intactos',async()=>{
  const{db,draft}=await fixture();try{

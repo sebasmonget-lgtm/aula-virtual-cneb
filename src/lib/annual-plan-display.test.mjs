@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {hasSavedAnnualYear,selectSavedAnnualPlan,currentAnnualPeriod,annualPeriodNumber} from './annual-plan-display.mjs';
+import {hasSavedAnnualYear,annualConversationEntry,selectSavedAnnualPlan,currentAnnualPeriod,annualPeriodNumber} from './annual-plan-display.mjs';
+
+test('entrar al chat conserva el año completo; entrar a Mi año sigue mostrando el guardado',()=>{
+ const saved={id:'same-year',status:'confirmed',proposal:{journey_version:2,editor_version:3,resolved_calendar:{projects:[{id:'p1'}]},generation_job_id:'completed-job'}};
+ const before=structuredClone(saved);
+ assert.equal(annualConversationEntry(saved,true),true);
+ assert.equal(annualConversationEntry(saved,false),false);
+ assert.equal(annualConversationEntry(null),true);
+ assert.equal(annualConversationEntry({proposal:{journey_version:2}},false),true);
+ assert.deepEqual(saved,before);
+ assert.equal(annualConversationEntry({proposal:{journey_version:1}},false),false);
+});
 test('saved partial and empty future years reopen; initial queued intent remains pending',()=>{
  const ready={id:'draft',proposal:{journey_version:2,editor_version:3,proposed_experiences:[],resolved_calendar:{projects:[]}}};
  assert.equal(hasSavedAnnualYear(ready),true);
