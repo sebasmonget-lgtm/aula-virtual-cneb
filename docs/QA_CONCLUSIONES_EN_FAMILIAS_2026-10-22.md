@@ -26,3 +26,7 @@ Se consideran las valoraciones pertinentes del bimestre según el servidor; no s
 Capturas en `outputs/conclusiones-en-familias-20261022/desktop-notas-completas.png` y `movil-notas-completas.png`. Harness ignorado en `.local/conclusiones-en-familias-20261022`; escritura/recarga sintéticas aisladas en ese origen. No se llamó IA real, ni se guardaron conclusiones de personas reales, ni se descargó Word en este recorrido. Las pruebas de servicios usan una base aislada y proveedor simulado. No equivale a un nuevo smoke cloud.
 
 Rollback: revertir los cambios de competency-period-review.tsx, period-evaluation.tsx y period-batch-panel.tsx y retirar period-family-flow.tsx. No requiere restaurar datos.
+
+## Publicación posterior en producción
+
+El mismo código quedó publicado el 22 de octubre en https://project-0w0pq.vercel.app/, deployment `dpl_GwkzJBptxKv24SM2cRaNjhj3MRTY` / `f3e61ad`, con autorización expresa y smoke público de 56 comprobaciones PASS. El escenario docente cloud usado no contiene notas/conclusiones/informes de período: no se afirma una nueva generación IA ni un lote no vacío en producción. Los casos con contenido guardado conservan la validación local descrita arriba. Recibo completo en QA_PUBLICACION_PILOTO_2026-10-22.md.

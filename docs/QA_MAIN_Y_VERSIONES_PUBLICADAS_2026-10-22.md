@@ -34,7 +34,7 @@ Los diez commits de referencia, incluido el piloto anterior `58b7642`, son ances
 
 Recibos reproducibles y capturas en `.local/main-audit-20261022/`: typecheck.log, lint.log, build.log, build-next.log, regressions.log, reconciliation.json y ui-checks.json. El informe conserva resultados sin copiar datos privados ni credenciales.
 
-## Lo publicado no coincide todavía con main
+## Desfase observado antes de la publicación posterior
 
 Consulta autenticada de solo lectura a Vercel el 22 de octubre:
 
@@ -63,3 +63,7 @@ Solo lectura de Git/Vercel y ejecución local de controles; modificación de doc
 Las carpetas no rastreadas `.impeccable/critique/` y `output/` contienen material local previo y entregables documentales; se conservan fuera del commit de auditoría. No se declara limpio el working tree completo mientras existan. La aplicación tracked no tiene cambios pendientes.
 
 Rollback: revertir únicamente el commit documental de esta auditoría si se necesitara; no restaurar datos ni revertir las correcciones funcionales aprobadas.
+
+## Actualización posterior: producción publicada y verificada
+
+Tras autorización expresa posterior de la usuaria, el 22 de octubre a las 11:09 de Lima se promovió `dpl_GwkzJBptxKv24SM2cRaNjhj3MRTY` / `f3e61ad` al dominio público. El código de aplicación es el auditado `34ceb4b`; 53 comprobaciones en candidata y 56 en producción PASS, más verificación visual tras recargar el sitio real. QA no cambió. El desfase de producción descrito arriba es histórico y queda resuelto por esta publicación, no por el push. Recibo, conservación, límites y rollback en QA_PUBLICACION_PILOTO_2026-10-22.md.

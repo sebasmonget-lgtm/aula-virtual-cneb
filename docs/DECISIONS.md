@@ -1619,3 +1619,8 @@ Solicitud expresa: retirar el bloque de conclusiones de la revisión de notas y 
 ### Verificación de versión antes de compartir el piloto · 2026-10-22
 
 No presentar main, un fixture local o un deployment READY como prueba de que el dominio público tiene la última revisión. Contrastar SHA y contenido de aplicación con el deployment efectivo del alias y su smoke. Los commits exclusivamente documentales pueden conservar el mismo código servido; dejar constancia de esa equivalencia. Subir a main y publicar son operaciones distintas: actualmente el proyecto Vercel no tiene integración Git. Mantener esa distinción en entregas y recibos. No desplegar como parte implícita de una auditoría de main. Ver QA_MAIN_Y_VERSIONES_PUBLICADAS_2026-10-22.md.
+
+
+### Publicación autorizada en el enlace de profesoras · 2026-10-22
+
+La usuaria solicita producción en el mismo enlace compartible. Publicar el commit limpio auditado primero como candidata con configuración de producción y después promoverlo al alias público tras smoke; no sustituir esta evidencia por un push. Ejecutado para f3e61ad: candidata 53 y producción 56 comprobaciones PASS, QA intacto. Preservar datos y configuración, mantener reloj QA apagado y conservar deployment previo para rollback. Commits posteriores solo documentales requieren comparación explícita de rutas de aplicación. Recibo QA_PUBLICACION_PILOTO_2026-10-22.md.
