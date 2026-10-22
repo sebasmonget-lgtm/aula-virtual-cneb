@@ -1317,3 +1317,18 @@ La competencia docente confirmada de la observación libre se comparte en lectur
 ### Cierre de publicación e impresión comprobados
 
 Código ee4bfb1 publicado únicamente en QA (dpl_D89mBBPSZLrerN6VwLmrFwxhScYv): 24 comprobaciones staging/alias, 66 huellas de fuentes conservadas y Producción intacta. Descarga posterior del Excel: las treinta notas y conclusiones exactas, todas las celdas anteriores conservadas y Resumen impreso en una página; seis páginas totales. Cero IA y cero escrituras pedagógicas durante la publicación. Recorrido cerrado, video nuevo de 7:55 y entrega en outputs/Ayni-desde-cero-2026-10-21; detalles y límites en QA_CIERRE_DESDE_CERO_2026-10-21.md y QA_IMPRESION_RESUMEN_EXCEL_2026-10-21.md. Esta actualización documental no requiere otro despliegue.
+
+
+### 22 de octubre — Hoy centrado en la actividad diaria
+
+A solicitud de la usuaria, Hoy retira Consultar actividades de otro día, Actividades anteriores por revisar y Ver otras actividades preparadas. Conserva flechas de consulta, asistencia y Observación libre; talleres al final. Abrir actividad inicia la prevista de hoy y abre directamente su guía mediante la ejecución existente; Continuar conserva el momento. Las consultas no muestran capturas libres/guiadas hasta iniciar. Misma identidad NotebookPen y nombre Observación libre en diagnóstico, Hoy vacío y guía. Sin cambios de servidor, RLS, currículo ni migraciones. Validación local: tipos/build PASS, lint sin errores (una advertencia previa), cuatro regresiones y recorrido UI sintético desktop/móvil PASS. No publicado. Detalle: QA_HOY_SIMPLE_2026-10-22.md.
+
+
+### 22 de octubre — Auditoría del retiro de inicio/cierre
+
+Aclaración de la usuaria: no debe exigirse empezar ni terminar una actividad. La implementación local anterior solo combinaba abrir+start y aún tiene Terminar: no satisface esa intención completa. Auditoría encuentra dependencias en avance, etiquetas de Calendario/Mi año, protección de fechas, oportunidades/talleres, mapa evaluativo y fecha Word. Abrir puede contar trabajo/bloquear reprogramación; active sin evidencia cuenta en revisión pero no en mapa. Observaciones canónicas no exigen ejecución. No cambiar datos ni publicar esta interpretación. La ruta propuesta separa lectura, observación real e históricos sin inferir realización por fecha, ni retirar cierre de período. Informe: QA_ACTIVIDAD_SIN_INICIO_CIERRE_2026-10-22.md.
+
+
+### 22 de octubre — Implementación sin ciclo manual
+
+La usuaria autoriza ajustar todas las dependencias y publicar solo en QA tras probar. La guía deja de escribir ejecución al abrir/avanzar; no hay iniciar/terminar y la lectura se conserva solo en el navegador. Observaciones/fechas previstas/históricos intactos. Hoy/Calendario/Mi año comparten señales de observaciones; talleres/revisión usan el mapa evaluativo común, sin contar una mera apertura antigua como realización. Notas anteriores visibles en guía/consulta; Word conserva sus fuentes. Cierres formales y confirmación docente de notas siguen. 153 regresiones PASS; typecheck/lint/build y UI local desktop/móvil. Publicación y huellas pendientes al escribir; recibo en QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md.

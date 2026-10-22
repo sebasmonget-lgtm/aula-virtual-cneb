@@ -1,3 +1,4 @@
+import {syncPeriodEvaluationMap} from "./period-assessment-closure-service.mjs";
 import {randomUUID} from 'node:crypto';
 import {workshopCatalog,workshopActivityDetails,rankWorkshopCatalog} from './workshop-catalog.mjs';
 import {workshopForAge} from './workshop-ages.mjs';
@@ -23,18 +24,17 @@ export async function loadWorkshopLibrary(db,{teacherId,classroomId,today=limaTo
   const [calendar,counts,developed]=await Promise.all([
     loadEffectiveCalendar(db,{teacherId,classroomId}),
     classroomObservationCoverage(db,{classroomId,year:own,competencyId:null,allCompetencies:true}),
-    db.query(`select ac.competency_v4_id as competency_id,count(distinct a.id)::int as developed,
-      max(d.execution_date)::text as last_developed from activity_criteria ac join activities a on a.id=ac.activity_id
-      join learning_experiences e on e.id=a.experience_id join class_schedule_entries se on se.activity_id=a.id
-      join daily_execution_logs d on d.schedule_entry_id=se.id
-      where e.classroom_id=$1 and d.status in ('active','completed') and d.actual_started_at is not null
-      and d.execution_date between $2::date and $3::date and ac.status='active'
-      group by ac.competency_v4_id`,[classroomId,date(own.starts_on),date(own.ends_on)]),
+    syncPeriodEvaluationMap(db,{classroomId,schoolYearId:own.school_year_id,
+      period:{starts_on:date(own.starts_on),ends_on:date(own.ends_on)},persist:false}),
   ]);
   const coverage={};
   for(const w of workshopCatalog)coverage[w.competency_id]??={developed:0,observed_students:0,last_developed:null};
   for(const key of counts.keys()){const id=key.split(':')[0];if(coverage[id])coverage[id].observed_students++;}
-  for(const row of developed.rows)if(coverage[row.competency_id])Object.assign(coverage[row.competency_id],row);
+  for(const id of Object.keys(coverage)){
+    const entries=developed.entries.filter(row=>row.competency_v4_id===id&&row.activity_state==='completed');
+    coverage[id].developed=new Set(entries.map(row=>row.activity_id)).size;
+    coverage[id].last_developed=entries.map(row=>row.actual_on).filter(Boolean).sort().at(-1)??null;
+  }
   const availableDates=calendar.days.filter(d=>d.is_instructional&&d.date>=today).map(d=>d.date);
   const scheduled=calendar.activities.filter(a=>a.experience_type==='workshop'&&a.status==='active'&&a.schedule_status!=='cancelled')
     .map(a=>({id:a.id,date:a.occurs_on,title:a.title}));

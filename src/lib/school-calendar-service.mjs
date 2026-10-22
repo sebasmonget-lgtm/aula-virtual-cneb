@@ -1,3 +1,4 @@
+import {loadActivityRecordSignals} from "./activity-record-signals.mjs";
 import { randomUUID } from "node:crypto";
 import { assertActivityScheduleMutable, limaToday, lockClassroomSchedule } from "./activity-schedule-integrity.mjs";
 import { assertRevision, expectedRevision } from "./version-integrity.mjs";
@@ -104,6 +105,8 @@ export async function loadEffectiveCalendar(db, { teacherId, classroomId = null,
     left join lateral(select id,start_time from class_schedule_entries where activity_id=a.id and scheduled_on=a.occurs_on order by start_time limit 1)se on true
     where e.classroom_id=$1 and a.occurs_on between $2::date and $3::date and a.status in ('draft','active','archived')
       and (a.status<>'archived' or se.id is not null) order by a.occurs_on,se.start_time`,[classroom.id,start,end])).rows;
+  const observationSignals=await loadActivityRecordSignals(db,{classroomId:classroom.id});
+  for(const activity of activities)Object.assign(activity,observationSignals.get(activity.id)??{observation_count:0,last_observed_on:null});
   return { classroom:{ id:classroom.id,section:classroom.section,year:Number(classroom.year),starts_on:iso(classroom.starts_on),ends_on:iso(classroom.ends_on) },
     version:{ id:version.id,name:version.name,version:version.version,source_name:version.source_name,source_url:version.source_url,source_metadata:version.source_metadata },
     days,blocks,experiences,activities };

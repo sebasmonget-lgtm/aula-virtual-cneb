@@ -151,7 +151,7 @@ test('seleccionar sin proyecto: propiedad, edad, calendario, replay, guía, obse
     await saveOrdinaryObservation(db,teacherId,{studentId:student,clientRequestId:randomUUID(),sourceKind:'guided',activityId:saved.id,criterionId:criterion.id,momentId:'development',rawText:'Explica que la esponja retuvo agua.'},{occurredAt:new Date('2026-10-19T15:00:00Z')});
     const library=await loadWorkshopLibrary(db,{teacherId,classroomId:c.classroomId,today:'2026-10-15'});
     assert.equal(library.coverage.CYT_INDAGA.observed_students,1);
-    assert.equal(library.coverage.CYT_INDAGA.developed,0,'planned/observed is not developed');
+    assert.equal(library.coverage.CYT_INDAGA.developed,1,'an attributed observation counts without starting or completing');
     assert.ok(library.available_dates.includes('2026-10-19'));assert.ok(!library.available_dates.includes('2026-10-17'));
     assert.equal(library.scheduled[0].id,saved.id);
     await startActivityToday(db,teacherId,saved.id,'2026-10-19');

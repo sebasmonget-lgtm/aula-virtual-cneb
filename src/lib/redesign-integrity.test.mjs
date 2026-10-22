@@ -1,4 +1,5 @@
 import test from "node:test";
+import {withPedagogicalClock} from "./pedagogical-clock.mjs";
 import assert from "node:assert/strict";
 import {readFile,readdir} from "node:fs/promises";
 import {randomUUID} from "node:crypto";
@@ -38,7 +39,7 @@ test("intercambio individual de confirmadas se rechaza y no altera fechas, agend
   }finally{await db.close();}
 });
 
-test("rebase explícito conserva padre, identidad y actividades; exige descendencia y vuelve a verificar al confirmar",async()=>{
+test("rebase explícito conserva padre, identidad y actividades; exige descendencia y vuelve a verificar al confirmar",async()=>withPedagogicalClock({date:"2026-10-19",time:"08:00"},async()=>{
   const {db,teacher,classroom,project,make}=await fixture();try{
     const curriculum=(await db.query("select id from curriculum_versions where active=true limit 1")).rows[0].id;
     const old=randomUUID(),next=randomUUID(),proposalId=randomUUID();
@@ -62,7 +63,7 @@ test("rebase explícito conserva padre, identidad y actividades; exige descenden
     assert.equal(projectSourceDiscrepancy({...source,details:{source_proposal_snapshot:annual.source}},{planId:next,proposal:annual.source},annual.slot).changed,true);
     await assert.rejects(assertProjectUnstarted(db,project,"2026-10-20"),/pasado/);
   }finally{await db.close();}
-});
+}));
 test("revisión distingue realización/evidencia/futuro y advertencias usan fechas literales",()=>{
   const result=periodFutureProjection({period:{id:"p"},feedback:{students_total:20,competencies:[]},curriculum:[{id:"indaga",name:"Indaga"}],opportunities:[{competency_id:"indaga",planned:10,worked:0}],plan:{id:"year",proposal:{proposed_experiences:[{proposal_id:"x",title:"Nuestro huerto",planned_start_date:"2026-11-09",planned_end_date:"2026-11-20",opportunities:[{competency_id:"indaga"}]}]}},today:"2026-10-05"});
   const row=result.competencies[0];assert.equal(row.worked_opportunities,0);assert.equal(row.planned_opportunities,10);assert.equal(row.students_without_evidence,20);assert.equal(row.future_projects[0].title,"Nuestro huerto");assert.match(row.continuity,/antes de decidir/);

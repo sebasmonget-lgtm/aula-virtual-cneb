@@ -37,7 +37,7 @@ export function competencyWorkState(entries = [], planned = false) {
   return { planned, worked, evidenced, state: evidenced ? "evidenced" : worked ? "worked" : planned ? "planned" : "not_planned" };
 }
 
-export async function syncPeriodEvaluationMap(db, { classroomId, schoolYearId, period }) {
+export async function syncPeriodEvaluationMap(db, { classroomId, schoolYearId, period, persist = true }) {
   const relations=(await db.query(`select to_regclass('period_evaluation_map_versions') is not null as map_ready,
     to_regclass('daily_execution_logs') is not null and to_regclass('class_schedule_entries') is not null as execution_ready,
     to_regclass('evidences') is not null and to_regclass('students') is not null as evidence_ready,
@@ -98,7 +98,7 @@ export async function syncPeriodEvaluationMap(db, { classroomId, schoolYearId, p
     return { ...item, source_fingerprint: hash(item) };
   });
   const sourceFingerprint = hash(snapshot);
-  if(!relations.map_ready) return { version: 1, source_fingerprint: sourceFingerprint, entries: snapshot, changed: true, ephemeral: true };
+  if(!relations.map_ready || !persist) return { version: 1, source_fingerprint: sourceFingerprint, entries: snapshot, changed: true, ephemeral: true };
   return versionTransaction(db, `period-evaluation-map:${classroomId}:${period.id}`, async (tx) => {
     const latest = (await tx.query(`select version,source_fingerprint from period_evaluation_map_versions
       where classroom_id=$1 and evaluation_period_id=$2 order by version desc limit 1`, [classroomId, period.id])).rows[0];

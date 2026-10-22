@@ -17,7 +17,7 @@ import calendarStyles from "./calendar-overview.module.css";
 
 type Day={id:string;date:string;calendar_type:string;is_instructional:boolean;source:string;reason:string;editable:boolean;school_override:boolean};
 type Experience={id:string;title:string;type:"project"|"unit"|"workshop";starts_on:string;ends_on:string;status:string;source_proposal_id?:string;annual_status?:string;details?:{activity_route?:unknown[];decisions?:{competency_ids?:string[]}}};
-type Activity={id:string;title:string;purpose:string|null;occurs_on:string;planned_date:string|null;schedule_status:string;status:string;execution_status?:string;sequence_locked?:boolean;experience_id:string;experience_title:string;experience_type:string;details?:{competency_id?:string};start_time:string};
+type Activity={id:string;title:string;purpose:string|null;occurs_on:string;planned_date:string|null;schedule_status:string;status:string;execution_status?:string;observation_count?:number;sequence_locked?:boolean;experience_id:string;experience_title:string;experience_type:string;details?:{competency_id?:string};start_time:string};
 type CalendarData={classroom:{id:string;section:string;year:number;starts_on:string;ends_on:string};version:{name:string;version:string;source_name:string;source_url:string;source_metadata:Record<string,unknown>};days:Day[];blocks:{type:string;label:string;start_date:string;end_date:string;sort_order:number}[];experiences:Experience[];activities:Activity[];birthdays?:StudentBirthday[]};
 
 

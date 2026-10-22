@@ -1,3 +1,4 @@
+import {loadActivityRecordSignals,activityRecordLabel} from "../src/lib/activity-record-signals.mjs";
 import { resourceReadiness, assertResourceReadiness } from "../src/lib/project-resource-readiness.mjs";
 import { enqueuePreparation, enqueueActivityBlock, ownedPreparationJob, publicPreparationJob, retryPreparation, preparationFingerprint,needsAcceptedProjectContinuation,recoverAcceptedProjectContinuation,recoverSavedPreparationResult } from "../src/lib/preparation-jobs.mjs";
 import { versionTransaction, VersionConflictError, httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
@@ -71,7 +72,8 @@ export async function handlePreparationRoutes({request,response,url,db,teacherId
       const can_restore=!!row&&!row.teacher_protected&&(row.instructional_dates??[]).some(date=>date>=limaToday()&&!blocked_dates.includes(date));
       const baseline=plan?.generation_metadata?.scoped_base_proposal??(plan?.supersedes_plan_id?(await db.query('select proposal from annual_plans where id=$1 and classroom_id=$2',[plan.supersedes_plan_id,context.id])).rows[0]?.proposal:null);
       const prepared_current=!!project&&(project.annual_plan_id===plan?.id||isDeepStrictEqual(row,baseline?.proposed_experiences?.find(item=>item.proposal_id===proposalActivities[1])));
-      send(response,200,{today:limaToday(),project,prepared_current,can_replace:!protectedProject,can_restore,blocked_dates,activities:activities.map(row=>({...row,state:row.execution_status==='completed'?'Realizada':['active','in_progress'].includes(row.execution_status)?'En curso':row.date<limaToday()?'Sin realizar':'Lista'}))},origin);return true;
+      const signals=await loadActivityRecordSignals(db,{classroomId:context.id});
+      send(response,200,{today:limaToday(),project,prepared_current,can_replace:!protectedProject,can_restore,blocked_dates,activities:activities.map(row=>({...row,...signals.get(row.id),state:activityRecordLabel({...row,...signals.get(row.id),occurs_on:row.date},limaToday())}))},origin);return true;
     }
     if(url.pathname==='/api/preparation/projects/future-preview'&&['GET','POST'].includes(request.method)){
       const body=request.method==='POST'?await readJson(request):Object.fromEntries(url.searchParams),{row:project}=await projectFlowRow(body.projectId);

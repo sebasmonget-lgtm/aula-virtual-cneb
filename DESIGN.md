@@ -64,3 +64,15 @@ Se conserva el diseño actual. La versión familiar dice «Lo que observamos», 
 La preferencia posterior reemplaza las barras por un círculo de tres colores: verde asistencia, amarillo tardanza y rojo falta; porcentajes y cantidades en leyenda legible y total en el centro. Cantidades nativas editables en Word; anillo dibujado por código a 640px para 184px de uso. Carátula inspirada en las plantillas existentes: cabecera celeste con foto, datos en cuadrícula, resumen verde suave, asistencia en fondo crema y adorno inferior de proyectos. No cambiar las páginas de competencias. En móvil, círculo y leyenda se apilan si no caben.
 
 Refinamiento del modo Operate. Gráfica horizontal pequeña, con etiquetas y cantidades legibles sin depender del color: verde Presente, ámbar Llegó tarde, rojo Faltó; justificada y sin registro solo cuando existen. Resumen breve y fecha de corte. Ubicación junto al resumen del alumno, antes de las competencias; Word la incluye una vez en la carátula, con identificación y foto ampliada a la derecha. Después, una competencia por hoja. Barras mediante tablas nativas. Sin acciones ni explicaciones largas dentro del gráfico; carga y error recuperable en pantalla.
+
+
+### Hoy cotidiano y observación reconocible · 2026-10-22
+
+Refinamiento Operate: saludo/asistencia, cumpleaños cuando corresponde, actividad con Abrir actividad de al menos 56 px, navegación anterior/siguiente, Observación libre y talleres al final. Se retiran accesos redundantes al calendario y otras listas. Abrir la prevista de hoy lleva a la guía en un paso; las consultas de otras fechas conservan una decisión explícita.
+
+Observación libre usa la identidad compartida NotebookPen + nombre completo, sin depender solo del icono. En Hoy, estado vacío y guía activa aparece como botón celeste con borde teal y área de al menos 48 px; diagnóstico conserva su selector de modo y adopta la misma identidad. Las consultas no ofrecen captura. Se conservan Poppins, paleta y sombras existentes. Revisión local 1440×900 y 390×844 sin recortes observados; detector de seis componentes sin hallazgos. Veredicto: refinamiento listo localmente; publicación pendiente. No hay raster nuevo.
+
+
+### Guía sin inicio ni cierre · 2026-10-22
+
+Sustituye la apertura con inicio implícito del refinamiento anterior. Abrir actividad lleva a una guía utilizable sin iniciar/terminar. Momento anterior/siguiente son navegación de lectura; no representan ejecución ni acreditan haber realizado la actividad. Se conserva la posición en el navegador, sin pedir otro paso. Observación libre mantiene identidad NotebookPen y el registro guiado conserva su criterio. Talleres queda independiente al final de Hoy. Notas históricas consultables sin editarlas. Las etiquetas distinguen observaciones, ausencia de registros e históricos. Revisión local computadora/móvil y detector limpios; no hay raster nuevo.

@@ -49,12 +49,12 @@ export function WorkshopLibrary({classroomId,onBack,onAdded,onOpen}:{classroomId
         <label><span className={styles.searchLabel}><Search size={16}/>Buscar taller</span><input type="search" value={query} onChange={e=>{setQuery(e.target.value);setSelected(null);}} placeholder="Nombre o idea…"/></label>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3"><p className={styles.hint} role="status">{filtered?.length??0} {(filtered?.length??0)===1?'taller disponible':'talleres disponibles'}{` para ${data.age} años`}.</p><label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-[#9bb6c9] bg-white px-3 text-sm font-semibold text-[#07576c]"><input type="checkbox" className="size-4 accent-[#087d96]" checked={onlySheets} onChange={e=>{setOnlySheets(e.target.checked);setSelected(null);}}/>Con fichas MINEDU</label></div>
-      <p className={styles.hint}>Primero verás competencias sin actividades desarrolladas y con menos niños observados. Tú eliges.</p>
+      <p className={styles.hint}>Primero verás competencias con menos actividades con observaciones o registros anteriores, y menos niños observados. Tú eliges.</p>
       <div className={styles.grid}>{filtered?.map(w=>{const visual=competencyVisual(w.competency_id);return <button type="button" key={w.id} aria-pressed={selected?.id===w.id} onClick={()=>{setSelected(w);setError('');}} className={styles.card} style={{background:visual?.background??'#edf7fa'}}>
         <div className={styles.cardTop}>{visual&&<Image src={visual.image} alt="" width={48} height={48} unoptimized/>}<span>{workshopAgeLabel(w)} · {w.duration_minutes} min</span></div>
         <h2>{w.title}</h2><p>{w.type}</p><span className={styles.competency} style={{color:visual?.foreground}}>{names.get(w.competency_id)}</span>
         {curatedWorkshopSheets(w.id,data.age).length>0&&<span className={styles.priority}>Con fichas MINEDU</span>}
-        {data.coverage[w.competency_id]?.developed===0&&<span className={styles.priority}>Por explorar en el aula</span>}
+        {data.coverage[w.competency_id]?.developed===0&&<span className={styles.priority}>Sin registros de actividad</span>}
       </button>;})}</div>
       {!filtered?.length&&<p>No hay talleres con esos filtros. Prueba otra competencia o tipo.</p>}
       {selected&&<article ref={detail} tabIndex={-1} className={styles.detail} aria-label={`Taller: ${selected.title}`}>

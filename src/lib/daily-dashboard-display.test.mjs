@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {teacherGreeting,todayBlockLabel,calendarActivityState,calendarAgenda,calendarProjectsOnDay} from './daily-dashboard-display.mjs';
 test('calendario distingue ejecución y no ofrece retirar trabajo registrado ni fechas pasadas',()=>{
   const activity={status:'active',schedule_status:'planned',occurs_on:'2026-07-06'};
-  assert.deepEqual(calendarActivityState({...activity,execution_status:'completed'},'2026-07-06'),{label:'Terminada',canMarkNotWorked:false});
+  assert.deepEqual(calendarActivityState({...activity,execution_status:'completed'},'2026-07-06'),{label:'Realizada · registro anterior',canMarkNotWorked:false});
   assert.equal(calendarActivityState({...activity,execution_status:'active'},'2026-07-06').canMarkNotWorked,false);
   assert.equal(calendarActivityState(activity,'2026-07-07').canMarkNotWorked,false);
   assert.equal(calendarActivityState(activity,'2026-07-06').canMarkNotWorked,true);

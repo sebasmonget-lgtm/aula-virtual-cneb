@@ -20,7 +20,7 @@ import {
   SidebarProvider,
 } from "@/components/ui/sidebar";
 import {
-  confirmClassroomEnrollment, createLocalEvidence, loadLocalDashboard, loadPilotSetup, localDatabaseApiUrl, saveLocalAttendance, updateLocalExecution, type ActivityCriterion, type LocalDashboard, type LocalStudent, type PrivateMediaUpload, type PilotSetupDraft,
+  confirmClassroomEnrollment, createLocalEvidence, loadLocalDashboard, loadPilotSetup, localDatabaseApiUrl, saveLocalAttendance, type ActivityCriterion, type LocalDashboard, type LocalStudent, type PrivateMediaUpload, type PilotSetupDraft,
 } from "@/src/lib/local-database";
 import { canOpenPlanningStep, loadPlanningJourney, loadStartingGuidance } from "@/src/lib/planning-journey.mjs";
 import { InstitutionProfile } from "./profile-and-diagnostic";
@@ -105,7 +105,6 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [evidenceRevision, setEvidenceRevision] = useState(0);
   const [attendanceOpen, setAttendanceOpen] = useState(false);
-  const [chooseWorkshopAfterActivity,setChooseWorkshopAfterActivity]=useState(false);
   const [activityRunBlockId, setActivityRunBlockId] = useState<string | null>(null);
   const [evidenceContext, setEvidenceContext] = useState<{ activityId: string; criteria: ActivityCriterion[]; title: string } | null>(null);
   const [studentId, setStudentId] = useState("");
@@ -278,9 +277,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
     setAttendanceOpen(false);
   }
 
-  async function updateExecution(input: { scheduleEntryId: string; action: "start" | "complete" | "skip" | "keep_current" | "set_step"; stepIndex?: number; closureType?: "as_planned" | "note"; closureNote?: string }) {
-    setDashboard(await updateLocalExecution(input));
-  }
+
 
   function openEvidenceFor(block: LocalDashboard["today"]["blocks"][number], suggestedStudentId?: string, selectedCriterionId?: string, momentId?: string) {
     if (newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) && block.activity_id) {
@@ -307,15 +304,13 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
     setEvidenceOpen(true);
   }
 
-  async function openActivity(block: LocalDashboard["today"]["blocks"][number], start = false) {
+  async function openActivity(block: LocalDashboard["today"]["blocks"][number]) {
     if (!block.activity_id) return;
-    if(!start&&block.status!=='active'){setActivityRunBlockId(null);setTodayConsultId(block.activity_id);return;}
-    if (start) await updateExecution({ scheduleEntryId: block.id, action: "start" });
     setActivityRunBlockId(block.id);
   }
 
   const [todayConsultId,setTodayConsultId]=useWorkspaceParam("Hoy","activity","",value=>/^[0-9a-f-]{36}$/i.test(value)?value:undefined);
-  useEffect(()=>{if(active!=='Hoy')return;const activityId=readWorkspaceParams('Hoy').get('activity');if(!activityId)return;let live=true;void loadLocalDashboard().then(value=>{if(live){setDashboard(value);setActivityRunBlockId(value.today.blocks.find(block=>block.activity_id===activityId&&block.status==='active')?.id??null);}}).catch(()=>{});return()=>{live=false;};},[active,todayConsultId]);
+  useEffect(()=>{if(active!=='Hoy')return;const activityId=readWorkspaceParams('Hoy').get('activity');if(!activityId)return;let live=true;void loadLocalDashboard().then(value=>{if(live){setDashboard(value);setActivityRunBlockId(value.today.blocks.find(block=>block.activity_id===activityId)?.id??null);}}).catch(()=>{});return()=>{live=false;};},[active,todayConsultId]);
   const activityRunBlock = dashboard?.today.blocks.find((block) => block.id === activityRunBlockId) ?? null;
 
   // Setup has already committed; its busy exit guard must not block this transition.
@@ -398,7 +393,7 @@ export function TeacherWorkspace({ onSignOut, onSetupRequired }: { onSignOut?: (
             setDashboard(current => current?.profile.classroom_id === confirmed.classroomId ? {...current,profile:{...current.profile,enrollment_completed_at:confirmed.completedAt}} : current);
             writeWorkspaceLocation("Aula", {view:"list"}, true); openDiagnostic(1, true);
           }} onImported={(ready) => { if (initialEnrollment) writeWorkspaceLocation("Aula", {view:"enrollment"}, true); setDashboard(ready); }} onDiagnostic={() => openDiagnostic()} onEvaluate={(studentId, competencyId) => { navigate("Evaluar"); setEvaluationTarget({ studentId, competencyId }); }} onPlan={() => navigatePrimary("Mi año")} /></> : <ScreenSkeleton /> : active === "Planificar" ? dashboard ? <PlanningArea onPreparationStep={selectPreparationStep} initialPreparation={preparing} onAnnualConfirmed={()=>{void loadStartingGuidance(localDatabaseApiUrl).then(guidance=>{setAnnualConfirmed(Boolean(guidance.plans.active));setAnnualDraft(Boolean(guidance.plans.draft));}).catch(()=>setGuidanceError(true));}} dashboard={dashboard} initialTab={planningTarget} initialActivity={calendarActivity} diagnosticInitialStep={diagnosticInitialStep} selectedResource={selectedResource} onGoToday={() => navigate("Hoy")} onRecordEvidence={openPlannedEvidence} onGoStudents={() => navigate("Aula")} onGoWorkshops={() => { setLibraryFilter("workshops"); navigate("Biblioteca"); }} onGoCalendar={() => navigate("Calendario")} onGoLibrary={() => { setLibraryFilter("for-you"); navigate("Biblioteca"); }} onGoEvaluation={()=>navigate("Evaluar")} onGoDocuments={()=>navigate("Documentos")} /> : <ScreenSkeleton /> : <>
-          {active === "Hoy" && activityRunBlock ? <ActivityRunView navigation={activityRunBlock.activity_details?.workshop_type?undefined:<ActivitySequenceNavigation activityId={activityRunBlock.activity_id!} onActivity={id=>{setActivityRunBlockId(null);setTodayConsultId(id);}}/>} block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => {setActivityRunBlockId(null);setTodayConsultId('');}} onEvidence={(id, criterionId, momentId) => openEvidenceFor(activityRunBlock, id, criterionId, momentId)} onFreeObservation={()=>setOrdinaryContext({id:activityRunBlock.activity_id!,title:activityRunBlock.title,criteria:activityRunBlock.criteria,free:true})} onStepChange={async (stepIndex) => updateExecution({ scheduleEntryId: activityRunBlock.id, action: "set_step", stepIndex })} onComplete={async (note,chooseWorkshop) => { await updateExecution({ scheduleEntryId: activityRunBlock.id, action: "complete", closureType: note ? "note" : "as_planned", closureNote: note }); setActivityRunBlockId(null);setTodayConsultId('');setChooseWorkshopAfterActivity(!!chooseWorkshop); }} /> : active === "Hoy" && todayConsultId ? <ActivityConsultation onActivity={setTodayConsultId} key={todayConsultId} inToday id={todayConsultId} onStarted={value=>{setDashboard(value);setActivityRunBlockId(value.today.blocks.find(block=>block.activity_id===todayConsultId)?.id??null);}} onBack={()=>setTodayConsultId('')}/> : active === "Hoy" && (dashboard ? <TodayHome initialChooseWorkshop={chooseWorkshopAfterActivity} onWorkshopPickerClose={()=>setChooseWorkshopAfterActivity(false)} onActivitiesChanged={async()=>setDashboard(await loadLocalDashboard())} dashboard={dashboard} refreshKey={evidenceRevision} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} updateExecution={updateExecution} openActivity={openActivity} onPlan={openAnnualProject} onCalendar={()=>navigate("Calendario")} onConsultActivity={setTodayConsultId} onPrepareActivity={() => { if(redesigned)navigatePrimary("Mi año");else{setPlanningTarget("activities");navigate("Planificar");} }} onObserveWithoutActivity={() => newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) ? setOrdinaryContext(null) : (setPlanningTarget("activities"), navigate("Planificar"))} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} onReviewObservations={() => setOrdinaryReviewOpen(true)} /> : <ScreenSkeleton />)}
+          {active === "Hoy" && activityRunBlock ? <ActivityRunView navigation={activityRunBlock.activity_details?.workshop_type?undefined:<ActivitySequenceNavigation activityId={activityRunBlock.activity_id!} onActivity={id=>{setActivityRunBlockId(null);setTodayConsultId(id);}}/>} block={activityRunBlock} evidenceRevision={evidenceRevision} onBack={() => {setActivityRunBlockId(null);setTodayConsultId('');}} onEvidence={(id, criterionId, momentId) => openEvidenceFor(activityRunBlock, id, criterionId, momentId)} onFreeObservation={()=>setOrdinaryContext({id:activityRunBlock.activity_id!,title:activityRunBlock.title,criteria:activityRunBlock.criteria,free:true})} /> : active === "Hoy" && todayConsultId ? <ActivityConsultation onActivity={setTodayConsultId} key={todayConsultId} inToday id={todayConsultId} onBack={()=>setTodayConsultId('')}/> : active === "Hoy" && (dashboard ? <TodayHome onActivitiesChanged={async()=>setDashboard(await loadLocalDashboard())} dashboard={dashboard} refreshKey={evidenceRevision} openEvidence={openEvidenceFor} openAttendance={() => setAttendanceOpen(true)} openActivity={openActivity} onPlan={openAnnualProject} onCalendar={()=>navigate("Calendario")} onConsultActivity={setTodayConsultId} onPrepareActivity={() => { if(redesigned)navigatePrimary("Mi año");else{setPlanningTarget("activities");navigate("Planificar");} }} onObserveWithoutActivity={() => newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS) ? setOrdinaryContext(null) : (setPlanningTarget("activities"), navigate("Planificar"))} onReplan={() => { navigate("Evaluar"); setEvaluationEntry("replan"); }} onReviewObservations={() => setOrdinaryReviewOpen(true)} /> : <ScreenSkeleton />)}
           </>}
         </main>
 

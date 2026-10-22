@@ -30,21 +30,18 @@ export function resolveDailyState({ now, scheduleEntries, attendanceRecorded, ca
     .at(-1);
   if (!currentBlock && pendingClosure) {
     return {
-      mode: "closure",
+      mode: "available",
       currentBlock: pendingClosure,
       nextBlock: ordered.find((entry) => minutes(entry.start_time) > minutes(pendingClosure.end_time)) ?? null,
-      primaryAction: "close_block",
-      pendingItems: ["closure"],
+      primaryAction: "view_block",
+      pendingItems: [],
     };
   }
   if (currentBlock?.status === "completed" || currentBlock?.status === "skipped") {
     return { mode: "next", currentBlock: null, nextBlock, primaryAction: nextBlock ? "open_next" : "close_day", pendingItems: [] };
   }
   if (currentBlock) {
-    const action = currentBlock.status === "active" && instructionalBlocks.has(currentBlock.block_type)
-      ? "continue_block"
-      : currentBlock.status === "active" ? "view_block" : "start_block";
-    return { mode: "in_progress", currentBlock, nextBlock, primaryAction: action, pendingItems: [] };
+    return { mode: "in_progress", currentBlock, nextBlock, primaryAction: "view_block", pendingItems: [] };
   }
   if (nextBlock) return { mode: "upcoming", currentBlock: null, nextBlock, primaryAction: "open_next", pendingItems: [] };
   return { mode: "day_complete", currentBlock: null, nextBlock: null, primaryAction: "close_day", pendingItems: firstInstructional ? [] : ["review_schedule"] };

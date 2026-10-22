@@ -1587,3 +1587,22 @@ Generar, guardar, descargar, abrir o continuar son operaciones del producto cuan
 ### 2026-10-21 — Diagnóstico inicial como documento de consulta
 
 Después de confirmar el diagnóstico inicial, Documentos ofrece su lectura y descarga mediante el catálogo; deja de ofrecer preparar otro. La decisión usa el avance autorizado del aula activa. Si se creó el plan sin preparar el documento, el acceso sigue disponible hasta confirmarlo. Las observaciones cotidianas no fuerzan repetir el diagnóstico ni reemplazan automáticamente el plan. Conserva historial y motores internos.
+
+
+## 2026-10-22 — Simplificar Hoy y abrir la guía en un paso
+
+La actividad cotidiana es la acción principal: el botón Abrir actividad de una actividad prevista hoy combina el inicio existente y la apertura de su guía. No hay un segundo Desarrollar ahora. Actividades realizadas/no realizadas siguen en consulta; las flechas consultan otras guías sin iniciar ni cambiar fechas. Trabajar otra fecha mantiene la decisión explícita y su confirmación. La consulta no expone captura de observaciones.
+
+Por pedido explícito se retiran de Hoy los accesos a otro día, revisión de pendientes anteriores y listado de otras preparadas; Calendario y las flechas siguen disponibles. El componente/API de revisión anterior se conserva, pero esa acción deja de ofrecerse en Hoy por decisión de producto. Talleres queda después de la actividad y el acceso libre. Observación libre comparte icono NotebookPen y etiqueta desde diagnóstico, sin sustituir la guía de observación ni atribuir competencias automáticamente. Rollback: revertir estos componentes y la identidad compartida; sin operación de datos.
+
+
+## 2026-10-22 — Aclaración posterior: sin empezar/terminar actividad
+
+La usuaria aclara que la intención es retirar el requisito cotidiano de empezar y terminar, no solo ocultar un botón intermedio. La apertura automática con start descrita en la entrada anterior no implementa íntegramente ese objetivo. Antes de publicarlo debe reconciliarse la lectura de guía con Calendario, Mi año, evaluación, talleres y protección de fechas. Consultar/avanzar/pasar el día no acredita realización. Conservar históricos y observaciones, sin inferir niveles ni realizar cierres de período automáticamente. Auditoría y ruta propuesta documentadas en QA_ACTIVIDAD_SIN_INICIO_CIERRE_2026-10-22.md; comportamiento nuevo aún pendiente de implementar.
+
+
+## 2026-10-22 — Guía cotidiana sin ciclo de ejecución
+
+La autorización posterior implementa el objetivo completo y sustituye abrir+start: abrir/navegar es lectura, persistida solo en sessionStorage. No exigir inicio ni cierre de actividad, tampoco realizar/terminar automáticamente por fecha o navegación. Captura usa observaciones canónicas y conserva alumno, criterio, momento y fecha real sin cambiar la prevista. Los proyectos pasados conservan consulta. Talleres es una elección independiente en Hoy.
+
+Etiquetas comunes: Prevista, Con observaciones, Sin registros; los históricos se identifican y se conservan. Ausencia de registro no prueba no realización. Revisión/talleres cuentan la misma proyección del mapa (observación atribuida o completed histórico), sin usar active aislado como realización. No borrar APIs/logs antiguos, ni inferir competencias de notas libres. Las notas previas siguen consultables, y los cierres de período/año y notas docentes mantienen sus confirmaciones. QA únicamente tras commit limpio y smoke; rollback de alias/código sin migrar datos.

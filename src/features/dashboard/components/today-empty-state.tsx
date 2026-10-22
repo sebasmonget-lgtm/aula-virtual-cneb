@@ -2,19 +2,20 @@
 
 import {useEffect,useState} from 'react';
 import Image from 'next/image';
-import {ArrowRight,BookOpen,CalendarDays,FileText,Lightbulb,PencilLine} from 'lucide-react';
+import {ArrowRight,BookOpen,CalendarDays,FileText,Lightbulb} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {apiFetch,apiJson} from '@/src/lib/ayni-api-fetch';
 import {localDatabaseApiUrl} from '@/src/lib/local-database';
 import {calendarAgenda} from '@/src/lib/daily-dashboard-display.mjs';
 import {displayDate} from '@/src/lib/display-date';
 import {ProjectPictogram} from './project-pictogram';
+import {FreeObservationButton} from "./free-observation-button";
 import styles from './daily-overview.module.css';
 
 type UpcomingData={experiences:{id:string;title:string;type:string;status:string;starts_on:string;ends_on:string;source_proposal_id?:string;annual_status?:string;details?:{decisions?:{competency_ids?:string[]}}}[];
   activities:{id:string;title:string;status:string;schedule_status:string;occurs_on:string;start_time?:string}[]};
 
-export function TodayEmptyState({today,reason,onPlan,onCalendar,onActivity,onObserve,plannedActivity,period}:{
+export function TodayEmptyState({today,reason,onPlan,onActivity,onObserve,plannedActivity,period}:{
   today:string;reason?:string;onPlan:(proposalId?:string)=>void;onCalendar:()=>void;onActivity:(id:string)=>void;
   onObserve?:()=>void;plannedActivity?:{id:string;title:string};period?:{label:string;starts_on:string;ends_on:string}|null;
 }){
@@ -37,8 +38,7 @@ export function TodayEmptyState({today,reason,onPlan,onCalendar,onActivity,onObs
     </section>
     <div className={styles.emptyLower}>
       <section className={styles.also}><h2><Lightbulb size={25}/>También puedes</h2><div className={styles.quickActions}>
-        {onObserve&&<Button variant="outline" onClick={onObserve}><PencilLine size={20}/>Registrar observación libre<ArrowRight size={17}/></Button>}
-        <Button variant="outline" onClick={onCalendar}><CalendarDays size={20}/>Ir al Calendario<ArrowRight size={17}/></Button>
+        {onObserve&&<FreeObservationButton onClick={onObserve}/>}
       </div></section>
       <section className={styles.upcoming} aria-label="Lo que viene"><h2><CalendarDays size={24}/>Lo que viene</h2>
         {!upcoming?<p>{failed?'No pudimos consultar lo que viene. Puedes abrir Mi año o Calendario.':'Buscando las próximas actividades…'}</p>:

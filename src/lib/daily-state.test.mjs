@@ -16,14 +16,14 @@ test("prioriza asistencia antes del primer bloque", () => {
 test("identifica la actividad actual si la docente entra tarde", () => {
   const state = resolveDailyState({ now: "09:20", scheduleEntries: blocks, attendanceRecorded: true, calendarException: null });
   assert.equal(state.currentBlock?.id, "activity");
-  assert.equal(state.primaryAction, "start_block");
+  assert.equal(state.primaryAction, "view_block");
 });
 
 test("respeta una actividad extendida manualmente", () => {
   const entries = blocks.map((block) => block.id === "activity" ? { ...block, status: "active", current_override: true } : block);
   const state = resolveDailyState({ now: "11:30", scheduleEntries: entries, attendanceRecorded: true, calendarException: null });
   assert.equal(state.currentBlock?.id, "activity");
-  assert.equal(state.primaryAction, "continue_block");
+  assert.equal(state.primaryAction, "view_block");
 });
 
 test("no sugiere actividades en un feriado", () => {
@@ -37,9 +37,9 @@ test("expone configuración cuando no existe horario", () => {
   assert.equal(state.primaryAction, "configure_schedule");
 });
 
-test("solicita cierre cuando una actividad terminó sin registro", () => {
+test("conserva la guía disponible después del horario sin pedir cierre", () => {
   const state = resolveDailyState({ now: "10:00", scheduleEntries: blocks, attendanceRecorded: true, calendarException: null });
-  assert.equal(state.mode, "closure");
+  assert.equal(state.mode, "available");
   assert.equal(state.currentBlock?.id, "activity");
-  assert.equal(state.primaryAction, "close_block");
+  assert.equal(state.primaryAction, "view_block");
 });

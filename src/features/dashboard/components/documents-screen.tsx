@@ -32,6 +32,7 @@ export type OpenDocument = DocumentEntry & {
   institution_name?: string; document_context?: DocumentContext; content: Record<string, unknown>;
   source_plan_format?: string; formal_ready?: boolean;
   actual_execution_date?:string|null;
+  teacher_closure_note?:string|null;
   experience_ends_on?:string;
   guide?: {criteria: import('@/src/lib/local-database').ActivityCriterion[];pedagogical_blocks: import('./pedagogical-block').PedagogicalBlockData[]};
   starts_on?: string; ends_on?: string; occurs_on?: string; experience_title?: string;

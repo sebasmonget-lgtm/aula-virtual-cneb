@@ -2389,3 +2389,18 @@ Síntoma real QA: master de un día rechazado por tres competencias sin oportuni
 # 2026-10-21 — Detalles mezclaba criterio de una competencia con evidencia de otra
 
 Síntoma: Oralidad figuraba como principal junto a evidencia de Convivencia. Causa: inserción sin display_order específico y lector que elegía la primera fila. Solución: guardar orden y resolver el principal mediante el competency_id declarado, con evidencia propia y orden compatible para históricos. Pruebas con fila secundaria ordenada antes del principal, exportación y acceso de otro propietario; notas sin cambios. Prevención: lectores comunes, orden transaccional y regresión multicriterio. Validaciones/recibo/rollback en QA_ACTIVIDAD_CRITERIOS_Y_RECORRIDO_2026-10-21.md.
+
+
+## 2026-10-22 — La consulta ofrecía observaciones antes de iniciar
+
+Síntoma: Ver actividad mostraba Desarrollar ahora junto con acciones de observación libre/guiada, sin aclarar si se estaba consultando o ejecutando. Causa raíz: ActivityRunView en preview deshabilitaba avance persistido/cierre pero mantenía headingActions y onObserve; Hoy enviaba toda apertura a consulta. Solución: preview no expone captura; la actividad prevista de Hoy usa la apertura/inicio existente en un solo paso. Otras fechas mantienen consulta y confirmación. Validado localmente con componentes reales y API sintética: apertura, avance, retorno, continuación sin otro inicio, cero botones de captura en consulta y confirmación al elegir otra fecha. Cuatro regresiones de ejecución y gates pasan. Prevención: probar ambos modos y conservar controles servidor. Publicación pendiente; ver QA_HOY_SIMPLE_2026-10-22.md.
+
+
+## 2026-10-22 — Apertura confundida con ejecución y lectores discrepantes
+
+Síntoma comprobado por auditoría: el refinamiento local inicia al abrir y mantiene Terminar, mientras la intención posterior es no exigir inicio/cierre. Calendario presenta active como En curso; revisión futura/talleres cuentan trabajo; mapa evaluativo active sin evidencia sigue planned. Un log además bloquea reprogramación y sirve de fecha de ejecución Word. Causa: reutilizar ejecución para abrir/navegar y proyectar semánticas distintas desde ese estado. Corrección pendiente: separar lectura de constancia real, alinear consumidores y conservar históricos/protecciones. No presentar como resuelto por haber quitado un clic. Reproducciones y regresiones del estado actual en QA_ACTIVIDAD_SIN_INICIO_CIERRE_2026-10-22.md. Prevención propuesta: recorrido vertical sin inicio/cierre y comparación de proyecciones antes de publicar.
+
+
+## 2026-10-22 — Corrección del ciclo manual y sus proyecciones
+
+Solución validada localmente al hallazgo anterior: se separa posición de lectura en el navegador, se retiran controles/emisiones de ejecución y se habilita observación canónica sin inicio. Calendario/Mi año/Hoy comparten señales reales; talleres/revisión usan el mismo mapa y conservan completed histórico. Notas previas se exponen en consulta/guía; permisos y protecciones históricas permanecen. 153 pruebas PASS, incluida integración sin logs con observación/reprogramación/evaluación y conservación de texto y nota. El lint detectó un setState en efecto al restaurar lectura: reemplazado por useSyncExternalStore con snapshot SSR y fallback local. Prueba de rebase antigua fijada al reloj pedagógico de su escenario, sin relajar el bloqueo del pasado. Prevención: verificar que leer no cree ejecución y comparar proyecciones/datos antes de publicar. Recibo QA pendiente en QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md.

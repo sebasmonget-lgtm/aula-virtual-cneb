@@ -1,3 +1,4 @@
+import {activityRecordLabel} from "./activity-record-signals.mjs";
 /** Presentation only. Peru's clock is independent of the device's time zone.
  * @param {Date} at
  * @param {{date:string,time:string}|null} qaClock
@@ -21,8 +22,8 @@ export function todayBlockLabel(block, isCurrent=false){
 export function calendarActivityState(activity,today){
   const execution=activity.execution_status??'planned';
   return {
-    label:execution==='completed'?'Terminada':execution==='skipped'||activity.schedule_status==='not_worked'?'No realizada':execution==='active'?'En curso':activity.schedule_status==='rescheduled'?'Reprogramada':activity.status==='active'?'Confirmada':'Pendiente',
-    canMarkNotWorked:activity.status==='active'&&execution==='planned'&&activity.occurs_on>=today&&!['cancelled','not_worked'].includes(activity.schedule_status),
+    label:activity.schedule_status==='rescheduled'&&Number(activity.observation_count??0)===0&&execution==='planned'?'Reprogramada':activityRecordLabel({...activity,execution_status:execution},today),
+    canMarkNotWorked:activity.status==='active'&&execution==='planned'&&Number(activity.observation_count??0)===0&&activity.occurs_on>=today&&!['cancelled','not_worked'].includes(activity.schedule_status),
   };
 }
 

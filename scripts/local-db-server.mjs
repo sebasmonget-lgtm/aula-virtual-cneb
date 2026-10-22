@@ -1,3 +1,4 @@
+import {loadActivityRecordSignals} from "../src/lib/activity-record-signals.mjs";
 import { loadWorkshopPrintContext, renderWorkshopPrint } from "../src/lib/workshop-print.mjs";
 import { workshopCatalog } from "../src/lib/workshop-catalog.mjs";
 import { loadAttendanceSummary } from "../src/lib/attendance-summary.mjs";
@@ -522,7 +523,8 @@ async function dashboard() {
            and exact.scheduled_on=$2::date and exact.block_type='workshop'))
      order by se.start_time, se.sort_order
   `, [teacherId, today]);
-  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, current_step_index:normalizeStepIndex(block.current_step_index,activityMomentCount(block.activity_details??{},block.steps??[])), materials: activityMaterials(block.materials,block.activity_details??{},block.project_details??{}).materials,materials_source:activityMaterials(block.materials,block.activity_details??{},block.project_details??{}).source, steps: block.steps ?? [], criteria: normalizeCriteria(block.criteria ?? []),
+  const observationSignals=await loadActivityRecordSignals(db,{classroomId});
+  const rawBlocks = todayBlocks.rows.map((block) => ({ ...block, ...observationSignals.get(block.activity_id), current_step_index:normalizeStepIndex(block.current_step_index,activityMomentCount(block.activity_details??{},block.steps??[])), materials: activityMaterials(block.materials,block.activity_details??{},block.project_details??{}).materials,materials_source:activityMaterials(block.materials,block.activity_details??{},block.project_details??{}).source, steps: block.steps ?? [], criteria: normalizeCriteria(block.criteria ?? []),
     day_progress: block.activity_route?.length ? { position: block.activity_route.findIndex(item=>item.id===block.activity_details?.route_item_id)+1, total: block.activity_route.length } : null,
     pedagogical_blocks: activityPedagogicalBlocks(block.activity_details ?? {}, block.steps ?? [], normalizeCriteria(block.criteria ?? [])) }));
   const attendanceRecorded = Number(attendanceResult.rows[0]?.recorded_count ?? 0) > 0;
