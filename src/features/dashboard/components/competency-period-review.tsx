@@ -13,7 +13,6 @@ import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 import { AsyncButton, LoadingState, WorkflowFeedback } from "./workflow-ui";
-import { PeriodBatchPanel } from "./period-batch-panel";
 import {PrivateEvidenceAttachment} from './private-evidence-attachment';
 import {CompetencyIdentity,competencyTheme} from './competency-identity';
 
@@ -22,12 +21,11 @@ type Row={student_id:string;competency_id:string;evidence_count:number;level:str
 type Detail={previous_valuation?:{period_id:string;period_label:string;level:string|null;teacher_confirmed_at:string|null}|null;evaluation_guidance?:{age:number;focus:string|null;kind:string;note:string;source:{title:string;url:string};performances:{id:string;text:string;page:number}[]};evidence_fingerprint:string;draft:{revision:number;teacher_analysis:string;provisional_level:string|null;teacher_justification:string;details?:{information_status?:string;insufficiency_reason?:string|null}}|null;assessment:{achievement_level:string|null;details:{evidence_overview?:string;information_status?:string};teacher_justification:string|null}|null;timeline:{id:string;observed_on:string;activity_title:string;criterion_text:string;observation_text:string|null;media_url?:string|null}[]};
 const snapshot = (analysis:string,level:string,reason:string) => JSON.stringify([analysis.trim(),level,reason.trim()]);
 async function api<T>(path:string,body?:unknown):Promise<T>{const response=await apiFetch(localDatabaseApiUrl+path,{method:body===undefined?"GET":"POST",cache:"no-store",...(body===undefined?{}:{headers:{"content-type":"application/json"},body:JSON.stringify(body)})});const data=await response.json() as T & {message?:string;error?:string};if(!response.ok)throw new Error(data.message??data.error??"No pudimos guardar la evaluación.");return data;}
-export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows,closed,onChanged,onConfirmed,onContinue,initialStudentId="",initialCompetencyId=""}:{classroomId:string;periodId:string;students:Person[];scope:{id:string;name:string}[];rows:Row[];closed:boolean;onChanged:()=>Promise<void>;onConfirmed?:(studentId:string,competencyId:string,level:string)=>void;onContinue:()=>void;initialStudentId?:string;initialCompetencyId?:string}){
+export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows,closed,onChanged,onConfirmed,initialStudentId="",initialCompetencyId=""}:{classroomId:string;periodId:string;students:Person[];scope:{id:string;name:string}[];rows:Row[];closed:boolean;onChanged:()=>Promise<void>;onConfirmed?:(studentId:string,competencyId:string,level:string)=>void;initialStudentId?:string;initialCompetencyId?:string}){
   const [competencyId,setCompetencyId]=useState(initialCompetencyId),[studentId,setStudentId]=useState(initialStudentId),[detail,setDetail]=useState<Detail|null>(null);
   const [analysis,setAnalysis]=useState(""),[level,setLevel]=useState(""),[reason,setReason]=useState(""),[editing,setEditing]=useState(false);
   const [busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
   const [busyAction,setBusyAction]=useState<"confirmation"|"draft"|null>(null);
-  const [batchRevision,setBatchRevision]=useState(0);
   const [savedSnapshot,setSavedSnapshot]=useState("");
   const [search,setSearch]=useState(""),[rosterFilter,setRosterFilter]=useState("all");
   const [rosterOpen,setRosterOpen]=useState(false);
@@ -45,7 +43,6 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
   },[classroomId,periodId,studentId,competencyId,selectedStudentName]);
   const name=(id:string)=>{const student=students.find(row=>row.id===id);return student?`${student.preferred_name||student.first_name} ${student.last_name}`:"Niño del aula";};
   const pairs=rows.filter(row=>row.competency_id===competencyId),pending=rows.filter(row=>row.evidence_count>0&&!row.valuation_confirmed),current=pairs.find(row=>row.student_id===studentId);
-  const relevant=rows.filter(row=>row.evidence_count>0||row.level);
   const needsReason=Boolean(detail&&(detail.timeline.length<3||detail.draft?.details?.information_status==="insufficient"||detail.assessment?.details.information_status==="insufficient"));
   const reviewed=pairs.filter(row=>row.valuation_confirmed).length;
   const visiblePairs=pairs.filter(row=>(rosterFilter==="all"||(rosterFilter==="confirmed"?row.valuation_confirmed:!row.valuation_confirmed))&&name(row.student_id).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es").includes(search.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("es")));
@@ -81,7 +78,7 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
     const next=pairs.find(row=>row.student_id!==studentId&&!row.valuation_confirmed&&row.evidence_count>0);
     if(onConfirmed)onConfirmed(studentId,competencyId,level);else await onChanged();
     prefetched.current.delete(classroomId+':'+periodId+':'+competencyId+':'+studentId);
-    setBatchRevision(value=>value+1);setSavedSnapshot(snapshot(analysis,level,reason));setNotice("Valoración guardada.");setDetail(null);setStudentId(next?.student_id??"");if(!next)setCompetencyId("");
+    setSavedSnapshot(snapshot(analysis,level,reason));setNotice("Valoración guardada.");setDetail(null);setStudentId(next?.student_id??"");if(!next)setCompetencyId("");
   }catch(cause){setError((cause as Error).message);}finally{setBusy(false);setBusyAction(null);}}
   const previousValuation=detail&&<aside aria-label="Valoración del bimestre anterior" className={styles.previousValuation}><ClipboardList aria-hidden="true"/><div><p className="font-semibold">{detail.previous_valuation?.period_label??'Bimestre anterior'}</p><p>{detail.previous_valuation?.level?'Valoración anterior':detail.previous_valuation?'Sin valoración registrada':'Primer período del año'}</p></div>{detail.previous_valuation?.level&&<strong>{detail.previous_valuation.level}</strong>}</aside>;
   const ageGuidance=detail?.evaluation_guidance&&<aside className={styles.ageGuidance}><BookOpen aria-hidden="true"/><div><p className="font-semibold">Guía breve · {detail.evaluation_guidance.age} años</p><p>{detail.evaluation_guidance.focus??'Revisa el referente del ciclo y los criterios trabajados.'}</p></div></aside>;
@@ -90,7 +87,6 @@ export function CompetencyPeriodReview({classroomId,periodId,students,scope,rows
   return <div className="space-y-6">
     {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
     {notice&&<WorkflowFeedback tone="success">{notice}</WorkflowFeedback>}
-    {relevant.length>0&&<PeriodBatchPanel key={`${classroomId}:${periodId}:conclusions:${batchRevision}`} classroomId={classroomId} periodId={periodId} kind="conclusions" collapsible pendingValuations={relevant.filter(row=>!row.valuation_confirmed).length} canPrepare={relevant.some(row=>row.valuation_confirmed)} students={students} competencies={scope} disabled={closed} onSaved={onChanged} onContinue={onContinue}/>}
     {!competencyId?<section aria-label="Competencias del bimestre" className={styles.competencyOverview}>
       <div className={styles.reviewIntro}><div><h2>¿Qué competencia revisamos?</h2><p>Las observaciones ya están guardadas. Ahora tú eliges y confirmas la valoración de cada niño.</p></div><p className={styles.reviewCount}><ChartColumn aria-hidden="true" size={20}/><span><strong>{pending.length}</strong> valoraciones por revisar</span></p></div>
       <div className={styles.competencyList}>{scope.map(card=>{const own=rows.filter(row=>row.competency_id===card.id),confirmed=own.filter(row=>row.valuation_confirmed).length,unobserved=own.filter(row=>!row.evidence_count&&!row.level).length;return <article key={card.id} className={styles.competencyRow} style={competencyTheme(card.id)}>

@@ -161,12 +161,12 @@ export function PeriodBatchPanel({classroomId,periodId,kind,students,competencie
   function renderConclusionBatch(){return <section ref={conclusionPanel} className={batchStyles.conclusions} aria-label="Conclusiones descriptivas">
     <header className={batchStyles.heading}>
       <div><h2>Conclusiones descriptivas</h2><p>{pendingValuations>0?`Faltan ${pendingValuations} notas. Puedes preparar las conclusiones con nota guardada.`:'Ayni prepara los textos con tus notas. Revisa y guarda el conjunto.'}</p></div>
-      {collapsible&&<Button size="lg" disabled={loading||busy||(!job&&(!canPrepare||disabled))} aria-expanded={expanded} onClick={()=>{if(job)setExpanded(!expanded);else requestPrepare();}}><Sparkles aria-hidden="true"/>{job?(expanded?'Ocultar conclusiones':'Ver conclusiones'):'Generar conclusiones descriptivas'}</Button>}
+      {collapsible&&<Button size="lg" disabled={loading||busy||(!job&&(!canPrepare||disabled))} aria-expanded={expanded} onClick={()=>{if(job)setExpanded(!expanded);else requestPrepare();}}><Sparkles aria-hidden="true"/>{job?(expanded?'Ocultar conclusiones':'Ver conclusiones'):'Preparar conclusiones'}</Button>}
     </header>
     {loading&&<LoadingState label="Recuperando las conclusiones..."/>}
     {error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}
     {expanded&&!loading&&<>
-      {!job&&!collapsible&&<Button size="lg" disabled={busy||disabled||!canPrepare} onClick={()=>requestPrepare()}><Sparkles aria-hidden="true"/>Generar conclusiones descriptivas</Button>}
+      {!job&&!collapsible&&<Button size="lg" disabled={busy||disabled||!canPrepare} onClick={()=>requestPrepare()}><Sparkles aria-hidden="true"/>Preparar conclusiones</Button>}
       {job&&<>
         <div className={batchStyles.summaries} aria-label="Filtrar conclusiones">{[
           {value:'all',label:'Preparadas',count:items.length,Icon:FileText},

@@ -1337,3 +1337,7 @@ La usuaria autoriza ajustar todas las dependencias y publicar solo en QA tras pr
 ### Cierre QA del flujo sin inicio/cierre · 22 de octubre
 
 63ea015 publicado solo en QA, deployment dpl_7wKLPEYG4DNVRqNAAXaqC8sZgWpv. 153 regresiones y 52 comprobaciones staging/alias PASS; controles visibles sin iniciar/terminar, lectura retomable y nota histórica comprobada. Primer staging refrescó dos tablas derivadas por un inicio ya existente; 64 fuentes intactas. Baseline final de 66 tablas conservado antes/después de publicar y del navegador: 118 observaciones, 30 valoraciones, 30 conclusiones, 10 informes y tres logs anteriores. Producción intacta, cero IA real. Detalles, límites y rollback: QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md.
+
+### Conclusiones después de las notas, dentro de Informe a familias · 2026-10-22
+
+Solicitud expresa: retirar el bloque de conclusiones de la revisión de notas y ofrecerlo al entrar a Informe a familias con las valoraciones pertinentes completas. Usar la comprobación del servidor y refrescarla al navegar; no inferir completitud solo del estado optimista de la última nota. Conservar lotes/textos y su consulta junto a los informes ya guardados. No generar automáticamente ni cambiar obligaciones curriculares. Implementado localmente, sin despliegue; pruebas y rollback en QA_CONCLUSIONES_EN_FAMILIAS_2026-10-22.md.

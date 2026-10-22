@@ -76,3 +76,7 @@ Observación libre usa la identidad compartida NotebookPen + nombre completo, si
 ### Guía sin inicio ni cierre · 2026-10-22
 
 Sustituye la apertura con inicio implícito del refinamiento anterior. Abrir actividad lleva a una guía utilizable sin iniciar/terminar. Momento anterior/siguiente son navegación de lectura; no representan ejecución ni acreditan haber realizado la actividad. Se conserva la posición en el navegador, sin pedir otro paso. Observación libre mantiene identidad NotebookPen y el registro guiado conserva su criterio. Talleres queda independiente al final de Hoy. Notas históricas consultables sin editarlas. Las etiquetas distinguen observaciones, ausencia de registros e históricos. Revisión local computadora/móvil y detector limpios; no hay raster nuevo.
+
+### Conclusiones en Informe a familias · 2026-10-22
+
+Refinamiento Operate: evaluación centrada en las notas. Informe a familias presenta un único paso de conclusiones después de comprobar notas completas; pendientes muestra cantidad y retorno a notas. Preparar conclusiones es explícito; Ver conclusiones recupera el lote existente, plegado para dejar visibles los informes cuando están listos. Se conserva la identidad teal de la preparación y la cabecera familiar existente, sin nuevos recursos raster. Revisión local 1440×900 y 390×844 legible, botón a ancho completo en móvil; detector de cuatro componentes sin hallazgos. Listo localmente, publicación pendiente. Ver QA_CONCLUSIONES_EN_FAMILIAS_2026-10-22.md.
