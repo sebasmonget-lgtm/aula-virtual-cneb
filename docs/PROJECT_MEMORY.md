@@ -1297,3 +1297,7 @@ QA UI aisló un borrador con las mismas observaciones pero marco anterior a una 
 ### 21 de octubre — Observación libre en Word y fidelidad de conclusiones
 
 La competencia docente confirmada de la observación libre se comparte en lectura/Word sin asignar un criterio inventado. Última atribución y revisión de texto vigentes, propiedad docente y exclusión de anulaciones; compatibilidad con esquema anterior. Layout13 conserva archivos previos. Se refuerza la instrucción general de conclusiones para conservar actor/materiales y distinguir ayuda pedida de recibida, tras dos detalles de la primera ronda de treinta propuestas. Ver QA_OBSERVACION_LIBRE_WORD_2026-10-21.md.
+
+### Cierre de publicación e impresión comprobados
+
+Código ee4bfb1 publicado únicamente en QA (dpl_D89mBBPSZLrerN6VwLmrFwxhScYv): 24 comprobaciones staging/alias, 66 huellas de fuentes conservadas y Producción intacta. Descarga posterior del Excel: las treinta notas y conclusiones exactas, todas las celdas anteriores conservadas y Resumen impreso en una página; seis páginas totales. Cero IA y cero escrituras pedagógicas durante la publicación. Recorrido cerrado, video nuevo de 7:55 y entrega en outputs/Ayni-desde-cero-2026-10-21; detalles y límites en QA_CIERRE_DESDE_CERO_2026-10-21.md y QA_IMPRESION_RESUMEN_EXCEL_2026-10-21.md. Esta actualización documental no requiere otro despliegue.
