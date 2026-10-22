@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { buildAssessmentContext, assessmentMasterSourceSnapshot, validateAssessmentMaster } from "../src/lib/assessment-master-service.mjs";
+import { buildAssessmentContext, assessmentPlanningMapFingerprint, assessmentMasterSourceSnapshot, validateAssessmentMaster } from "../src/lib/assessment-master-service.mjs";
 import { loadKnowledgeBaseV4 } from "../src/lib/knowledge-base-v4.mjs";
 import { cardIsApplicable } from "../src/lib/ai-context-builder-v4.mjs";
 import { httpStatusForError, publicErrorMessage } from "../src/lib/version-integrity.mjs";
@@ -50,7 +50,8 @@ export async function loadAssessmentMasterSources(db, context, period) {
     activity_revisions: activities.map((row) => `${row.id}:${row.revision}`),
     criterion_revisions: criteria.map((row) => `${row.id}:${row.revision}`),
     classroom_context_fingerprint: null,
-    evaluation_map_version: map.version, evaluation_map_fingerprint: map.source_fingerprint };
+    // The map version also changes when another child gets an observation.
+    evaluation_map_version: null, evaluation_map_fingerprint: assessmentPlanningMapFingerprint(map.entries) };
   return { snapshot: assessmentMasterSourceSnapshot(source), competencyIds,
     sources: { period: { id: period.id, label: period.label, starts_on: source.starts_on, ends_on: source.ends_on },
       evaluation_map: map.entries.filter((row) => row.activity_state === "completed"),

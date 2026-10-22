@@ -21,7 +21,7 @@ const WORKFLOW = "period_evaluation_batch_v1";
 const ANALYSIS_CONCURRENCY = 12;
 import { stableFingerprint } from "../src/lib/source-fingerprint-v4.mjs";
 const hash = stableFingerprint;
-const taskSource = task => ({key:key(task),snapshot:task.snapshot,...(task.family_context_fingerprint?{family_context_fingerprint:task.family_context_fingerprint}:{})});
+const taskSource = task => ({key:key(task),snapshot:task.snapshot,...(task.assessment_context_fingerprint?{assessment_context_fingerprint:task.assessment_context_fingerprint}:{}),...(task.family_context_fingerprint?{family_context_fingerprint:task.family_context_fingerprint}:{})});
 const key = task => `${task.student_id}:${task.competency_id ?? "family"}`;
 const eligible = row => row.assessment?.achievement_level && row.assessment.teacher_confirmed_at && !row.draft && evidenceIsCurrent(row.assessment,row.sourceRows);
 // A confirmed assessment is not weak merely because it has fewer than three records.
@@ -30,16 +30,18 @@ export const conclusionReviewReason = row => row.assessment?.details?.informatio
 const reportReviewReason = rows => !rows.length ? 'Este niño aún no tiene conclusiones guardadas.'
   : rows.some(row=>conclusionReviewReason(row)) ? 'Hay una competencia con información pendiente.' : null;
 
-export function batchTasks(model, kind) {
+export function batchTasks(model, kind, assessmentContextFingerprint=null) {
   if (kind === "family" && !familyEvaluationReadiness(model).ready)
     throw new Error("Termina la evaluación del bimestre: guarda las notas y las conclusiones antes de preparar los informes.");
   if(kind==='analysis')return model.rows.filter(row=>row.sourceRows.length>0).map(row=>{
     const current=row.draft??row.assessment;
     const teacherText=row.draft?.draft_teacher_analysis??row.assessment?.details?.evidence_overview;
     const manual=Boolean(row.draft&&teacherText?.trim()&&(!row.draft.generation_metadata?.analysis||teacherText!==row.draft.details?.evidence_overview));
-    const reusable=Boolean(teacherText?.trim()&&(manual||evidenceIsCurrent(current,row.sourceRows)));
+    const contextCurrent=!assessmentContextFingerprint||!row.draft||current.assessment_master_snapshot?.construction!=='deterministic-v1'||current.assessment_master_snapshot.fingerprint===assessmentContextFingerprint;
+    const reusable=Boolean(contextCurrent&&teacherText?.trim()&&(manual||evidenceIsCurrent(current,row.sourceRows)));
     return {student_id:row.student_id,competency_id:row.competency_v4_id,snapshot:assessmentSourceSnapshot(row.sourceRows),
-      existing:reusable?{id:current.id,details:{...current.details,evidence_overview:teacherText}}:null,
+      existing:reusable?{id:current.id,details:{...current.details,evidence_overview:teacherText}}:null,manual,
+      ...(assessmentContextFingerprint?{assessment_context_fingerprint:assessmentContextFingerprint}:{}),
       review_reason:manual&&!evidenceIsCurrent(current,row.sourceRows)?'Conservamos tu análisis docente; revisa las nuevas observaciones.':row.sourceRows.length<3?'Hay pocas evidencias de esta competencia.':null};
   });
   const relevant = model.rows.filter(row => row.sourceRows.length > 0 || row.assessment);
@@ -100,7 +102,14 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
     }
     result.completed=result.items.length;return result;
   };
-  const freshTasks=async(data,kind,tx=db)=>{const tasks=batchTasks(await loadRows(tx,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map(card=>card.id))}),kind);if(kind==="family")for(const task of tasks)task.family_context_fingerprint=await currentFamilyRecommendationFingerprint(tx,data.classroom.id,task.student_id);return tasks;};
+  const freshTasks=async(data,kind,tx=db)=>{
+    const model=await loadRows(tx,{classroomId:data.classroom.id,period:data.period,applicableIds:new Set(data.cards.map(card=>card.id))});
+    const sourceDb=tx===db?db:{query:(...args)=>tx.query(...args),transaction:action=>action(tx)};
+    const source=kind==='analysis'?await loadAssessmentMasterSources(sourceDb,data.classroom,data.period):null;
+    const tasks=batchTasks(model,kind,source?.snapshot.fingerprint);
+    if(kind==="family")for(const task of tasks)task.family_context_fingerprint=await currentFamilyRecommendationFingerprint(tx,data.classroom.id,task.student_id);
+    return tasks;
+  };
   return async function handle(args) {
     const {request,url,response,origin}=args;
     if(!url.pathname.startsWith("/api/period-evaluations/batches"))return false;
@@ -136,7 +145,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
         }
         if(body.edit && tasks.some(task=>!task.existing))throw new VersionConflictError("Prepara primero el texto desde las fuentes actuales.");
         const id=randomUUID(),payload={teacher_id:teacherId,classroom_id:data.classroom.id,period_id:data.period.id,kind:body.kind,status:body.edit?"ready":"queued",revision:1,lease_token:randomUUID(),source_fingerprint:sourceFingerprint,
-          tasks:tasks.map(task=>({student_id:task.student_id,competency_id:task.competency_id,snapshot:task.snapshot,...(task.family_context_fingerprint?{family_context_fingerprint:task.family_context_fingerprint}:{}),review_reason:task.review_reason})),results:body.regenerate?[]:tasks.filter(task=>task.existing).map(task=>({student_id:task.student_id,competency_id:task.competency_id,snapshot:task.snapshot,...(task.family_context_fingerprint?{family_context_fingerprint:task.family_context_fingerprint}:{}),review_reason:task.review_reason,proposal:task.existing.details,saved_id:task.existing.id,metadata:{...task.existing.generation_metadata,source:"existing_canonical",family_context_fingerprint:task.family_context_fingerprint??null}}))};
+          tasks:tasks.map(task=>({student_id:task.student_id,competency_id:task.competency_id,snapshot:task.snapshot,...(task.assessment_context_fingerprint?{assessment_context_fingerprint:task.assessment_context_fingerprint}:{}),...(task.family_context_fingerprint?{family_context_fingerprint:task.family_context_fingerprint}:{}),review_reason:task.review_reason})),results:body.regenerate?[]:tasks.filter(task=>task.existing).map(task=>({student_id:task.student_id,competency_id:task.competency_id,snapshot:task.snapshot,...(task.assessment_context_fingerprint?{assessment_context_fingerprint:task.assessment_context_fingerprint}:{}),...(task.family_context_fingerprint?{family_context_fingerprint:task.family_context_fingerprint}:{}),review_reason:task.review_reason,proposal:task.existing.details,saved_id:task.existing.id,metadata:{...task.existing.generation_metadata,source:"existing_canonical",family_context_fingerprint:task.family_context_fingerprint??null}}))};
         await tx.query(`insert into ai_pending_generations(id,classroom_id,workflow,payload,created_at,expires_at) values($1,$2,$3,$4::jsonb,now(),now()+interval '7 days')`,[id,data.classroom.id,WORKFLOW,JSON.stringify(payload)]);
         return publicJob(id,payload);
       });send(response,202,result,origin);return true;
@@ -200,11 +209,11 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
       job.failures??={};
       if(!todo.length){Object.assign(job,analysisOutcome(job));job.revision++;await put(id,job,job.lease_token);send(response,200,publicJob(id,job),origin);return true;}
       // Read the shared classroom context once per group; never cache it across requests.
-      const shared=context(data.classroom.id,data.period.id).then(async fresh=>({
-        fresh,preparedSource:await loadAssessmentMasterSources(db,fresh.classroom,fresh.period),
-        names:assessmentStudentNames(fresh.model.students),
-        cachedTasks:new Map(batchTasks(fresh.model,'analysis').map(item=>[key(item),item])),
-      }));
+      const shared=context(data.classroom.id,data.period.id).then(async fresh=>{
+        const preparedSource=await loadAssessmentMasterSources(db,fresh.classroom,fresh.period);
+        return {fresh,preparedSource,names:assessmentStudentNames(fresh.model.students),
+          cachedTasks:new Map(batchTasks(fresh.model,'analysis',preparedSource.snapshot.fingerprint).map(item=>[key(item),item]))};
+      });
       let checkpoint=Promise.resolve();
       // Provider calls overlap; each validated result is saved and checkpointed by one writer.
       // A failed save must not prevent the other independent results from being preserved.
@@ -217,7 +226,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
         try{
         const {fresh,preparedSource,names,cachedTasks}=await shared;
         const row=fresh.model.rows.find(row=>row.student_id===task.student_id&&row.competency_v4_id===task.competency_id);
-        if(!row||hash(assessmentSourceSnapshot(row.sourceRows))!==hash(task.snapshot))throw new VersionConflictError('Las observaciones cambiaron. Revisa los análisis pendientes.');
+        if(!row||task.assessment_context_fingerprint!==preparedSource.snapshot.fingerprint||hash(assessmentSourceSnapshot(row.sourceRows))!==hash(task.snapshot))throw new VersionConflictError('Las observaciones cambiaron. Revisa los análisis pendientes.');
         const cached=cachedTasks.get(key(task))?.existing;
         if(cached){phase='save';await persist(async()=>({...task,proposal:cached.details,saved_id:cached.id,metadata:{source:'existing_canonical'}}));}
         else{
@@ -232,7 +241,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
           validateAssessmentProposal(generated.output,task.competency_id,row.sourceRows.length);
           const metadata={analysis:metadataForAudit(generated.metadata),source_batch_id:id,brief_assessment:brief};
           phase='save';await persist(async()=>{const saved=await savePeriodEvaluationDraft(db,{studentId:task.student_id,competencyId:task.competency_id,period:fresh.period,sourceRows:row.sourceRows,analysis:generated.output,metadata,
-            teacherAnalysis:generated.output.evidence_overview,provisionalLevel:row.draft?.provisional_level??row.assessment?.achievement_level??null,teacherJustification:row.draft?.draft_teacher_justification??row.assessment?.teacher_justification??'',
+            teacherAnalysis:cachedTasks.get(key(task))?.manual?row.draft.draft_teacher_analysis:generated.output.evidence_overview,provisionalLevel:row.draft?.provisional_level??row.assessment?.achievement_level??null,teacherJustification:row.draft?.draft_teacher_justification??row.assessment?.teacher_justification??'',
             assessmentMasterId:computed.id,assessmentMasterSnapshot:computed.source_snapshot,expectedDraftRevision:row.draft?Number(row.draft.revision):null,expectedEvidenceFingerprint:createHash('sha256').update(JSON.stringify(task.snapshot)).digest('hex'),
             loadCurrent:async tx=>{await assertPeriodOpen(tx,fresh.classroom.id,fresh.period.id);return loadEvidence(tx,{classroomId:fresh.classroom.id,period:fresh.period,studentId:task.student_id,competencyId:task.competency_id});}});
           return {...task,proposal:generated.output,saved_id:saved.id,metadata};});

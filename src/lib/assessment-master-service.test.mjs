@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { createAssessmentMasterRouteHandler } from "../../scripts/assessment-master-routes.mjs";
-import { assessmentMasterSourceSnapshot, validateAssessmentMaster } from "./assessment-master-service.mjs";
+import { assessmentMasterSourceSnapshot, assessmentPlanningMapFingerprint, validateAssessmentMaster } from "./assessment-master-service.mjs";
 
 const id = (value) => `00000000-0000-4000-8000-${String(value).padStart(12, "0")}`;
 const teacherA=id(1),teacherB=id(2),yearA=id(11),yearB=id(12),classA=id(21),classB=id(22),periodA=id(31),periodB=id(32);
@@ -94,4 +94,15 @@ test("la migración remota limita lectura al aula propia y bloquea escrituras di
   assert.match(sql,/private\.owns_classroom\(classroom_id\)/);
   assert.match(sql,/revoke insert,update,delete,truncate,references,trigger on public\.assessment_masters from authenticated/);
   assert.match(sql,/revoke all on public\.assessment_masters from anon/);
+});
+
+
+test('contexto trabajado conserva conteos fuera de su huella y detecta cambios de criterio o ejecución',()=>{
+ const row={criterion_id:id(61),activity_id:id(51),criterion_revision:1,activity_revision:1,experience_revision:1,
+  activity_state:'completed',planned_on:'2026-04-12',actual_on:'2026-04-12',competency_v4_id:'COM_ORAL',evidence_count:1,students_with_evidence:1,source_fingerprint:'old'};
+ const original=assessmentPlanningMapFingerprint([row]);
+ assert.equal(original,assessmentPlanningMapFingerprint([{...row,evidence_count:5,students_with_evidence:2,actual_on:'2026-04-13',source_fingerprint:'new'}]));
+ for(const changed of [{criterion_revision:2},{activity_revision:2},{experience_revision:2},{activity_state:'planned'},{planned_on:'2026-04-14'},{competency_v4_id:'PS_CONVIVE'}])
+  assert.notEqual(original,assessmentPlanningMapFingerprint([{...row,...changed}]));
+ assert.notEqual(original,assessmentPlanningMapFingerprint([]));
 });

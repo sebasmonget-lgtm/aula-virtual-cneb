@@ -1159,3 +1159,41 @@ test('evento atómico conserva reapertura, otras secciones y orden del historial
  for(const event of state.period_edit.events){assert.equal(event.by,teacher);assert.equal(new Date(event.at).toISOString(),event.at);}
  }finally{await f.db.close();}
 });
+
+
+test('un cambio del contexto trabajado actualiza análisis sin nuevas observaciones y conserva texto docente',async()=>{
+ const f=await fixture({batchProvider:input=>mockBrief(input)});try{
+ const scope={classroomId:classId,periodId:firstPeriod,kind:'analysis'};
+ const start=await f.call('POST','/api/period-evaluations/batches',scope);assert.equal(start.status,202,JSON.stringify(start.body));
+ let run=await f.call('POST',`/api/period-evaluations/batches/${start.body.id}/run`,scope);
+ assert.equal(run.body.status,'ready',JSON.stringify(run.body));
+ const count=f.calls.length;
+ const teacherText='Ana explicó su elección y pidió escuchar a su compañero. Mantener este texto docente.';
+ await f.db.query("update competency_assessments set draft_teacher_analysis=$1,provisional_level='B',draft_teacher_justification='La profesora sostiene esta decisión desde los registros.' where student_id=$2 and status='draft'",[teacherText,studentA]);
+ const before=(await f.db.query("select source_evidence_snapshot,assessment_master_snapshot from competency_assessments where student_id=$1 and status='draft'",[studentA])).rows[0];
+ await f.db.query('update activities set revision=revision+1 where id=$1',[activity]);
+ const stale=await f.call('GET','/api/period-evaluations/batches?'+new URLSearchParams(scope));
+ assert.equal(stale.body.job.status,'stale');
+ const again=await f.call('POST','/api/period-evaluations/batches',scope);
+ assert.notEqual(again.body.id,start.body.id);assert.equal(again.body.completed,0);
+ run=await f.call('POST',`/api/period-evaluations/batches/${again.body.id}/run`,scope);
+ assert.equal(run.body.status,'ready',JSON.stringify(run.body));assert.equal(f.calls.length,count*2);
+ const after=(await f.db.query("select * from competency_assessments where student_id=$1 and status='draft'",[studentA])).rows[0];
+ assert.equal(after.draft_teacher_analysis,teacherText);assert.equal(after.provisional_level,'B');
+ assert.deepEqual(after.source_evidence_snapshot,before.source_evidence_snapshot);
+ assert.notEqual(after.assessment_master_snapshot.fingerprint,before.assessment_master_snapshot.fingerprint);
+ const pair={classroomId:classId,periodId:firstPeriod,studentId:studentA,competencyId:'COM_ORAL'};
+ const detail=(await f.call('GET','/api/period-evaluations/detail?'+new URLSearchParams(pair))).body;
+ const confirmed=await f.call('POST','/api/period-evaluations/save-and-confirm',{...pair,expectedDraftRevision:detail.draft.revision,evidenceFingerprint:detail.evidence_fingerprint,achievementLevel:'B',teacherAnalysis:teacherText,teacherJustification:'La profesora sostiene esta decisión desde los registros.'});
+ assert.equal(confirmed.status,200,JSON.stringify(confirmed.body));
+ const calls=f.calls.length;
+ const reused=await f.call('POST','/api/period-evaluations/batches',{...scope,refresh:true});
+ assert.equal(reused.body.completed,reused.body.total);assert.equal(f.calls.length,calls);
+ const savedId=confirmed.body.assessment_id;
+ await f.db.query('update activities set revision=revision+1 where id=$1',[activity]);
+ const preserved=await f.call('POST','/api/period-evaluations/batches',scope);
+ assert.equal(preserved.body.completed,preserved.body.total);assert.equal(f.calls.length,calls);
+ const grades=(await f.db.query("select id,achievement_level from competency_assessments where status='active'")).rows;
+ assert.deepEqual(grades,[{id:savedId,achievement_level:'B'}]);
+ }finally{await f.db.close();}
+});

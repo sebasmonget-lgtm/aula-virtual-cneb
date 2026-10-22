@@ -16,6 +16,15 @@ export const ASSESSMENT_MASTER_OUTPUT_SCHEMA = { id: "assessment-master-v1", typ
     competencies: { type: "array", minItems: 1, items: entry } } };
 
 const normalized = (value) => JSON.stringify(value, Object.keys(value ?? {}).sort());
+/** Counts belong to evidence coverage; they must not invalidate another child's analysis. */
+export function assessmentPlanningMapFingerprint(entries) {
+  const fields=['learning_experience_id','learning_experience_type','experience_revision','activity_blueprint_ref',
+    'activity_id','activity_revision','criterion_id','criterion_revision','criterion_source','planned_on','activity_state','competency_v4_id'];
+  const rows=entries.map(row=>Object.fromEntries(fields.map(field=>[field,row[field]??null])))
+    .sort((a,b)=>String(a.criterion_id).localeCompare(String(b.criterion_id)));
+  return createHash('sha256').update(JSON.stringify(rows)).digest('hex');
+}
+
 export function assessmentMasterSourceSnapshot(source) {
   const canonical = { evaluation_period_id: source.evaluation_period_id, starts_on: source.starts_on, ends_on: source.ends_on,
     competency_ids: [...new Set(source.competency_ids ?? [])].sort(),

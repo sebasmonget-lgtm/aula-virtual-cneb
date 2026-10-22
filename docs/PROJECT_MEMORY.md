@@ -1279,3 +1279,8 @@ e7399f5 publicado solo en QA (dpl_9Fb257RafFJXrBp6resJDvjpVypf), 35 regresiones,
 ### 21 de octubre — Documento diagnóstico ya confirmado
 
 A pedido de la usuaria, Documentos oculta la preparación si el aula activa ya tiene diagnóstico confirmado; conserva consulta/descarga e historial. Comprobación paralela y de solo lectura; error de avance no impide consultar el catálogo. No se infiere desde otras aulas ni de que exista plan anual. Sin rediseño, cambios pedagógicos o IA. Ver QA_DIAGNOSTICO_CONSULTA_2026-10-21.md para gates y publicación.
+
+
+### 21 de octubre — Vigencia del contexto en análisis de evaluación
+
+QA UI aisló un borrador con las mismas observaciones pero marco anterior a una actividad completada: la nota se rechazó correctamente al confirmar. Lotes comparan ahora observaciones y contexto; huella común excluye cobertura/fecha inferida de observaciones y conserva cambios de actividades, criterios y ejecución. Texto docente y notas confirmadas se conservan. Sin cambiar modelos, prompts ni guards. Ver QA_CONTEXTO_EVALUACION_2026-10-21.md para pruebas/publicación y rollback.
