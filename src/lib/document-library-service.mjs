@@ -213,7 +213,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
         competency_v4_id: activeCriterion.competency_v4_id, observation_focus: activeCriterion.details?.observation_focus ?? [],
         expected_evidence: activeCriterion.details?.expected_evidence ?? (activeCriterion.competency_v4_id===row.details?.competency_id?row.details?.expected_evidence:null) } : null,
       registered_evidence: registeredEvidence.map((item) => ({ id: item.id, student_id: item.student_id,
-        criterion_id: item.criterion_id, criterion_text: item.criterion_text, competency_v4_id: item.competency_v4_id,
+        criterion_id: item.criterion_id, criterion_text: item.criterion_text, competency_v4_id: item.competency_v4_id, confirmed_competency_ids:item.confirmed_competency_ids??[],
         student_name: item.student_name, observation_text: item.observation_text, observation_status: item.observation_status,
         type: item.type, observed_at: timestamp(item.observed_at), has_attachment: item.has_attachment, source: item.source, source_revision: item.source_revision })),
       actual_execution_date: closure?.actual_execution_date??null,

@@ -104,7 +104,7 @@ test("la actividad distingue qué observar de las observaciones registradas", as
   assert.match(observationRows[1][0], /Ana[\s\S]*Explica cómo acuerda un turno[\s\S]*Propuso esperar su turno/);
   const freeZip=await JSZip.loadAsync(await renderActivityUnifiedWord({...document,registered_evidence:[{student_name:"Ana",criterion_id:null,criterion_text:null,observation_text:"Dijo que le gustan las semillas rojas.",observed_at:"2026-04-14T15:00:00Z",source:"ordinary_observation"}]},cards));
   const freeXml=await freeZip.file("word/document.xml").async("string"),freeTable=[...freeXml.matchAll(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g)].find(match=>match[0].includes("Nombre del estudiante"))?.[0];
-  assert.match(freeTable,/Sin criterio asociado/);assert.doesNotMatch(freeTable,/Acordar turnos/);
+  assert.match(freeTable,/Observación libre/);assert.doesNotMatch(freeTable,/Acordar turnos/);
   assert.doesNotMatch(freeTable,/Sin adjunto/,'Sin archivos, el espacio se dedica a leer la observación');
   assert.equal(([...freeTable.matchAll(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g)][0][0].match(/<w:tc>/g)??[]).length,3);
   const literal='Dijo COM_ORAL mientras miraba su dibujo.';

@@ -294,3 +294,12 @@ test("interfaz y migración sostienen reload, solo lectura y RLS", async () => {
   assert.match(migration, /where status = 'draft'/);
   assert.match(migration, /where status = 'active'/);
 });
+
+
+test('la conclusión pide conservar actores y materiales y distingue ayuda solicitada de realizada',()=>{
+ const observations=[{id:'source',observed_at:'2026-04-10',observed_on:'2026-04-10',observation_text:'Luz eligió bloques; Diego eligió una caja. Luz pidió ayuda para sostenerlos.',activity_title:'Construimos juntos'}];
+ const input=buildDescriptiveConclusionInput({age:5,competencyId:'COM_ORAL',studentName:'Luz',analysisStatus:'sufficient',evidenceRows:observations});
+ assert.match(input.teacher_request,/no intercambies sujetos, objetos ni preferencias/);
+ assert.match(input.teacher_request,/solo describe un apoyo como realizado cuando la observación cuenta que ocurrió/);
+ assert.equal(input.multiple_evidence_records[0].observation_note,observations[0].observation_text);
+});

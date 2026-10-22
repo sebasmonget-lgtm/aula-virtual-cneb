@@ -1,3 +1,4 @@
+import {activityObservationCriterionLabel} from './activity-observation-presentation.mjs';
 import { activityPedagogicalBlocks } from "./pedagogical-blocks.mjs";
 import { activityObservationCriteria } from "./activity-observation-plan.mjs";
 import { ageReference } from "./pedagogical-word-presentation.mjs";
@@ -200,7 +201,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const workshopCard = cards.find((item) => item.id === workshop?.competency_id);
   const evidenceRows = actualEvidence.map((item) => ({
     EVIDENCIA_ESTUDIANTE: clean(item.student_name) || "Niño del aula",
-    EVIDENCIA_CRITERIO: clean(item.criterion_text) || "Sin criterio asociado",
+    EVIDENCIA_CRITERIO: activityObservationCriterionLabel(item,cards),
     EVIDENCIA_TIPO: item.has_attachment ? "Foto" : "Sin adjunto",
     EVIDENCIA_ADJUNTO: item.has_attachment ? "Guardada en Ayni" : "",
     EVIDENCIA_REGISTRO_CAMPO: [observedDate(item.observed_at), clean(item.observation_text) || "Foto registrada en Ayni"].filter(Boolean).join(" · "),

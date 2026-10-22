@@ -1,5 +1,6 @@
 "use client";
 import Image from 'next/image';
+import {activityObservationCriterionLabel} from '@/src/lib/activity-observation-presentation.mjs';
 import {CalendarDays,CheckCircle2,ListChecks,Target,Heart,Search,ClipboardList,BookOpen,FileText} from 'lucide-react';
 import {activityReadingStages,readingSentences,savedText} from '@/src/lib/activity-reading-content.mjs';
 import {activityTeacherText} from '@/src/lib/activity-teacher-reading.mjs';
@@ -57,7 +58,7 @@ export function ActivityReadingView({document,position,total,actions}:{document:
       <section className={styles.sky}><h2><FileText/>Evidencia esperada</h2><p>{savedText(document.active_criterion?.expected_evidence||content.expected_evidence)}</p></section>
     </div>
     {!!additionalCriteria.length&&<details className={styles.continuity}><summary className="min-h-11 cursor-pointer py-2 font-bold">Otras competencias de esta actividad</summary><div className="mt-3 space-y-5">{additionalCriteria.map(item=><section key={item.id}><h3 className="font-bold">{names.get(item.competency_v4_id??item.competency_id??'')??item.competency_text}</h3><p className="mt-1"><strong>Criterio: </strong>{item.criterion_text}</p>{item.details?.expected_evidence&&<p className="mt-1"><strong>Evidencia esperada: </strong>{item.details.expected_evidence}</p>}</section>)}</div></details>}
-    {!!document.registered_evidence?.length&&<section className={styles.sequence}><h2><ClipboardList/>Observaciones registradas</h2><ul className="mt-3 space-y-3">{document.registered_evidence.map(item=><li key={item.id} className="rounded-xl bg-[#edf7fa] p-3"><strong>{item.student_name}</strong><span className="ml-2 text-sm">{displayDocumentDate(item.observed_at)}</span><p className="mt-1">{item.observation_text||'Evidencia privada adjunta'}</p></li>)}</ul></section>}
+    {!!document.registered_evidence?.length&&<section className={styles.sequence}><h2><ClipboardList/>Observaciones registradas</h2><ul className="mt-3 space-y-3">{document.registered_evidence.map(item=><li key={item.id} className="rounded-xl bg-[#edf7fa] p-3"><strong>{item.student_name}</strong><span className="ml-2 text-sm">{displayDocumentDate(item.observed_at)}</span>{!item.criterion_text&&!!item.confirmed_competency_ids?.length&&<p className="mt-1 text-sm font-semibold">{activityObservationCriterionLabel(item,document.competencies??[])}</p>}<p className="mt-1">{item.observation_text||'Evidencia privada adjunta'}</p></li>)}</ul></section>}
     {document.workshop&&<section className={styles.workshop}><h2>Taller del día · {savedText(document.workshop.content.title)}</h2>{[['Propósito','purpose'],['Materiales','materials'],['Inicio','opening'],['Desarrollo','development'],['Cierre','closure'],['Qué observar','criterion_or_observation_focus'],['Evidencia esperada','evidence_expected']].map(([label,key])=><div key={key}><h3>{label}</h3><SavedLines value={document.workshop?.content[key]}/></div>)}</section>}
   </article>;
 }

@@ -81,7 +81,7 @@ export function createPeriodBatchHandler({db,teacherId,context,loadRows,loadEvid
     });
     if(payload.kind==='analysis'){
       const tasks=await freshTasks(data,'analysis');
-      if(hash(tasks.map(taskSource))!==payload.source_fingerprint){result.status='stale';result.error='Hay observaciones nuevas. Prepara los análisis pendientes; los textos docentes se conservan.';}
+      if(hash(tasks.map(taskSource))!==payload.source_fingerprint){result.status='stale';result.error='Hay información nueva. Actualiza los análisis pendientes; tus textos se conservan.';}
       return result;
     }
     if(payload.status!=="saved"){

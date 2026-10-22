@@ -43,7 +43,7 @@ export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, k
   if(expectedSourceHash && sourceHash!==expectedSourceHash)throw new VersionConflictError("El documento cambió durante la descarga. Prepara una descarga nueva; los archivos anteriores se conservan.");
   const templateBase = kind === "annual_plan" ? document.content?.journey_version === 2 ? "annual-journey-readable-v6" : document.document_context?.template_version === "annual-unified-v1" ? "annual-unified-v1-layout2" : document.content?.plan_format === "twelve_projects_flexible_weeks" ? "annual-flexible-layout2" : document.content?.experience_context ? "annual-experience-v1" : document.document_context?.template_version ?? "annual-legacy-v1"
     : kind === "experience" ? `${document.content?.document_template_version ?? "experience-legacy-v1"}-layout8`
-    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout12" : kind === "diagnostic_summary" ? "-layout3" : ["family_report","period_closure"].includes(kind) ? "-layout2" : ""}-snapshot-${sourceHash.slice(0,16)}`;
+    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout13" : kind === "diagnostic_summary" ? "-layout3" : ["family_report","period_closure"].includes(kind) ? "-layout2" : ""}-snapshot-${sourceHash.slice(0,16)}`;
   // Branding is a render input, independent of the confirmed pedagogical source.
   // Retain old immutable files while resolving the current logo for a new download.
   const templateVersion = `${templateBase}-logo-${logo ? hash(logo).slice(0,16) : 'none'}`;

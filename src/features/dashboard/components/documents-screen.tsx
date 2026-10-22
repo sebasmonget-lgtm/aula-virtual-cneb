@@ -38,7 +38,7 @@ export type OpenDocument = DocumentEntry & {
   period_start?: string; period_end?: string; competencies?: { id: string; name: string }[];
   active_criterion?: { criterion_text: string; competency_v4_id: string;expected_evidence?:string|null } | null;
   project_activities?: {id:string;title:string;date:string}[];
-  registered_evidence?:{id:string;student_name:string;observation_text?:string;observed_at:string}[];
+  registered_evidence?:{id:string;student_name:string;observation_text?:string;observed_at:string;criterion_text?:string|null;source?:string;confirmed_competency_ids?:string[]}[];
   workshop?: { id: string; content: Record<string, unknown> } | null;
 };
 type Artifact = { template_version?:string;id: string; source_kind: string; source_id: string; filename: string;

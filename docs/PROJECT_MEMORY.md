@@ -1284,3 +1284,8 @@ A pedido de la usuaria, Documentos oculta la preparación si el aula activa ya t
 ### 21 de octubre — Vigencia del contexto en análisis de evaluación
 
 QA UI aisló un borrador con las mismas observaciones pero marco anterior a una actividad completada: la nota se rechazó correctamente al confirmar. Lotes comparan ahora observaciones y contexto; huella común excluye cobertura/fecha inferida de observaciones y conserva cambios de actividades, criterios y ejecución. Texto docente y notas confirmadas se conservan. Sin cambiar modelos, prompts ni guards. Ver QA_CONTEXTO_EVALUACION_2026-10-21.md para pruebas/publicación y rollback.
+
+
+### 21 de octubre — Observación libre en Word y fidelidad de conclusiones
+
+La competencia docente confirmada de la observación libre se comparte en lectura/Word sin asignar un criterio inventado. Última atribución y revisión de texto vigentes, propiedad docente y exclusión de anulaciones; compatibilidad con esquema anterior. Layout13 conserva archivos previos. Se refuerza la instrucción general de conclusiones para conservar actor/materiales y distinguir ayuda pedida de recibida, tras dos detalles de la primera ronda de treinta propuestas. Ver QA_OBSERVACION_LIBRE_WORD_2026-10-21.md.

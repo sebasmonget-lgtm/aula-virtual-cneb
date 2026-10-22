@@ -247,3 +247,25 @@ test('modern year version without legacy title opens and exports with classroom 
   assert.equal(await loadSavedDocument(db,id(2),'annual_plan',row.id),null);
  }finally{await db.close();}
 });
+
+
+test('observación libre muestra solo competencias confirmadas de su texto vigente, en lectura y Word',async()=>{
+ const db=await fixture();try{
+ await db.query(`create table ordinary_observation_attributions(id uuid,observation_id uuid,version int,state text,source text,raw_revision int,confirmed_competency_ids text[])`);
+ await db.query(`insert into ordinary_observations(id,classroom_id,student_id,created_by,activity_id,raw_text,occurred_at) values('${id(61)}','${id(6)}','${id(13)}','${id(1)}','${id(12)}','Acordó compartir y explicó qué necesitaba.','2026-04-14')`);
+ await db.query(`insert into ordinary_observation_attributions values('${id(62)}','${id(61)}',1,'confirmed','teacher',1,array['PS_CONVIVE','COM_ORAL']);`);
+ const read=async()=>{const doc=await loadSavedDocument(db,id(1),'activity',id(12));return {doc,note:doc.registered_evidence.find(row=>row.id===id(61))};};
+ let {doc,note}=await read();assert.equal(note.criterion_text,null);assert.deepEqual(note.confirmed_competency_ids,['PS_CONVIVE','COM_ORAL']);
+ const cards=(await loadKnowledgeBaseV4()).competencyCards.map(card=>({id:card.id,name:card.official_name,capacities:card.capacities,ages:card.ages}));
+ const word=await JSZip.loadAsync(await renderActivityUnifiedWord({...doc,content:{...doc.content,document_template_version:'activity-unified-v1',competency_id:'CYT_INDAGA'}},cards));
+ const xml=await word.file('word/document.xml').async('string');assert.match(xml,/Observación libre · Convive y participa democráticamente/);assert.match(xml,/Se comunica oralmente en su lengua materna/);
+ await db.query(`insert into ordinary_observation_attributions values('${id(63)}','${id(61)}',2,'pending','ai',1,array['MAT_CANTIDAD'])`);
+ assert.deepEqual((await read()).note.confirmed_competency_ids,[],'No reutilizar una confirmación anterior si existe una nueva revisión sin confirmar');
+ await db.query("update ordinary_observation_attributions set state='confirmed' where id=$1",[id(63)]);assert.deepEqual((await read()).note.confirmed_competency_ids,[],'La sugerencia IA no equivale a confirmación docente');
+ await db.query("update ordinary_observation_attributions set source='teacher' where id=$1",[id(63)]);
+ await db.query("update ordinary_observations set source_revision=2 where id=$1",[id(61)]);assert.deepEqual((await read()).note.confirmed_competency_ids,[],'No mostrar atribuciones de otro texto');
+ await db.query("update ordinary_observation_attributions set raw_revision=2 where id=$1",[id(63)]);assert.deepEqual((await read()).note.confirmed_competency_ids,['MAT_CANTIDAD']);
+ assert.equal(await loadSavedDocument(db,id(2),'activity',id(12)),null);
+ await db.query("update ordinary_observations set status='voided' where id=$1",[id(61)]);assert.equal((await read()).note,undefined);
+ }finally{await db.close();}
+});

@@ -1,0 +1,11 @@
+# Observaciones libres: competencia confirmada y revisión de conclusiones
+
+La descarga diaria incluía el texto libre pero decía Sin criterio asociado sin mostrar la competencia confirmada por la docente. La proyección autorizada de observaciones añade las competencias de la última atribución, únicamente si está confirmada por la docente y corresponde a la revisión vigente del texto. No usa sugerencias IA, decisiones anteriores sustituidas, ni datos de observaciones anuladas o de otro docente. Conserva la captura guiada y las evidencias antiguas. Si la tabla de atribución no existe en un esquema anterior, conserva la lectura sin atribuciones.
+
+Word y lectura de actividad comparten la etiqueta Observación libre con los nombres curriculares confirmados; no se inventa un criterio ni se reasigna la nota a la competencia principal de la actividad. Se añade una línea de texto con los estilos actuales del lector. Layout13 crea un nuevo archivo cuando corresponda, manteniendo bytes/versiones anteriores. No hay migración o llamadas IA para este cambio.
+
+En la primera revisión de treinta conclusiones, el texto principal era coherente pero un ejemplo invirtió los materiales de dos niños y un apoyo se narró como realizado aunque la nota solo decía que se pidió. La instrucción general se refuerza para contrastar actor, acción, objeto y preferencia en todos los campos y distinguir petición de apoyo recibido. Modelos, esquema, notas y fuentes se conservan. La segunda ronda explícita quedará registrada; no atribuir al prompt una garantía de exactitud sin revisión docente.
+
+38 pruebas de catálogo/Word/artefactos y 15 de conclusión PASS. Incluyen dos competencias, última atribución, propuesta IA no confirmada, revisión de texto cambiada, propiedad del aula y anulación; no introducir un criterio para registros libres. Typecheck/lint/build Next webpack PASS (una advertencia histórica). Previsualización desde fuentes QA en transacción de solo lectura: siete páginas, sin escrituras ni IA; inspección del apartado de observaciones y reflexión. Publicación, comprobación UI, descarga real y segunda ronda pendientes hasta registrar sus recibos.
+
+Reversión: revertir esta proyección, etiqueta, revisión de render y frase de prompt; conservar las observaciones, confirmaciones, documentos históricos y notas. Producción queda fuera de este recorrido.
