@@ -9,11 +9,23 @@ import {hasWorkshopPrintMaterial} from "./workshop-print-material.mjs";
 import {workshopActivityDetails} from "./workshop-catalog.mjs";
 import {activityPedagogicalBlocks} from "./pedagogical-blocks.mjs";
 import curatedSheets from '../../assets/workshop-resources/minedu/manifest.json' with {type:'json'};
-import {readFile} from 'node:fs/promises';
+import {readFile,writeFile} from 'node:fs/promises';
+import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {loadWorkshopPrintContext,renderWorkshopPrint,workshopPrintHeaderLayout} from "./workshop-print.mjs";
 
 const normalize=value=>value.replace(/\s+/g,' ').trim();
+test('la ficha de huevos incluye la condición del cuento y una consigna infantil sin cambiar su original',async()=>{
+ const sheet=curatedSheets.find(row=>row.id==='minedu_crea_4_013');
+ const original=await readFile(new URL('../../assets/workshop-resources/minedu/'+sheet.filename,import.meta.url));
+ const bytes=await renderWorkshopPrint({context:{institution_name:'IE Semillas',section:'Girasoles',age:4},workshopId:sheet.workshop_id,sheetId:sheet.id});
+ const pdf=await PDFDocument.load(bytes),printed=normalize(nativeText(pdf,pdf.getPage(0)));
+ assert.match(printed,/En esta historia, hoy cada gallina puso un huevo/);
+ assert.match(printed,/Dibuja en la cuadrícula un huevo por cada gallina/);
+ assert.match(sheet.classroom_use,/no una regla sobre todas las gallinas/);
+ assert.equal(createHash('sha256').update(original).digest('hex'),sheet.sha256);
+ if(process.env.AYNI_QA_DOCX_DIR)await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR,'ficha-huevos-qa.pdf'),bytes);
+});
 function nativeText(pdf,page){
   const contents=page.node.Contents(),streams=contents instanceof PDFArray?contents.asArray():[contents];
   return streams.map(ref=>pdf.context.lookup(ref)).filter(stream=>stream instanceof PDFRawStream)

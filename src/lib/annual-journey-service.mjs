@@ -1,3 +1,4 @@
+import { annualFollowupForSnapshot } from './annual-current-context.mjs';
 import { resourceEligibleCompetencies } from "./annual-resource-policy.mjs";
 import {proposalIntentIssues} from "./annual-proposal-intent.mjs";
 import { randomUUID } from "node:crypto";
@@ -66,7 +67,7 @@ export function refreshJourneySnapshot(plan, snapshot) {
   const freshKeys = new Set(snapshot.facts.map((fact) => fact.key));
   const historical = plan.classroom_snapshot.facts.filter((fact) => !freshKeys.has(fact.key))
     .map((fact) => ({ ...fact, uncertainty: fact.kind === "teacher_decision" ? fact.uncertainty : "historical_source_preserved_for_trace" }));
-  return appendJourneyIntent({ ...plan, classroom_snapshot: { ...snapshot, facts: [...snapshot.facts, ...historical] },
+  return appendJourneyIntent({ ...plan, assessment_followup: annualFollowupForSnapshot(plan.assessment_followup, snapshot), classroom_snapshot: { ...snapshot, facts: [...snapshot.facts, ...historical] },
     pedagogical_review: { status: "pending", policy: "annual-journey-v2" } },
     "Considera los nuevos registros del aula y ajusta solo las propuestas futuras que lo necesiten. Conserva las decisiones y el trabajo protegido.");
 }

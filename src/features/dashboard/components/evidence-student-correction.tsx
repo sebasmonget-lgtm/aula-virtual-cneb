@@ -17,7 +17,7 @@ export function EvidenceStudentCorrection({ profile, students, onCorrected }: {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<"success" | "error">("success");
-  const notes = profile?.recent_relevant_observations ?? [];
+  const notes = (profile?.recent_relevant_observations ?? []).filter(item => item.source_type !== 'ordinary_observation');
   const note = notes.find(item => item.id === evidenceId);
   if (!profile || !notes.length) return null;
   async function correct() {

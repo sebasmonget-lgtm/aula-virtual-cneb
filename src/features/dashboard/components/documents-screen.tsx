@@ -29,6 +29,7 @@ type DocumentEntry = {
   parent_experience_id?:string; date: string; period_label?: string | null;
 };
 export type OpenDocument = DocumentEntry & {
+  source_current?: boolean | null;
   institution_name?: string; document_context?: DocumentContext; content: Record<string, unknown>;
   source_plan_format?: string; formal_ready?: boolean;
   actual_execution_date?:string|null;
@@ -58,7 +59,7 @@ const labelFor = (entry: DocumentEntry) => entry.kind === "annual_plan" ? "Plan 
   entry.kind === "diagnostic_summary" ? "Diagnóstico del aula" : entry.kind === "experience" ?
     entry.subtype === "project" ? "Proyecto" : "Unidad" : entry.kind === "activity" ? "Actividad" :
     entry.kind === "period_closure" ? "Cierre del período" : "Informe a la familia";
-const statusFor = (status: string) => status === "active" || status === "confirmed" ? "Confirmado" :
+const statusFor = (status: string, kind?: DocumentKind) => status === "active" || status === "confirmed" ? kind === "activity" || kind === "experience" ? "Preparado" : "Confirmado" :
   status === "archived" ? "Versión anterior" : "Borrador";
 const dateFor=displayDocumentDate;
 
@@ -109,7 +110,7 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
   if (document.kind === "period_closure") {
     const entries=Array.isArray(document.content.entries)?document.content.entries as Record<string,unknown>[]:[];
     const names=new Map((document.competencies??[]).map((card)=>[card.id,card.name]));
-    return <article className="rounded-3xl border bg-white p-5 sm:p-8"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">Proyección provisional · cierre V{document.version}</p><h2 className="mt-2 text-2xl font-extrabold">{document.title}</h2><p className="mt-2 text-sm text-[#526b87]">{document.classroom} · {document.school_year} · {dateFor(document.period_start??"")} a {dateFor(document.period_end??"")}</p><p className="mt-4 rounded-xl bg-[#eaf7fb] p-3 text-sm">Puedes descargar el registro del cierre confirmado. Esta exportación conserva sus datos y no se presenta como una plantilla oficial adicional.</p><div className="mt-5 space-y-3">{entries.map((entry,index)=>{const assessment=(entry.assessment_details??{}) as Record<string,unknown>,conclusion=(entry.conclusion_details??{}) as Record<string,unknown>,evidence=Array.isArray(entry.evidence)?entry.evidence:[];return <section key={`${entry.assessment_id??index}`} className="rounded-xl border p-4"><h3 className="font-bold">{text(entry.student_name)} · {names.get(text(entry.competency_id))??text(entry.competency_id)}</h3><p className="mt-1 text-sm">Nivel confirmado por la docente: <b>{text(entry.achievement_level)}</b> · {evidence.length} registros</p>{text(assessment.evidence_overview)&&<p className="mt-2 text-sm">{text(assessment.evidence_overview)}</p>}{text(conclusion.conclusion_text)&&<p className="mt-2 text-sm"><b>Conclusión:</b> {text(conclusion.conclusion_text)}</p>}</section>;})}</div></article>;
+    return <article className="rounded-3xl border bg-white p-5 sm:p-8"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">Cierre confirmado · versión {document.version}</p><h2 className="mt-2 text-2xl font-extrabold">{document.title}</h2><p className="mt-2 text-sm text-[#526b87]">{document.classroom} · {document.school_year} · {dateFor(document.period_start??"")} a {dateFor(document.period_end??"")}</p><p className="mt-4 rounded-xl bg-[#eaf7fb] p-3 text-sm">Puedes descargar el registro del cierre confirmado. Esta exportación conserva sus datos y no se presenta como una plantilla oficial adicional.</p><div className="mt-5 space-y-3">{entries.map((entry,index)=>{const assessment=(entry.assessment_details??{}) as Record<string,unknown>,conclusion=(entry.conclusion_details??{}) as Record<string,unknown>,evidence=Array.isArray(entry.evidence)?entry.evidence:[];return <section key={`${entry.assessment_id??index}`} className="rounded-xl border p-4"><h3 className="font-bold">{text(entry.student_name)} · {names.get(text(entry.competency_id))??text(entry.competency_id)}</h3><p className="mt-1 text-sm">Nivel confirmado por la docente: <b>{text(entry.achievement_level)}</b> · {evidence.length} registros</p>{text(assessment.evidence_overview)&&<p className="mt-2 text-sm">{text(assessment.evidence_overview)}</p>}{text(conclusion.conclusion_text)&&<p className="mt-2 text-sm"><b>Conclusión:</b> {text(conclusion.conclusion_text)}</p>}</section>;})}</div></article>;
   }
   const content = document.content;
   const diagnosticPeriod=document.kind==='diagnostic_summary'?diagnosticReportPeriod(document,document.document_context??{}):null;
@@ -123,6 +124,7 @@ export function DocumentContent({ document }: { document: OpenDocument }) {
     </header>
     <div className="space-y-5 p-5 sm:p-8">
       {document.kind === "diagnostic_summary" && <>
+        {document.source_current === false && <p role="status" className="rounded-xl bg-[#fff8e7] p-3 text-sm text-[#745014]">Hay observaciones o información familiar que cambiaron después de confirmar este diagnóstico. Conservamos esta versión; consulta los registros actuales antes de usarla para planificar.</p>}
         <p className="text-sm text-[#526b87]">{diagnosticReportPurpose}</p>
         {diagnosticPeriod&&<Section title={diagnosticPeriod.periodLabel} value={[diagnosticPeriod.recordsLabel,diagnosticPeriod.kind!=='initial'&&diagnosticPeriod.initialPeriodLabel,diagnosticPeriod.scopeNote].filter(Boolean).join(' ')}/>}
         <Section title="Fortalezas del grupo" value={content.strengths} /><Section title="Dónde acompañar más" value={content.needs} />
@@ -349,7 +351,7 @@ export function DocumentsScreen({ onPlan, folder }: { onPlan?: () => void;folder
           onOpen={item=>{setOpened(null);setError("");setWordMessage("");setWordError("");setOpening(true);setSelected({kind:item.kind as DocumentKind,id:item.id});}} /> :
         years.map((year) => <section key={year} aria-label={`Documentos ${year}`} className="space-y-3"><h2 className="text-lg font-extrabold text-[#172b52]">Año escolar {year}</h2>
           <ul className="space-y-2">{documents.filter((item) => item.school_year === year).map((item) => <li key={`${item.kind}-${item.id}`} className="rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-4 shadow-[var(--ayni-panel-shadow)] sm:flex sm:items-center sm:justify-between sm:gap-5">
-            <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">{labelFor(item)} · {statusFor(item.status)}</p><h3 className="mt-1 break-words text-lg font-bold text-[#172b52]">{item.title}</h3><p className="mt-1 text-sm text-[#526b87]">{item.classroom}{item.period_label ? ` · ${item.period_label}` : item.kind === "family_report" ? " · Informe histórico sin período formal" : ""}{item.date ? ` · ${dateFor(item.date)}` : ""}{item.version && item.version > 1 ? ` · Versión ${item.version}` : ""}</p></div>
+            <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-wide text-[#087d96]">{labelFor(item)} · {statusFor(item.status,item.kind)}</p><h3 className="mt-1 break-words text-lg font-bold text-[#172b52]">{item.title}</h3><p className="mt-1 text-sm text-[#526b87]">{item.classroom}{item.period_label ? ` · ${item.period_label}` : item.kind === "family_report" ? " · Informe histórico sin período formal" : ""}{item.date ? ` · ${item.kind === "activity" || item.kind === "experience" ? "Fecha prevista" : item.kind === "period_closure" ? "Confirmado el" : "Guardado el"}: ${dateFor(item.date)}` : ""}{item.version && item.version > 1 ? ` · Versión ${item.version}` : ""}</p></div>
             <Button variant="outline" className="mt-3 min-h-11 shrink-0 sm:mt-0" onClick={() => { setOpened(null); setError(""); setWordMessage(""); setWordError(""); setOpening(true); setSelected({ kind: item.kind, id: item.id }); }}>Abrir documento</Button>
           </li>)}</ul>
         </section>)}

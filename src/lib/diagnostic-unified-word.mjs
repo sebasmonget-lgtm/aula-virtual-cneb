@@ -1,6 +1,6 @@
 import path from "node:path";
 import { insertCoverQuickView, renderUnifiedWord, removeParagraphsContaining, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
-import { retainCoverPageBreak } from "./teacher-guide-word-layout.mjs";
+import { retainCoverPageBreak, keepShortRowsTogether, keepShortTableTogether } from "./teacher-guide-word-layout.mjs";
 import {diagnosticCompetencyReading,diagnosticRecordExcerpt,diagnosticReportPurpose,diagnosticReportPeriod,diagnosticReportFollowups} from './diagnostic-report-reading.mjs';
 
 const templateUrl = path.join(process.cwd(), "assets/templates/evaluacion-diagnostica-inicial-unificada-v1.docx");
@@ -20,7 +20,7 @@ const countLabel = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
 
 function paragraph(value, bold = false, bullet = false, keepNext = bold) {
-  return `<w:p><w:pPr><w:spacing w:before="${bold ? 145 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${keepNext ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${value}`)}</w:t></w:r></w:p>`;
+  return `<w:p><w:pPr>${String(value).length < 800 ? '<w:keepLines/>' : ''}<w:spacing w:before="${bold ? 145 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${keepNext ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${value}`)}</w:t></w:r></w:p>`;
 }
 
 function replaceSectionBody(xml, startText, endText, body) {
@@ -265,5 +265,5 @@ export async function renderDiagnosticUnifiedWord(document, context, cards = [],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl, values, logo, compactTrailingSpace: true,
     transformPart:(_part,xml)=>diagnosticReportPeriod(document,context).kind==='update'?replaceWordText(xml,'EVALUACIÓN DIAGNÓSTICA','ACTUALIZACIÓN DIAGNÓSTICA').replace(/<w:t>/g,'<w:t xml:space="preserve">'):xml,
-    transform: (xml) => retainCoverPageBreak(insertCoverQuickView(transformDiagnostic(xml, { ...context, competencyCards: cards }, snapshot, followups, values), "El diagnóstico en una mirada", overview)) });
+    transform: (xml) => keepShortRowsTogether(retainCoverPageBreak(insertCoverQuickView(transformDiagnostic(xml, { ...context, competencyCards: cards }, snapshot, followups, values), "El diagnóstico en una mirada", overview)).replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,keepShortTableTogether)) });
 }

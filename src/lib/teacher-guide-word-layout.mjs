@@ -64,6 +64,16 @@ export function compactCoverSpacers(xml){
 }
 
 /** Short attached forms move as a unit instead of leaving a few rows alone. */
+/** Avoid splitting a compact row while allowing long records to continue normally. */
+export function keepShortRowsTogether(xml) {
+  return xml.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,row=>{
+    const text=[...row.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(match=>match[1]).join('');
+    if(text.length>1200 || /<w:cantSplit\b/.test(row))return row;
+    return row.includes('<w:trPr>')?row.replace('<w:trPr>','<w:trPr><w:cantSplit/>')
+      :row.replace(/(<w:tr(?:\s[^>]*)?>)/,'$1<w:trPr><w:cantSplit/></w:trPr>');
+  });
+}
+
 export function keepShortTableTogether(table) {
   const paragraphs = [...table.matchAll(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g)];
   const text = [...table.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(match=>match[1]).join("");

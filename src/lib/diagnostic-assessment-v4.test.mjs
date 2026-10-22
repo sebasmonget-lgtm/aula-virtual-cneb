@@ -7,7 +7,7 @@ import { loadDiagnosticExperienceWorkspace, recordDiagnosticExperienceObservatio
 import {
   confirmDiagnosticGroupReview, confirmDiagnosticSynthesis, loadDiagnosticAssessmentWorkspace,
   prepareDiagnosticGroupReview, prepareDiagnosticSynthesis, saveDiagnosticGroupReview,
-  saveDiagnosticSynthesis, saveStudentInitialContext, sameDiagnosticSources, summarizeDiagnosticGroup, diagnosticPlanningSummary,
+  saveDiagnosticSynthesis, saveStudentInitialContext, sameDiagnosticSources, summarizeDiagnosticGroup, diagnosticPlanningSummary, isCurrentDiagnosticGroupDocument,
 } from "./diagnostic-assessment-v4.mjs";
 import { buildStudentPedagogicalContext } from "./student-context-service.mjs";
 import { diagnosticProgressForTeacher } from "./diagnostic-review-service.mjs";
@@ -141,6 +141,12 @@ test("vista grupal admite observaciones sin comentarios; prioridades docentes ll
     assert.match(server, /diagnostic_summary: groupSummary/);
     assert.equal(diagnosticPlanningSummary({ strengths: "Ana conversó.", needs: "", planning_priorities: "Jugar juntos." }, ["Ana"]), "Ana conversó. Jugar juntos.");
     assert.equal(diagnosticPlanningSummary(null), undefined);
+    const savedDetails=structuredClone(confirmed.details);
+    assert.equal(await isCurrentDiagnosticGroupDocument(db,teacher,group.id),true);
+    assert.equal(await isCurrentDiagnosticGroupDocument(db,other,group.id),null);
+    await observe(db,teacher,workspace,studentId,0,'with_support','Probó otra forma de sostener los bloques.');
+    assert.equal(await isCurrentDiagnosticGroupDocument(db,teacher,group.id),false);
+    assert.deepEqual((await db.query('select details from diagnostic_group_reviews where id=$1',[group.id])).rows[0].details,savedDetails);
   } finally { await db.close(); }
 });
 

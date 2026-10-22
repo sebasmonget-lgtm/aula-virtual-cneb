@@ -77,7 +77,7 @@ export function buildFamilyReportInput({ age, competencyIds, studentName, conclu
   const clean = (value) => neutralizeAssessmentText(value, knownNames);
   const findings = conclusions.filter((row) => competencyIds.includes(row.competency_v4_id)).map((row) => ({ competency_id: row.competency_v4_id, confirmed_achievement_level: confirmedAssessments.find(assessment=>assessment.id===row.assessment_id&&assessment.teacher_confirmed_at)?.achievement_level??null, period_start: dateOnly(row.period_start), period_end: dateOnly(row.period_end), information_status: row.details.information_status, conclusion_text: clean(row.details.conclusion_text), progress_examples: (row.details.progress_examples ?? []).map(clean), support_or_conditions: (row.details.support_or_conditions ?? []).map(clean), next_steps: (row.details.next_steps ?? []).map(clean), insufficiency_reason: clean(row.details.insufficiency_reason), caution: clean(row.details.caution) }));
   return { workflow: "family_report", age, competency_ids: competencyIds, castellano_l2_applicable: castellanoL2Applicable, religion_applicable: religionApplicable, teacher_request: [
-    "El alumno evaluado se identifica en student_context.name. Conserva quién hizo cada acción; no le atribuyas acciones de otros.",
+    "Cuando las fuentes indiquen explícitamente que son datos ficticios o de prueba, describe sus actuaciones como parte de ese escenario; conserva esa condición y no rechaces redactarlas como si se pidiera acreditar hechos reales. El alumno evaluado se identifica en student_context.name. Conserva quién hizo cada acción; no le atribuyas acciones de otros.",
     "Prepara una versión para la familia con palabras comunes, frases cortas y una idea por oración. Conserva los hechos, apoyos, dificultades y dudas de las conclusiones confirmadas. Puedes reformularlos; no copies sus expresiones técnicas. El servidor conserva la conclusión original por separado.",
     "En progress_summary explica qué hizo el niño y qué está aprendiendo en dos o tres frases. Evita repetir el nombre completo de la competencia o empezar cada sección con la misma fórmula. En examples incluye ejemplos concretos de progress_examples, sin convertir recomendaciones en hechos.",
     "En support_or_conditions distingue el apoyo que recibió de una propuesta futura. Si la fuente dice ofrecerle, no afirmes que ya se le ofreció. En next_steps explica qué seguiremos trabajando y cómo ayudarlo; observar o registrar más no reemplaza una ayuda concreta. No inventes apoyos ni dificultades para llenar un apartado.",
@@ -107,6 +107,22 @@ export function buildFamilyReportFallback(competencyIds, conclusions) {
     introduction:"Compartimos las conclusiones confirmadas para este período.",
     sections,closing_note:"La docente debe revisar este informe antes de compartirlo con la familia."
   },competencyIds,snapshot);
+}
+
+/** Family wording is optional: a provider failure must not block confirmed teacher conclusions. */
+export async function prepareRecoverableFamilyReport({ generate, competencyIds, conclusions, snapshot }) {
+  if (!competencyIds.length || competencyIds.some(id => !conclusions.some(row => row.competency_v4_id === id)))
+    throw new Error('Faltan conclusiones confirmadas para preparar este informe.');
+  try {
+    const generated = await generate();
+    const proposal = preserveConfirmedFamilySections(generated.output, conclusions, { captureFamilyWording: true });
+    validateFamilyReport(proposal, competencyIds, snapshot);
+    return { proposal, metadata: generated.metadata, usesConfirmedConclusions: false };
+  } catch {
+    const proposal = preserveConfirmedFamilySections(buildFamilyReportFallback(competencyIds, conclusions), conclusions);
+    validateFamilyReport(proposal, competencyIds, snapshot);
+    return { proposal, metadata: {}, usesConfirmedConclusions: true };
+  }
 }
 
 export function familyWordingFingerprint(section) {

@@ -5,6 +5,23 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
+import {workshopCatalog,workshopActivityDetails} from './workshop-catalog.mjs';
+import {workshopForAge} from './workshop-ages.mjs';
+
+test('el Word de taller identifica el taller e incluye la orientación de sus fichas',async()=>{
+ const workshop=workshopForAge(workshopCatalog.find(row=>row.id==='taller-biblioteca-canastas-para-comparar'),4);
+ const content=workshopActivityDetails(workshop),before=structuredClone(content);
+ const cards=(await loadKnowledgeBaseV4()).competencyCards.map(card=>({...card,name:card.official_name}));
+ const bytes=await renderActivityUnifiedWord({kind:'activity',school_year:2026,age:4,classroom:'Girasoles',title:workshop.title,occurs_on:'2026-04-14',content},cards);
+ const zip=await JSZip.loadAsync(bytes),xml=await zip.file('word/document.xml').async('string');
+ const text=[...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(match=>match[1]).join('');
+ assert.doesNotMatch(text,/Actividad|APRENDIZAJEEducación|N\.°|Del proyecto|\{\{/);
+ assert.match(text,/TALLER/);assert.match(text,/Fichas opcionales/);assert.match(text,/hoy cada gallina del señor Cristóbal puso un huevo/);
+ assert.equal(text.split(workshop.opening.teacher).length-1,1);
+ assert.equal(text.split(workshop.closure.teacher).length-1,1);
+ assert.deepEqual(content,before);
+ if(process.env.AYNI_QA_DOCX_DIR)await writeFile(path.join(process.env.AYNI_QA_DOCX_DIR,'taller-huevos-qa.docx'),bytes);
+});
 
 test("la actividad distingue qué observar de las observaciones registradas", async () => {
   const cards = (await loadKnowledgeBaseV4()).competencyCards.map((card) => ({ id: card.id, name: card.official_name,

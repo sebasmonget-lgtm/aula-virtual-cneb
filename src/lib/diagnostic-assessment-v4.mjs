@@ -519,6 +519,25 @@ async function optionalGroupSourceSnapshot(db, classroom, students, currentSnaps
 export async function prepareDiagnosticGroupReview(db, teacherId) {
   return versionTransaction(db,`group-prepare:${teacherId}`,tx=>prepareGroup(tx,teacherId));
 }
+
+/** The saved document keeps its text; compare its sources using the confirmation contract. */
+export async function isCurrentDiagnosticGroupDocument(db, teacherId, id) {
+  const row = (await db.query(`select d.source_snapshot,c.id,(to_jsonb(c)->>'castellano_l2_applicable')::boolean as castellano_l2_applicable,(to_jsonb(c)->>'religion_applicable')::boolean as religion_applicable,ag.age_years
+    from diagnostic_group_reviews d join classrooms c on c.id=d.classroom_id
+    join school_years y on y.id=c.school_year_id join age_grades ag on ag.id=c.age_grade_id
+    where d.id=$1 and c.teacher_id=$2 and y.owner_id=$2`, [id,teacherId])).rows[0];
+  if (!row) return null;
+  if (!row.source_snapshot?.length) return null;
+  const students = (await db.query("select id from students where classroom_id=$1 and status='active' order by id",[row.id])).rows;
+  const snapshots = new Map([...(await groupReviewSources(db,row.id,students))].map(([key,value])=>[key,value.snapshot]));
+  if (row.source_snapshot?.some?.(source=>source.id==='group-sources:v2'))
+    return sameDiagnosticSources(row.source_snapshot,await optionalGroupSourceSnapshot(db,row,students,snapshots));
+  try { return sameDiagnosticSources(row.source_snapshot,await confirmedSnapshot(db,row.id,snapshots)); }
+  catch (error) {
+    if (error instanceof DiagnosticAssessmentError && ['incomplete_children','stale_sources'].includes(error.reason)) return false;
+    throw error;
+  }
+}
 async function prepareGroup(db, teacherId) {
   const { classroom, students } = await scope(db, teacherId);
   const snapshot = await optionalGroupSourceSnapshot(db, classroom, students);

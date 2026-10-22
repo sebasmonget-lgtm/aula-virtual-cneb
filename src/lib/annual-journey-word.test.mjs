@@ -41,4 +41,10 @@ test('Word anual conserva fuentes una vez, con referencias y alcance legibles si
  assert.doesNotMatch(xml,/<w:pStyle w:val="(?:Heading1|Title)"/,'el cuerpo insertado no referencia estilos ausentes en la plantilla');
  assert.match(xml,/<w:keepLines\/>/);
  assert.deepEqual(plan,before);
+ const refreshed={...plan,teacher_preferences:'Aún no hay actuaciones observadas.',assessment_followup:['Aún no hay actuaciones observadas. No se atribuyen niveles.']};
+ const currentSections=annualJourneyDocumentSections(refreshed);
+ assert.match(currentSections.find(section=>section.title==='Información disponible en esta versión').lines[0],/2 registros de observación/);
+ assert.equal(currentSections.find(section=>section.title==='Ideas y decisiones docentes al preparar el año').lines[0],refreshed.teacher_preferences);
+ assert.doesNotMatch(currentSections.find(section=>section.title==='Observación y seguimiento').lines[0],/no hay actuaciones/);
+ assert.match(currentSections.find(section=>section.title==='Observación y seguimiento').lines[0],/No se atribuyen niveles/);
 });

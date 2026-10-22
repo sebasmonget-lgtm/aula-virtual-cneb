@@ -7,6 +7,7 @@ import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, remove
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 import { activityReadingStages } from "./activity-reading-content.mjs";
 import {activityTeacherText} from './activity-teacher-reading.mjs';
+import { curatedWorkshopSheets } from './workshop-print-material.mjs';
 import { guidePanel as renderGuidePanel, guideText, guideParagraph, guideDetails, keepShortTableTogether, retainCoverPageBreak,compactCoverSpacers } from "./teacher-guide-word-layout.mjs";
 
 const guidePanel = (title, columns, observations) => renderGuidePanel(title, columns, observations, { keepObservationsTogether: true });
@@ -14,6 +15,7 @@ const guidePanel = (title, columns, observations) => renderGuidePanel(title, col
 const oldTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-ayni-v2.docx");
 const workshopTemplateUrl = path.join(process.cwd(), "assets/templates/actividad-aprendizaje-inicial-con-taller-v1.docx");
 const clean = (value) => typeof value === "string" ? value.trim() : "";
+const sameInstruction = (left, right) => clean(left).replace(/\s+/g,' ') === clean(right).replace(/\s+/g,' ');
 const list = (value) => Array.isArray(value) ? value.map(clean).filter(Boolean).join("; ") : "";
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
 const paragraphPattern = /<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g;
@@ -67,8 +69,8 @@ function activityGuide(content, whatToObserve, observationBlocks = [], names = n
       readableBlock("Orientaciones generales", mediation.introduction) +
       actions.stages.map((stage, index) => guidePanel(stage.label.toLocaleUpperCase("es-PE"), [
         { title: "Niños · qué harán", body: guideText(stage.text) },
-        { title: "Docente · cómo acompaña", body: (index === 0 && content.meaningful_situation ? readableBlock("Situación para empezar", content.meaningful_situation) : "") + guideText(mediation.stages[index].text) },
-      ], observations(["opening", "development", "closure"][index]))).join("") + readableBlock("Continuidad", content.closure_or_continuity),
+        { title: "Docente · cómo acompaña", body: (index === 0 && content.meaningful_situation && !sameInstruction(content.meaningful_situation,mediation.stages[0].text) ? readableBlock("Situación para empezar", content.meaningful_situation) : "") + guideText(mediation.stages[index].text) },
+      ], observations(["opening", "development", "closure"][index]))).join("") + (sameInstruction(content.closure_or_continuity,mediation.stages[2].text) ? '' : readableBlock("Continuidad", content.closure_or_continuity)),
   };
   // Historical unphased instructions remain in their saved scope, rather than
   // fabricating separate child actions for opening and closure.
@@ -232,13 +234,15 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const approaches = document.experience_details?.transversal_approaches ?? [];
   const attitudes = document.experience_details?.observable_attitudes ?? [];
   guide.sequence += readableBlock("Enfoques transversales previstos", approaches) + readableBlock("Actitudes a acompañar", attitudes);
+  const workshopSheets = curatedWorkshopSheets(content.workshop_catalog?.id,Number(document.age));
+  if(workshopSheets.length)guide.sequence += readableBlock('Fichas opcionales · cómo usarlas',workshopSheets.map(sheet=>`${sheet.title}: ${sheet.classroom_use} Fuente: ${sheet.source}. Orientación para la docente en la página ${sheet.teacher_guide_pages.join(', ')} del recurso original conservado.`));
   const date = String(document.occurs_on ?? "").slice(0, 10);
   const values = {
     "AÑO_ESCOLAR": String(document.school_year), TITULO_ACTIVIDAD: document.title,
     TITULO_PROYECTO: clean(document.experience_title), INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
     EDAD_AULA: `${document.age || ""} años · ${clean(document.classroom)}`, DOCENTE: clean(document.teacher_name) || "Docente del aula",
     FECHA: document.actual_execution_date&&document.actual_execution_date!==date ? `${document.actual_execution_date.slice(8)}/${document.actual_execution_date.slice(5,7)}/${document.actual_execution_date.slice(0,4)} (prevista: ${date.slice(8)}/${date.slice(5,7)}/${date.slice(0,4)})` : /^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date.slice(8)}/${date.slice(5, 7)}/${date.slice(0, 4)}` : date,
-    UGEL: clean(document.ugel), NUMERO_ACTIVIDAD: String(route?.number ?? "Del proyecto"),
+    UGEL: clean(document.ugel), NUMERO_ACTIVIDAD: content.workshop_catalog ? '' : String(route?.number ?? "Del proyecto"),
     DURACION_REFERENCIAL: Number.isInteger(route?.estimated_minutes) ? `${route.estimated_minutes} minutos estimados` : "Tiempo ajustable al grupo", SEDE_COLEGIO: clean(document.district),
     PROPOSITO_QUE: clean(content.purpose), PROPOSITO_COMO: clean(content.child_actions), PROPOSITO_PARA_QUE: clean(content.closure_or_continuity),
     COMPETENCIA_PRINCIPAL: card?.name || "Por confirmar con la docente",
@@ -279,6 +283,20 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     ["Qué haremos hoy", clean(content.purpose).length<=180?clean(content.purpose):""],
   ].filter(([, value]) => value);
   return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages, compactTrailingSpace: true,
-    transform: (xml) => compactCoverSpacers(insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide, curriculum, values), "Hoy en el aula", overview)),
-    transformPart: (part, xml) => part.includes("header") ? replaceWordText(xml, "PLANIFICACIÓN ANUAL", "ACTIVIDAD DE APRENDIZAJE") : xml });
+    transform: (xml) => {
+      let result=compactCoverSpacers(insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide, curriculum, values), "Hoy en el aula", overview));
+      if(content.workshop_catalog){
+        result=result.replace(paragraphPattern,paragraph=>{
+          const label=xmlText(paragraph).trim();
+          if(label==='APRENDIZAJE')return '';
+          if(label==='ACTIVIDAD DE')return replaceWordText(paragraph,label,'TALLER');
+          if(label==='Actividad')return replaceWordText(paragraph,label,'Taller');
+          return paragraph;
+        });
+        result=replaceWordText(result,'N.° {{NUMERO_ACTIVIDAD}} · ','');
+        result=replaceWordText(result,'ACTIVIDAD DE APRENDIZAJE','TALLER');
+      }
+      return result;
+    },
+    transformPart: (part, xml) => part.includes("header") ? replaceWordText(xml, "PLANIFICACIÓN ANUAL", content.workshop_catalog ? "TALLER" : "ACTIVIDAD DE APRENDIZAJE") : xml });
 }

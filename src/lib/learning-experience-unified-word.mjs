@@ -1,4 +1,4 @@
-import { retainCoverPageBreak, compactCoverSpacers, guideDetails, keepShortTableTogether } from "./teacher-guide-word-layout.mjs";
+import { retainCoverPageBreak, compactCoverSpacers, guideDetails, keepShortTableTogether, keepShortRowsTogether } from "./teacher-guide-word-layout.mjs";
 import { routeObservationCriteria } from "./activity-observation-plan.mjs";
 import {projectFlexibilityGuidance,projectFlexibilityText,projectMediationNotes} from './activity-teacher-reading.mjs';
 import { ageReference, compactPlanningTable } from "./pedagogical-word-presentation.mjs";
@@ -18,7 +18,7 @@ const durationWeeks = (startsOn, endsOn) => {
 const xmlText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map((match) => match[1]).join("");
 
 function paragraph(text, bold = false, bullet = false, keepNext = false) {
-  return `<w:p><w:pPr><w:spacing w:before="${bold ? 140 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${bold || keepNext ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${text}`)}</w:t></w:r></w:p>`;
+  return `<w:p><w:pPr>${String(text).length < 800 ? '<w:keepLines/>' : ''}<w:spacing w:before="${bold ? 140 : 0}" w:after="${bold ? 75 : 55}"/>${bullet ? '<w:ind w:left="340" w:hanging="180"/>' : ""}${bold || keepNext ? "<w:keepNext/>" : ""}</w:pPr><w:r><w:rPr>${bold ? "<w:b/>" : ""}<w:color w:val="173352"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xmlEscape(`${bullet ? "• " : ""}${text}`)}</w:t></w:r></w:p>`;
 }
 
 
@@ -184,6 +184,6 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
       if(!/^[IVX]+\. (?:DATOS GENERALES|ORIGEN|PREPLANIFICACIÓN|PROPÓSITO|ENFOQUES|ESTRATEGIA|RUTA)/.test(title))return part;
       return replaceWordText(part,title,title.replace(/^[IVX]+/,numerals[section++]));
     });
-    return compactCoverSpacers(insertCoverQuickView(output, "El proyecto en una mirada", overview));
+    return keepShortRowsTogether(compactCoverSpacers(insertCoverQuickView(output, "El proyecto en una mirada", overview)).replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,keepShortTableTogether));
   } });
 }

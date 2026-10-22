@@ -1,8 +1,24 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { projectConversation } from "./project-conversation.mjs";
+import { projectConversation, projectChangeConversation } from "./project-conversation.mjs";
 
 const card={title:"Miramos semillas",purpose:"Elegir una pregunta",primary_competency_ids:["CYT_INDAGA"]};
+test('cambiar proyecto recibe el contexto actual, distingue sus fuentes y conserva los registros',async()=>{
+ const snapshot={source_fingerprint:'current',facts:[
+  {key:'o1',kind:'observed',subject:'child_1',scope:'individual',competency_id:'CYT_INDAGA',support_text:'Ana comparó dos semillas.'},
+  {key:'f1',kind:'family_report',support_text:'Su familia cuenta que cuida una planta.'},
+  {key:'old',kind:'observed',uncertainty:'historical_source_preserved_for_trace',support_text:'Fuente anterior.'}]};
+ snapshot.facts.push(...Array.from({length:30},(_,i)=>({key:'family'+i,kind:'family_report',support_text:'La familia aporta contexto.'})));
+ const before=structuredClone(snapshot);let bundle;
+ await projectChangeConversation({card,messages:[{role:'teacher',text:'Quiero explorar las semillas.'}],classroomSnapshot:snapshot,
+  curriculum:[{id:'CYT_INDAGA'}],createProvider:()=>({generate:async request=>{bundle=request.ai_context_bundle;return{output:{message:'Podemos explorar las semillas.',question:'',ready:true,chips:[],competency_ids:['CYT_INDAGA']}};}})});
+ assert.equal(bundle.classroom_context.source_fingerprint,'current');
+ assert.equal(bundle.classroom_context.records.filter(row=>row.kind==='observed').length,1);
+ assert.equal(bundle.classroom_context.records.filter(row=>row.kind==='family_report').length,6);
+ assert.equal(bundle.classroom_context.recorded_observations,1);
+ assert.equal(bundle.classroom_context.records[0].text,snapshot.facts[0].support_text);
+ assert.match(bundle.task,/No pidas copiar un diagnóstico/);assert.deepEqual(snapshot,before);
+});
 test("conversación de proyecto conserva el texto de apoyo y conserva su turno",async()=>{
   let request;
   const result=await projectConversation({card,knownContext:"Alba eligió una mesa",names:["Alba"],

@@ -2,7 +2,7 @@ import { guidedObservationActive } from "./guided-observation-state.mjs";
 import { createHash } from "node:crypto";
 import { loadActivityObservations } from "./activity-observations.mjs";
 import {orderedActivityCriteria} from './activity-teacher-reading.mjs';
-import { diagnosticPlanningSummary } from "./diagnostic-assessment-v4.mjs";
+import { diagnosticPlanningSummary, isCurrentDiagnosticGroupDocument } from "./diagnostic-assessment-v4.mjs";
 import { getCurrentClassroomContext } from "./classroom-context-service.mjs";
 import { projectPeriodClosureDocument } from "./period-closure-history.mjs";
 import { activityV3, canonicalProjectRoute, planningV3ReadEnabled, projectMasterV3 } from "./planning-contract-v3.mjs";
@@ -140,7 +140,7 @@ export async function loadSavedDocument(db, teacherId, kind, id) {
     const period=diagnosticReportPeriod({content:row?.details},timing);
     return row ? { id: row.id, kind, title: row.details?.report_snapshot?period.title:"Resumen diagnóstico del aula", status: row.status,
       version: Number(row.version), school_year: Number(row.year), classroom: row.section,
-      institution_name: row.institution_name,document_context:timing, confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
+      institution_name: row.institution_name,document_context:timing, source_current: await isCurrentDiagnosticGroupDocument(db,teacherId,id), confirmed_at: row.teacher_confirmed_at ? timestamp(row.teacher_confirmed_at) : null,
       content: { strengths: row.details?.strengths ?? "", needs: row.details?.needs ?? "", planning_priorities: row.details?.planning_priorities ?? "",
         document_format: row.details?.document_format, report_snapshot: row.details?.report_snapshot } } : null;
   }

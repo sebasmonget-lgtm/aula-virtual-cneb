@@ -7,7 +7,7 @@ export async function loadConfirmedOrdinaryEvaluationRows(db, { classroomId, per
       (o.media_path is not null) as media_available,
       o.activity_id,o.captured_criterion_id as criterion_id,
       coalesce(act.title,o.context_snapshot->>'activity_title',
-        case when o.source_kind='spontaneous' then 'Observación espontánea' else 'Actividad guiada' end) as activity_title,
+        case when o.source_kind='spontaneous' then 'Observación libre' else 'Observación guiada' end) as activity_title,
       chosen.competency_v4_id,
       case when chosen.criterion_id is not null then chosen.criterion_text else null end as criterion_text,
       jsonb_build_object('source','ordinary_observation','raw_revision',o.source_revision,

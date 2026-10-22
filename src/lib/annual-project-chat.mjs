@@ -11,7 +11,7 @@ export async function loadProjectChat(db,classroomId,proposalId,id){
     and ($4::uuid is null or id=$4) order by created_at desc limit 1`,[classroomId,WORKFLOW,proposalId,id??null])).rows[0];
   if(id&&!row)journeyFail("not_found","Conversación no disponible en este aula.");return row;
 }
-export async function handleAnnualProjectChat({request,response,url,db,context,sources,curriculum,origin,send,readJson,load,protectedIds,createProvider}){
+export async function handleAnnualProjectChat({request,response,url,db,context,sources,snapshot,curriculum,origin,send,readJson,load,protectedIds,createProvider}){
   const match=/^\/api\/annual-journey\/([0-9a-f-]{36})\/proposal-chat$/i.exec(url.pathname);if(!match)return false;
   const plan=await load(match[1],db,false);
   if(!["active","draft"].includes(plan.status))journeyFail("invalid_scope","Esta versión es histórica. Abre Mi año actual.");
@@ -44,7 +44,7 @@ export async function handleAnnualProjectChat({request,response,url,db,context,s
   });
   if(replay){send(response,200,publicProjectChat(row),origin);return true;}
   try{
-    const answer=await projectChangeConversation({card,messages:row.payload.messages,curriculum,names:sources.names,futureOnly,createProvider});
+    const answer=await projectChangeConversation({card,messages:row.payload.messages,curriculum,names:sources.names,classroomSnapshot:snapshot,futureOnly,createProvider});
     const payload={...row.payload,answer,pending_turn:null,lease_until:null,uncertain:false,revision:row.payload.revision+1,
       completed_turns:[...row.payload.completed_turns,body.turnId],messages:[...row.payload.messages,{role:"assistant",text:[answer.message,answer.question].filter(Boolean).join("\n\n")}]};
     const saved=(await db.query(`update ai_pending_generations set payload=$1::jsonb where id=$2 and payload->>'lease'=$3 returning *`,[JSON.stringify(payload),row.id,lease])).rows[0];

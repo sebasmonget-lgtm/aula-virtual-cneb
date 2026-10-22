@@ -133,7 +133,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
     if(editorMatch && request.method==="GET") { const row=await load(editorMatch[1],db,false);send(response,200,{protected_ids:await protectedIds(row),today:limaToday()},origin);return true; }
     if(await handleAnnualProposalCreation({request,response,url,db,context,teacherId,sources,curriculum,send,origin,readJson,load,write,createProvider,resolvePlan,
       loadReviewContext:periodId=>loadPeriodFutureReview(db,{teacherId,classroomId:context.id,periodId,curriculum})}))return true;
-    if(await handleAnnualProjectChat({request,response,url,db,context,sources,curriculum,origin,send,readJson,load,protectedIds,createProvider}))return true;
+    if(await handleAnnualProjectChat({request,response,url,db,context,sources,snapshot,curriculum,origin,send,readJson,load,protectedIds,createProvider}))return true;
     if(await handleAnnualProposalPreview({request,response,url,db,context,teacherId,sources,curriculum,calendar,origin,send,readJson,
       load,write,protectedIds,createProvider,resolvePlan,loadFreshSources:tx=>personalizationSources(tx,teacherId,context),
       loadFreshCalendar:async tx=>({...await loadEffectiveCalendar(tx,{teacherId,classroomId:context.id}),initial_stage:context.calendar.initial_stage})}))return true;

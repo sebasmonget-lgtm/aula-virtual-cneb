@@ -74,7 +74,7 @@ export async function renderWorkshopPrint({context,workshopId=null,resourceId=nu
     text(page,`${sourceLabel??'Ayni Aula · Material para acompañar el juego'} · ${pdf.getPageCount()}`,36,17,{font,size:8,width:w-72});
     return layout.contentTop;
   };
-  const appendSource=async(bytes,printPages=null,sourceLabel=null,clockwiseRotation=0)=>{
+  const appendSource=async(bytes,printPages=null,sourceLabel=null,clockwiseRotation=0,childPrompt=null)=>{
     if(bytes.subarray(0,4).toString()==='%PDF'){
       const source=await PDFDocument.load(bytes);
       if(printPages!==null&&(!Array.isArray(printPages)||!printPages.length||new Set(printPages).size!==printPages.length||printPages.some(page=>!Number.isInteger(page)||page<1||page>source.getPageCount())))
@@ -87,7 +87,11 @@ export async function renderWorkshopPrint({context,workshopId=null,resourceId=nu
         if(![0,90,180,270].includes(rotation))throw new TypeError('Revisa la orientación de la ficha.');
         const embedded=await pdf.embedPage(original,{left:box.x,bottom:box.y,right:box.x+box.width,top:box.y+box.height});
         const rotated=rotation===90||rotation===270,w=rotated?embedded.height:embedded.width,h=rotated?embedded.width:embedded.height;
-        const page=pdf.addPage(w>h?[PageSizes.A4[1],PageSizes.A4[0]]:PageSizes.A4),contentTop=header(page,sourceLabel),{width}=page.getSize(),scale=Math.min((width-72)/w,(contentTop-38)/h);
+        const page=pdf.addPage(w>h?[PageSizes.A4[1],PageSizes.A4[0]]:PageSizes.A4);
+        let contentTop=header(page,sourceLabel);
+        const {width}=page.getSize();
+        if(childPrompt)contentTop=text(page,childPrompt,36,contentTop,{font,size:11,width:width-72,lineHeight:15})-10;
+        const scale=Math.min((width-72)/w,(contentTop-38)/h);
         const x=(width-w*scale)/2+(rotation===180?embedded.width*scale:rotation===270?embedded.height*scale:0);
         const y=contentTop-h*scale+(rotation===90?embedded.width*scale:rotation===180?embedded.height*scale:0);
         page.drawPage(embedded,{x,y,width:embedded.width*scale,height:embedded.height*scale,rotate:degrees(-rotation)});
@@ -133,7 +137,7 @@ export async function renderWorkshopPrint({context,workshopId=null,resourceId=nu
     const bytes=await readFile(path.join(process.cwd(),'assets/workshop-resources/minedu',sheet.filename));
     const {createHash}=await import('node:crypto');if(createHash('sha256').update(bytes).digest('hex')!==sheet.sha256)throw new Error("La ficha no coincide con el original verificado.");
     if(!Array.isArray(sheet.print_pages))throw new TypeError('Revisa las páginas infantiles de esta ficha antes de imprimirla.');
-    await appendSource(bytes,sheet.print_pages,sheet.source,sheet.clockwise_rotation??0);
+    await appendSource(bytes,sheet.print_pages,sheet.source,sheet.clockwise_rotation??0,sheet.child_prompt);
   }
   return Buffer.from(await pdf.save());
 }

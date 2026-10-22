@@ -102,10 +102,10 @@ export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath 
 
 export async function listOrdinaryObservations(db, teacherId, studentId = null) {
   if (studentId != null && !validId(studentId)) throw new TypeError("Alumno no válido.");
-  return (await db.query(`select o.*, r.corrected_text, r.action as latest_action
+  return (await db.query(`select o.*, r.corrected_text, r.action as latest_action,r.created_at as revised_at
     from ordinary_observations o join classrooms c on c.id=o.classroom_id
     join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
-    left join lateral (select corrected_text, action from ordinary_observation_revisions
+    left join lateral (select corrected_text, action,created_at from ordinary_observation_revisions
       where observation_id=o.id order by revision desc limit 1) r on true
     where c.teacher_id=$1 and o.created_by=$1 and ($2::uuid is null or o.student_id=$2)
     order by o.occurred_at desc,o.id desc`, [teacherId, studentId])).rows;

@@ -7,6 +7,9 @@ import { buildDiagnosticContext } from "./context-policy-v4.mjs";
 import { isDiagnosticScaffoldSummary } from "./diagnostic-review-copy.mjs";
 import { isCurrentDiagnosticStudentReview } from "./diagnostic-assessment-v4.mjs";
 import { versionTransaction } from "./version-integrity.mjs";
+import { listOrdinaryObservations } from './ordinary-observation-service.mjs';
+import { loadConfirmedOrdinaryEvaluationRows } from './ordinary-evaluation-adapter.mjs';
+import { mergeStudentOrdinaryProfile } from './student-ordinary-profile.mjs';
 
 export function resolveSourceUpdatedAt(...timestamps) {
   const valid = timestamps.flat().filter(Boolean).map((value) => new Date(value)).filter((value) => !Number.isNaN(value.valueOf()));
@@ -17,7 +20,7 @@ export function resolveSourceUpdatedAt(...timestamps) {
 async function loadContextSources(db, studentId) {
   const row = (await db.query(`select (select to_jsonb(q) from (
     select s.id, coalesce(s.preferred_name, s.first_name) as name, s.first_name, s.last_name,
-           c.section, ag.age_years, sy.year as school_year
+           c.id as classroom_id,c.teacher_id,c.section, ag.age_years, sy.year as school_year
       from students s join classrooms c on c.id = s.classroom_id
       join age_grades ag on ag.id = c.age_grade_id join school_years sy on sy.id = c.school_year_id
      where s.id = $1
@@ -84,12 +87,15 @@ coalesce((select jsonb_agg(to_jsonb(q)) from (select distinct on (competency_v4_
 
 export async function buildStudentPedagogicalContext(db, studentId) {
   const sources = await loadContextSources(db, studentId);
-  const student = sources.student ?? undefined;
-  if (!student) return null;
+  if (!sources.student) return null;
+  const { classroom_id: classroomId, teacher_id: teacherId, ...student } = sources.student;
 
   const v4Names = new Map((await loadKnowledgeBaseV4()).competencyCards.map((card) => [card.id, card.official_name]));
-  const competencies = sources.competencies;
-  const recentEvidence = sources.recentEvidence;
+  const ready = teacherId && classroomId && (await db.query("select to_regclass('ordinary_observation_attributions') is not null as ready")).rows[0]?.ready;
+  const ordinary = ready ? await listOrdinaryObservations(db, teacherId, studentId) : [];
+  const confirmed = ready ? await loadConfirmedOrdinaryEvaluationRows(db, { classroomId, studentId,
+    period: { starts_on: '1900-01-01', ends_on: '9999-12-31' } }) : [];
+  const { competencies, recentEvidence } = mergeStudentOrdinaryProfile(sources.competencies, sources.recentEvidence, ordinary, confirmed, v4Names);
   const assessments = sources.assessments;
   const conclusions = sources.conclusions;
   const safeConclusion = (row) => ({ id: row.id, period_start: row.period_start, period_end: row.period_end, information_status: row.details?.information_status, conclusion_text: row.details?.conclusion_text, support_or_conditions: row.details?.support_or_conditions ?? [], next_steps: row.details?.next_steps ?? [], teacher_confirmed_at: row.teacher_confirmed_at });
@@ -111,7 +117,7 @@ export async function buildStudentPedagogicalContext(db, studentId) {
       ...confirmedDiagnosticReviews.map((item) => ({ source_type: "diagnostic_initial", source_id: item.id, source_version: item.version, confirmed_at: item.teacher_confirmed_at })),
       ...(confirmedStudentReview ? [{ source_type: "diagnostic_student_review", source_id: confirmedStudentReview.id,
         source_version: confirmedStudentReview.version, confirmed_at: confirmedStudentReview.teacher_confirmed_at }] : []),
-      ...recentEvidence.map((item) => ({ source_type: "formative_evidence", source_id: item.id, observed_at: item.observed_at })),
+      ...recentEvidence.map((item) => ({ source_type: item.source_type ?? "formative_evidence", source_id: item.id, observed_at: item.observed_at })),
       ...assessments.map((item) => ({ source_type: "formative_assessment", source_id: item.id, confirmed_at: item.teacher_confirmed_at })),
       ...conclusions.map((item) => ({ source_type: "descriptive_conclusion", source_id: item.id, confirmed_at: item.teacher_confirmed_at })),
     ],
@@ -149,11 +155,11 @@ export async function buildStudentPedagogicalContext(db, studentId) {
         not_yet_demonstrated: competency.not_yet_demonstrated,
         insufficient_information: competency.insufficient_information,
       },
-      recent_evidence: recentEvidence.filter((evidence) => evidence.competency_key === competency.competency_key),
+      recent_evidence: recentEvidence.filter((evidence) => evidence.competency_key === competency.competency_key || evidence.competency_ids?.includes(competency.competency_v4_id)),
       teacher_confirmed_assessment: competency.competency_v4_id ? (()=>{const assessment=assessments.find(item=>item.competency_v4_id===competency.competency_v4_id);return assessment?{id:assessment.id,period_start:assessment.period_start,period_end:assessment.period_end,information_status:assessment.details?.information_status,evidence_overview:assessment.details?.evidence_overview,strengths_and_advances:assessment.details?.strengths_and_advances??[],support_needs:assessment.details?.support_needs??[],next_opportunities:assessment.details?.next_opportunities??[],teacher_confirmed_at:assessment.teacher_confirmed_at}:null})() : null,
       teacher_confirmed_conclusion: competency.competency_v4_id ? (() => { const conclusion = conclusions.find((item) => item.competency_v4_id === competency.competency_v4_id); return conclusion ? safeConclusion(conclusion) : null; })() : null,
     })),
-    recent_relevant_observations: recentEvidence.map((evidence) => ({ ...evidence, competency_text: evidence.competency_v4_id ? v4Names.get(evidence.competency_v4_id) ?? evidence.competency_v4_id : undefined })),
+    recent_relevant_observations: recentEvidence.map((evidence) => ({ ...evidence, competency_text: evidence.competency_v4_id ? v4Names.get(evidence.competency_v4_id) ?? evidence.competency_v4_id : evidence.competency_text })),
     confirmed_period_assessments: assessments.map((assessment)=>({id:assessment.id,competency_v4_id:assessment.competency_v4_id,period_start:assessment.period_start,period_end:assessment.period_end,information_status:assessment.details?.information_status,evidence_overview:assessment.details?.evidence_overview,strengths_and_advances:assessment.details?.strengths_and_advances??[],support_needs:assessment.details?.support_needs??[],next_opportunities:assessment.details?.next_opportunities??[],teacher_confirmed_at:assessment.teacher_confirmed_at})),
     confirmed_period_conclusions: conclusions.map((row) => ({ competency_v4_id: row.competency_v4_id, ...safeConclusion(row) })),
   };
@@ -168,7 +174,7 @@ async function refreshSnapshotWithin(db, studentId) {
   const context = await buildStudentPedagogicalContext(db, studentId);
   if (!context) return null;
   const sourceUpdatedAt = resolveSourceUpdatedAt(
-    context.recent_relevant_observations.map((item) => item.observed_at),
+    context.recent_relevant_observations.flatMap((item) => [item.observed_at,item.updated_at]),
     context.diagnosis.map((item) => item.updated_at),
     context.diagnostic_observations.map((item) => item.observed_at),
     context.family_interview_context?.teacher_confirmed_at,

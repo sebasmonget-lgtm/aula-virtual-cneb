@@ -1634,3 +1634,8 @@ Autorización expresa para la cuenta docente Marcelo, contrastada con captura de
 ### Cierre de publicación del reloj restringido · 2026-10-22
 
 Producción sirve 0210191 / dpl_FauD214LpJNRYEgt3Gav8LkTzxf1, con Ctrl + Alt + L oculto al cargar y permitido solo a Marcelo. Candidata final 53+25 y producción 56+25 comprobaciones PASS; typecheck/lint/build y 12 regresiones PASS. Otra docente comprobada en navegador no muestra panel con el atajo. Huellas de fuentes y tres Word por destino conservados; QA, variables globales y protecciones sin cambios. El fallo del control auxiliar no bloquea el aula. Sin migraciones ni nuevas generaciones IA. Recibo, límites y rollback en QA_RELOJ_OCULTO_PRODUCCION_2026-10-22.md. Sustituye el estado anterior de reloj totalmente desactivado en producción: ahora existe un permiso único de pruebas.
+
+
+### 2026-10-22 — Resolver el informe externo sin más trámites docentes
+
+El perfil debe mostrar la observación cotidiana aunque no tenga una competencia vinculada; atribución y valoración docente permanecen separadas. Si falla la redacción adicional del informe familiar, ofrecer para revisión el texto confirmado conservado, identificando ese origen y sin inventar recomendaciones. La confirmación final y los guardas de fuentes/período siguen vigentes. Distinguir contexto inicial y fuentes de una versión del plan sin alterar decisiones históricas. Avisos de vigencia y día no lectivo son informativos, sin confirmaciones nuevas. No relajar obligaciones curriculares ni cambiar la navegación de preparación del año basándose en riesgos no demostrados. Implementación y límites: QA_INFORME_EXTERNO_CORRECCIONES_2026-10-22.md. No publicar como parte implícita de esta corrección.

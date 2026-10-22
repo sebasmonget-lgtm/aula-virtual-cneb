@@ -14,6 +14,9 @@ import { createPeriodEvaluationRouteHandler } from "../../scripts/period-evaluat
 import { createFamilyReportRouteHandler } from "../../scripts/family-report-routes.mjs";
 import { loadPlanningFeedback } from "./planning-feedback.mjs";
 import { listSavedDocuments, loadSavedDocument } from "./document-library-service.mjs";
+import { buildStudentPedagogicalContext, refreshStudentContextSnapshot } from './student-context-service.mjs';
+import { saveOrdinaryObservation, reviseOrdinaryObservation } from './ordinary-observation-service.mjs';
+import { confirmOrdinaryAttribution } from './ordinary-attribution-service.mjs';
 
 const teacherA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const teacherB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -25,6 +28,28 @@ async function database() {
     await db.exec(await readFile(new URL(file, migrations), "utf8"));
   return db;
 }
+
+test('perfil real conserva observaciones libres, correcciones y atribuciones sin mezclarlas con diagnóstico ni inventar notas',async()=>{
+ const db=await database();try{
+  const classroom=await createPilotClassroom(db,teacherA,{teacherName:'Docente QA',institutionName:'Jardín QA',section:'Prueba',age:4,year:2026,startsOn:'2026-03-01',endsOn:'2026-12-18'});
+  const student=randomUUID(),other=randomUUID();
+  await db.query("insert into students(id,classroom_id,first_name,last_name,status) values($1,$3,'Niño','Prueba','active'),($2,$3,'Otra','Prueba','active')",[student,other,classroom.classroomId]);
+  const first=(await saveOrdinaryObservation(db,teacherA,{studentId:student,clientRequestId:randomUUID(),sourceKind:'spontaneous',rawText:'Contó una idea del juego.'})).observation;
+  const second=(await saveOrdinaryObservation(db,teacherA,{studentId:student,clientRequestId:randomUUID(),sourceKind:'spontaneous',rawText:'Se acercó a observar.'})).observation;
+  await reviseOrdinaryObservation(db,teacherA,first.id,{action:'correct',expectedRevision:1,correctedText:'Explicó por dónde podría pasar el grupo.',reason:'Precisar lo observado.'});
+  await confirmOrdinaryAttribution(db,teacherA,first.id,{expectedVersion:0,competencyIds:['COM_ORAL'],allowedIds:['COM_ORAL'],reason:'Revisión docente.'});
+  const before=await buildStudentPedagogicalContext(db,student);
+  assert.equal(before.recent_relevant_observations.length,2);
+  assert.equal(before.recent_relevant_observations.find(row=>row.id===first.id).observation_text,'Explicó por dónde podría pasar el grupo.');
+  assert.equal(before.competencies.length,1);assert.equal(before.competencies[0].evidence_count,1);
+  assert.equal(before.diagnostic_observations.length,0);assert.equal(before.confirmed_period_assessments.length,0);
+  assert.equal((await buildStudentPedagogicalContext(db,other)).recent_relevant_observations.length,0);
+  await refreshStudentContextSnapshot(db,student);
+  await reviseOrdinaryObservation(db,teacherA,second.id,{action:'void',expectedRevision:1,reason:'Registro anulado por la docente.'});
+  assert.equal((await buildStudentPedagogicalContext(db,student)).recent_relevant_observations.length,1);
+  assert.equal((await db.query('select raw_text from ordinary_observations where id=$1',[first.id])).rows[0].raw_text,'Contó una idea del juego.');
+ }finally{await db.close();}
+});
 
 test("recorrido integrado conserva versiones y aísla aulas, años y documentos", async () => {
   const db = await database();

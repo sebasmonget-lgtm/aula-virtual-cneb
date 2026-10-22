@@ -695,6 +695,33 @@ async function prepareBatch(f,kind,extra={}){const r=await f.call("POST","/api/p
 async function runBatch(f,job){for(let i=0;i<10&&job.status==="queued";i++){const r=await f.call("POST",`/api/period-evaluations/batches/${job.id}/run`,batchScope);assert.equal(r.status,200,JSON.stringify(r.body));job=r.body;}return job;}
 async function saveBatch(f,job){const r=await f.call("POST",`/api/period-evaluations/batches/${job.id}/save`,{...batchScope,expectedRevision:job.revision,items:job.items});assert.equal(r.status,200,JSON.stringify(r.body));return r.body;}
 
+test('un fallo de redacción familiar no bloquea el conjunto ni cambia notas o conclusiones confirmadas',async()=>{
+ let familyCalls=0;
+ const f=await fixture({batchProvider:async input=>{
+  if(input.workflow==='family_report'){familyCalls++;if(familyCalls===1)throw Error('Provider failure');return mockFamily(input);}
+  return mockConclusion();
+ }});try{
+  await confirmBatchGrades(f);
+  await saveBatch(f,await runBatch(f,await prepareBatch(f,'conclusions')));
+  const notes=(await f.db.query('select * from competency_assessments order by id')).rows;
+  const conclusions=(await f.db.query('select * from competency_descriptive_conclusions order by id')).rows;
+  const job=await runBatch(f,await prepareBatch(f,'family'));
+  assert.equal(job.status,'ready');assert.equal(job.completed,2);assert.equal(familyCalls,2);
+  assert.equal(job.items.filter(item=>item.uses_confirmed_conclusions).length,1);
+  const saved=await saveBatch(f,job);assert.equal(saved.status,'saved');
+  assert.equal((await f.db.query("select count(*)::int as n from family_reports where status='active'")).rows[0].n,2);
+  assert.deepEqual((await f.db.query('select * from competency_assessments order by id')).rows,notes);
+  assert.deepEqual((await f.db.query('select * from competency_descriptive_conclusions order by id')).rows,conclusions);
+  const catalog=await f.call('GET',`/api/period-evaluations/batches?classroomId=${classId}&periodId=${firstPeriod}&kind=family`);
+  assert.equal(catalog.body.job.items.length,2);assert.equal(familyCalls,2);
+  assert.equal(catalog.body.job.items.filter(item=>item.uses_confirmed_conclusions).length,1);
+  const fallback=job.items.find(item=>item.uses_confirmed_conclusions);
+  const editing=await f.call('POST','/api/period-evaluations/batches',{...batchScope,kind:'family',studentId:fallback.student_id,edit:true});
+  assert.equal(editing.status,202);assert.equal(editing.body.items.find(item=>item.student_id===fallback.student_id).uses_confirmed_conclusions,true);
+  assert.equal(familyCalls,2);
+ }finally{await f.db.close();}
+});
+
 test("lotes: checkpoint durable, reintento explícito y guardado idempotente",async()=>{
   let fail=true;const f=await fixture({batchProvider:async(input,n)=>{if(n===2&&fail){fail=false;throw Error("fixture interruption");}return mockConclusion();}});
   try{

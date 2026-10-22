@@ -275,8 +275,9 @@
     "source": "MINEDU · Crea, resuelve y aprende",
     "source_year": 2024,
     "fit": "Comparar cantidades en grupos usando conteo o correspondencia.",
-    "classroom_use": "Después de comparar las canastas del juego, elige una escena para comparar sus grupos. Se permite señalar, emparejar o contar; no se exige escribir números.",
-    "usage": "Material infantil complementario; conservar el original completo y su autoría"
+    "classroom_use": "Después del juego con canastas, presenta esta historia: hoy cada gallina del señor Cristóbal puso un huevo. Invita a dibujar en la cuadrícula un huevo por cada gallina y a explicar cómo sabe cuántos recogerá. Es una condición de esta historia, no una regla sobre todas las gallinas. No se exige dibujar perfecto ni escribir números.",
+    "usage": "Material infantil complementario; conservar el original completo y su autoría",
+    "child_prompt": "En esta historia, hoy cada gallina puso un huevo. Dibuja en la cuadrícula un huevo por cada gallina. ¿Cuántos huevos recogerá el señor Cristóbal?"
   },
   {
     "workshop_id": "taller-biblioteca-canastas-para-comparar",

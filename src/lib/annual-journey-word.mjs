@@ -7,6 +7,7 @@ import { Document, Paragraph, Packer, TextRun, Table, TableRow, TableCell, Width
 import { familyInterviewQuestionGroups } from "./family-interview-contract.mjs";
 import * as interview from "./family-interview-contract.mjs";
 import {competencyLabels} from './competency-labels.mjs';
+import { annualFollowupForSnapshot, currentAnnualObservationCount } from './annual-current-context.mjs';
 
 const sourceKinds = { observed: "Observación de aula", family_report: "Relato de la familia",
   teacher_context: "Contexto del aula", teacher_decision: "Decisión docente" };
@@ -50,9 +51,13 @@ export function annualJourneyDocumentSections(plan, names = new Map(), subjects 
   const facts = plan.classroom_snapshot.facts;
   const sources = new Map(facts.map((fact,index) => [fact.key,{ fact, number: index + 1 }]));
   const citedKeys=new Set([...plan.proposed_experiences.flatMap(row=>row.source_fact_keys),...plan.evidence_interpretations.flatMap(item=>item.fact_keys??[])]);
-  const sections = plan.experience_context ? [] : [{ title: "Ideas y decisiones docentes", lines: [plan.teacher_preferences].filter(Boolean) }];
+  const count = currentAnnualObservationCount(plan.classroom_snapshot);
+  const sections = [{ title: 'Información disponible en esta versión', lines: [count
+    ? `Esta versión incorpora ${count} ${count === 1 ? 'registro de observación' : 'registros de observación'}. Son actuaciones registradas; no representan por sí solas logros ni niveles confirmados.`
+    : 'Esta versión todavía no incorpora actuaciones observadas. Los relatos familiares y las decisiones docentes se conservan como contexto.'] }];
+  if (!plan.experience_context) sections.push({ title: "Ideas y decisiones docentes al preparar el año", lines: [plan.teacher_preferences].filter(Boolean) });
   if(plan.experience_context){
-    sections.push({title:"Contexto aprobado por la profesora",lines:plan.experience_context.context_items.map(item=>item.text)});
+    sections.push({title:"Contexto inicial de planificación aprobado por la profesora",lines:plan.experience_context.context_items.map(item=>item.text)});
     sections.push({title:"Proyectos anteriores declarados",lines:plan.experience_context.historical_projects.length ? plan.experience_context.historical_projects.map(item=>`${item.title} · ${item.period?`Bimestre ${item.period}`:"Período no precisado"} · ${item.competency_ids.length?item.competency_ids.map(id=>names.get(id)??id).join("; "):"Competencias no declaradas"}. Declaración docente; no representa evidencias ni evaluaciones.`) : ["No se declararon proyectos anteriores."]});
     if(plan.resolved_calendar.planning_scope!=="full_year")sections.push({title:"Pasado sin registro en Ayni",lines:plan.resolved_calendar.projects.filter(slot=>slot.occupancy==="past_unrecorded").map(slot=>`Tramo ${slot.index}: ${slot.starts_on} al ${slot.ends_on}. No se generó trabajo retrospectivo.`)});
     sections.push({title:"Preparación desde el inicio en Ayni",lines:[plan.resolved_calendar.planning_scope==="full_year"?`El plan anual incluye quince propuestas. Las de fechas pasadas son solo para consulta; no acreditan trabajo realizado. Las actividades se preparan únicamente desde ${plan.experience_context.starts_on}.`:`Se preparan únicamente fechas desde ${plan.experience_context.starts_on}. El primer tramo puede tener menos días disponibles.`, ...(plan.future_coverage_gaps ?? []).map(id=>`${names.get(id)??id}: sin oportunidad futura prevista; no implica nivel ni ausencia de trabajo anterior.`)]});
@@ -60,7 +65,7 @@ export function annualJourneyDocumentSections(plan, names = new Map(), subjects 
   const general = { organization_criteria: "Organización del año", transversal_approaches: "Enfoques transversales",
     teaching_strategies: "Acompañamiento", assessment_followup: "Observación y seguimiento",
     family_collaboration: "Familias y comunidad", inclusive_supports: "Apoyos para participar" };
-  for (const [key, title] of Object.entries(general)) sections.push({ title, lines: plan[key] });
+  for (const [key, title] of Object.entries(general)) sections.push({ title, lines: key === 'assessment_followup' ? annualFollowupForSnapshot(plan[key], plan.classroom_snapshot) : plan[key] });
   const stage = plan.resolved_calendar.initial_stage;
   sections.push({ title: stage.name, lines: [...(plan.experience_context?.starts_on>stage.ends_on ? ["Período pasado: esta previsión no acredita ejecución ni diagnóstico registrado."]:[]),stage.purpose, `${stage.starts_on} al ${stage.ends_on}`,
     ...stage.suggested_experiences, ...stage.what_to_observe, ...(stage.family_actions ?? []), ...(stage.diagnostic_focus ?? []),

@@ -53,6 +53,7 @@ export function buildBriefAssessmentContext(input,kb){
       'No sugieras ni asignes notas, letras o niveles de logro, tampoco de forma implícita con etiquetas de calificación. La valoración corresponde exclusivamente a la profesora.',
       'Si los registros no describen actuaciones pertinentes del niño, information_status=insufficient y explica qué falta observar. La ausencia de evidencia no prueba una dificultad.',
       'No inventes dificultades por aspectos que no se observaron. No declares insuficiencia solo porque falta registrar algún desempeño. El apoyo previsto en el propio desempeño no implica una dificultad.',
+      'Conserva las preguntas e intervenciones adultas descritas. Distingue una pregunta abierta para observar de un modelo o ayuda para resolver. Si existe una intervención, no escribas que no consta apoyo sin explicar esta distinción.',
       'Distingue apoyo registrado de apoyo desconocido: si las notas no lo mencionan, no afirmes que actuó solo o que no necesitó ayuda.',
       'La cantidad de días o registros no determina la suficiencia. No impongas mínimos numéricos inventados; importa qué actuaciones permiten sustentar los registros.',
       'Si no hay desempeños específicos para la edad, no copies los de otra edad: indica esa limitación del referente sin convertirla en una dificultad del niño.',
