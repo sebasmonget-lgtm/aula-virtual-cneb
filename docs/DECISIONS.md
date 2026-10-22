@@ -1624,3 +1624,8 @@ No presentar main, un fixture local o un deployment READY como prueba de que el 
 ### Publicación autorizada en el enlace de profesoras · 2026-10-22
 
 La usuaria solicita producción en el mismo enlace compartible. Publicar el commit limpio auditado primero como candidata con configuración de producción y después promoverlo al alias público tras smoke; no sustituir esta evidencia por un push. Ejecutado para f3e61ad: candidata 53 y producción 56 comprobaciones PASS, QA intacto. Preservar datos y configuración, mantener reloj QA apagado y conservar deployment previo para rollback. Commits posteriores solo documentales requieren comparación explícita de rutas de aplicación. Recibo QA_PUBLICACION_PILOTO_2026-10-22.md.
+
+
+### Reloj oculto y restringido para QA en producción · 2026-10-22
+
+Autorización expresa para la cuenta docente Marcelo, contrastada con captura de administración. Ctrl + Alt + L muestra/oculta; panel oculto al cargar. Producción requiere opt-in e identificador único en servidor, separados de Preview: el atajo no concede acceso. Sin cookie se mantiene tiempo real; Restablecer reloj la elimina. Otras docentes no pueden activarlo aunque conozcan el atajo o copien cookie. Se conservan fuentes y fechas previas; la simulación posterior escribe fechas de prueba solo en esa cuenta. 12 pruebas, tipos/lint/build y UI real con API sintética PASS. Sin migraciones ni contraseñas nuevas. Publicación candidata/alias aún pendiente al escribir; recibo y rollback en QA_RELOJ_OCULTO_PRODUCCION_2026-10-22.md.

@@ -27,7 +27,7 @@ import { teacherTodayActions } from "../src/lib/teacher-today-actions.mjs";
 import { readQADailyClock } from "../src/lib/qa-daily-clock.mjs";
 const localQaDailyClock = readQADailyClock();
 import { currentPedagogicalClock, pedagogicalNow, simulatedObservationInstant, withPedagogicalClock } from "../src/lib/pedagogical-clock.mjs";
-import { readPreviewQAClock, previewQAClockCookie, previewQAClockForJob, validateQAClock } from "../src/lib/preview-qa-clock.mjs";
+import { readPreviewQAClock, previewQAClockAllowed, previewQAClockCookie, previewQAClockForJob, resetPreviewQAClockCookie, realQAClock, validateQAClock } from "../src/lib/preview-qa-clock.mjs";
 import {activityMaterials} from "../src/lib/activity-materials.mjs";
 import { activityMomentCount,assertActivityMomentAction,normalizeStepIndex } from "../src/lib/activity-runner.mjs";
 import { refreshStudentContextSnapshot } from "../src/lib/student-context-service.mjs";
@@ -3281,9 +3281,14 @@ export async function handleApiRequest(request, response) {
     if (!origin || !allowedOrigins.has(origin)) {send(response,403,{error:"Origen requerido."},origin);return;}
   }
   if (url.pathname === "/api/qa/clock") {
-    if (!previewClock) { send(response, 404, { error: "Reloj QA no disponible." }, origin); return; }
+    if (!previewQAClockAllowed(context.teacherId, context.role)) { send(response, 404, { error: "Reloj QA no disponible." }, origin); return; }
     if (request.method === "GET") {
-      send(response, 200, previewClock, origin, { "cache-control": "private, no-store" }); return;
+      send(response, 200, previewClock ?? { ...realQAClock(), active: false }, origin, { "cache-control": "private, no-store" }); return;
+    }
+    if (request.method === "DELETE") {
+      if (!origin || !allowedOrigins.has(origin)) { send(response, 403, { error: "Origen requerido para restablecer el reloj QA." }, origin); return; }
+      send(response, 200, { reset: true }, origin, { "cache-control": "private, no-store",
+        "set-cookie": [...(context.sessionCookies ?? []), resetPreviewQAClockCookie(context)] }); return;
     }
     if (request.method === "PUT") {
       if (!origin || !allowedOrigins.has(origin)) { send(response, 403, { error: "Origen requerido para cambiar el reloj QA." }, origin); return; }

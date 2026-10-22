@@ -7,8 +7,7 @@ import { displayDate, setQADisplayClock } from "@/src/lib/display-date";
 import { canLeaveWorkspace } from "@/src/lib/workspace-location";
 import { QASetupPerformance } from "./qa-setup-performance";
 
-type Clock = { date: string; time: string };
-const clockVisibilityKey = "ayni:qa-clock-hidden";
+type Clock = { date: string; time: string; active?: boolean };
 
 export function QAClockControl({ children }: { children: ReactNode }) {
   const [clock, setClock] = useState<Clock | null>(null);
@@ -18,18 +17,12 @@ export function QAClockControl({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(0);
-  const [hidden, setHidden] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (hidden === null) return;
-    try { window.sessionStorage.setItem(clockVisibilityKey, hidden ? "1" : "0"); }
-    catch { /* The shortcut still works when browser storage is unavailable. */ }
-  }, [hidden]);
+  const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
     if (!clock) return;
     function toggleClock(event: KeyboardEvent) {
-      if (event.code !== "KeyQ" || !event.ctrlKey || !event.altKey || event.metaKey || event.shiftKey
+      if (event.code !== "KeyL" || !event.ctrlKey || !event.altKey || event.metaKey || event.shiftKey
         || event.repeat || event.isComposing || event.getModifierState("AltGraph")) return;
       event.preventDefault();
       setHidden(value => !value);
@@ -47,9 +40,7 @@ export function QAClockControl({ children }: { children: ReactNode }) {
         if (!response.ok) throw new Error();
         const value = await response.json() as Clock;
         if (controller.signal.aborted) return;
-        try { setHidden(window.sessionStorage.getItem(clockVisibilityKey) === "1"); }
-        catch { setHidden(false); }
-        setQADisplayClock(value); setClock(value); setDate(value.date); setTime(value.time); setReady(true);
+        setQADisplayClock(value.active === false ? null : value); setClock(value); setDate(value.date); setTime(value.time); setReady(true);
       })
       .catch(() => { if (!controller.signal.aborted) setError("No pudimos comprobar el reloj QA. Reintenta antes de continuar."); });
     return () => { controller.abort(); setQADisplayClock(null); };
@@ -69,7 +60,17 @@ export function QAClockControl({ children }: { children: ReactNode }) {
     } catch { setError("No pudimos confirmar el cambio. Recarga para comprobar la fecha activa."); setBusy(false); }
   }
 
-  if (!ready && !error && hidden !== false) return null;
+  async function resetClock() {
+    if (busy || !canLeaveWorkspace()) return;
+    setBusy(true); setError("");
+    try {
+      const response = await apiFetch(`${localDatabaseApiUrl}/api/qa/clock`, { method: "DELETE" });
+      if (!response.ok) throw new Error();
+      window.location.reload();
+    } catch { setError("No pudimos restablecer el reloj. Reintenta."); setBusy(false); }
+  }
+
+  if (!ready && !error) return <>{children}</>;
 
   if (!ready) return <div className="border-b border-amber-300 bg-amber-50 px-5 py-4 text-sm text-amber-950" role={error ? "alert" : "status"}>
     {error || "Comprobando el reloj QA…"}
@@ -77,10 +78,10 @@ export function QAClockControl({ children }: { children: ReactNode }) {
   </div>;
 
   return <>
-    {clock && hidden === false && <aside aria-label="Reloj de pruebas QA" aria-keyshortcuts="Control+Alt+Q" className="border-b border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 sm:px-5">
+    {clock && !hidden && <aside aria-label="Reloj de pruebas QA" aria-keyshortcuts="Control+Alt+L" className="border-b border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 sm:px-5">
       <div className="flex flex-wrap items-center justify-between gap-x-4">
-        <p role="status" className="font-semibold">QA · {displayDate(clock.date)} · {clock.time} · Lima</p>
-        <button type="button" onClick={() => setHidden(true)} title="Volver a mostrar: Ctrl + Alt + Q" className="min-h-11 rounded-lg px-3 text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2">Ocultar · Ctrl + Alt + Q</button>
+        <p role="status" className="font-semibold">QA · {clock.active === false ? "Fecha real · " : "Fecha simulada · "}{displayDate(clock.date)} · {clock.time} · Lima</p>
+        <button type="button" onClick={() => setHidden(true)} title="Volver a mostrar: Ctrl + Alt + L" className="min-h-11 rounded-lg px-3 text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2">Ocultar · Ctrl + Alt + L</button>
       </div>
       <details className="mt-1">
         <summary className="min-h-11 cursor-pointer py-3 font-medium underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2">Cambiar fecha y hora de pruebas</summary>
@@ -92,8 +93,9 @@ export function QAClockControl({ children }: { children: ReactNode }) {
             <input id="qa-clock-time" type="time" required disabled={busy} value={time} onChange={event => setTime(event.target.value)} className="min-h-11 rounded-lg border border-amber-700 bg-white px-3 text-base outline-offset-2" />
           </label>
           <button type="submit" disabled={busy || (date === clock.date && time === clock.time)} className="min-h-11 rounded-lg bg-amber-950 px-4 font-semibold text-white hover:bg-amber-900 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50">{busy ? "Aplicando…" : "Aplicar reloj QA"}</button>
+          <button type="button" disabled={busy || clock.active === false} onClick={() => void resetClock()} className="min-h-11 rounded-lg border border-amber-700 bg-white px-4 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50">Restablecer reloj</button>
         </form>
-        <p>Solo esta cuenta QA en esta Preview. Los registros guardados conservan sus fechas.</p>
+        <p>Solo esta cuenta de pruebas. Ocultar el panel conserva la fecha aplicada. Restablecer vuelve a la fecha real en producción. Los registros guardados conservan sus fechas.</p>
         {error && <p role="alert" className="mt-2">{error}</p>}
       </details>
       {process.env.NEXT_PUBLIC_AYNI_QA_SETUP_BENCHMARK === "1" && <QASetupPerformance />}

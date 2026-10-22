@@ -2422,3 +2422,8 @@ Síntoma: la usuaria ve accesos antiguos de Hoy en el enlace público recibido, 
 ## 2026-10-22 — Cierre del desfase del piloto público
 
 Después de la autorización expresa de publicación, el alias project-0w0pq.vercel.app fue promovido desde dpl_B4ccwivp6ZtpbsiGKLYwPm767fAk / 58b7642 a dpl_GwkzJBptxKv24SM2cRaNjhj3MRTY / f3e61ad, código de aplicación equivalente a 34ceb4b. Candidata 53 y dominio público 56 comprobaciones PASS; navegador recargado confirma identidad Observación libre, ausencia de acceso redundante y talleres al final. Una pestaña abierta conservaba el JavaScript anterior hasta recargar. Datos de prueba comprobados por API conservados, QA y seguridad/variables del proyecto sin cambios. Prevención: distinguir push, deployment y código servido; contrastar alias antes de compartir y avisar de recarga a quienes ya tengan la página abierta. Límites de conservación y rollback en QA_PUBLICACION_PILOTO_2026-10-22.md.
+
+
+### Reloj oculto y restringido para QA en producción · 2026-10-22
+
+Autorización expresa para la cuenta docente Marcelo, contrastada con captura de administración. Ctrl + Alt + L muestra/oculta; panel oculto al cargar. Producción requiere opt-in e identificador único en servidor, separados de Preview: el atajo no concede acceso. Sin cookie se mantiene tiempo real; Restablecer reloj la elimina. Otras docentes no pueden activarlo aunque conozcan el atajo o copien cookie. Se conservan fuentes y fechas previas; la simulación posterior escribe fechas de prueba solo en esa cuenta. 12 pruebas, tipos/lint/build y UI real con API sintética PASS. Sin migraciones ni contraseñas nuevas. Publicación candidata/alias aún pendiente al escribir; recibo y rollback en QA_RELOJ_OCULTO_PRODUCCION_2026-10-22.md.

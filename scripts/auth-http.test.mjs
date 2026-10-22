@@ -53,6 +53,42 @@ async function stopAyni(child) {
   });
 }
 
+test("Production clock stays real until applied, resets, and denies a second teacher even with a copied cookie", { timeout: 90000 }, async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), "ayni-production-clock-"));
+  let instance;
+  try {
+    const port = await freePort(), origin = `http://127.0.0.1:${port}`;
+    const config = { NODE_ENV: "test", AYNI_DB_MODE: "local", AYNI_AUTH_MODE: "local", AYNI_LOCAL_TEACHER_ID: teacherA,
+      AYNI_ALLOWED_ORIGIN: origin, VERCEL_ENV: "production", AYNI_QA_PRODUCTION_CLOCK: "1",
+      AYNI_QA_PRODUCTION_TEACHER_ID: teacherA, AYNI_SESSION_SIGNING_KEY: sessionSigningKey };
+    instance = await startAyni(port, path.join(temp, "pgdata"), config);
+    const initial = await fetch(`${instance.base}/api/qa/clock`);
+    assert.equal(initial.status, 200);
+    assert.equal((await initial.json()).active, false);
+    const options = { method: "PUT", headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ date: "2026-03-16", time: "09:15" }) };
+    assert.equal((await fetch(`${instance.base}/api/qa/clock`, { ...options, headers: {} })).status, 403);
+    const changed = await fetch(`${instance.base}/api/qa/clock`, options);
+    assert.equal(changed.status, 200);
+    const cookie = changed.headers.getSetCookie().find(value => value.startsWith("__Host-ayni_qa_clock=")).split(";")[0];
+    assert.deepEqual(await (await fetch(`${instance.base}/api/qa/clock`, { headers: { cookie } })).json(), { date: "2026-03-16", time: "09:15" });
+    assert.equal((await fetch(`${instance.base}/api/qa/clock`, { method: "DELETE" })).status, 403);
+    const reset = await fetch(`${instance.base}/api/qa/clock`, { method: "DELETE", headers: { origin, cookie } });
+    assert.equal(reset.status, 200);
+    assert.match(reset.headers.getSetCookie().find(value => value.startsWith("__Host-ayni_qa_clock=")), /Max-Age=0/);
+    assert.equal((await (await fetch(`${instance.base}/api/qa/clock`)).json()).active, false);
+    assert.equal((await (await fetch(`${instance.base}/api/pilot/setup`)).json()).configured, false);
+    await stopAyni(instance.child);
+    instance = await startAyni(port, path.join(temp, "pgdata"), { ...config, AYNI_LOCAL_TEACHER_ID: teacherB });
+    for (const method of ["GET", "PUT", "DELETE"]) {
+      const response = await fetch(`${instance.base}/api/qa/clock`, { method, headers: { origin, cookie, "content-type": "application/json" }, ...(method === "PUT" ? { body: options.body } : {}) });
+      assert.equal(response.status, 404);
+    }
+  } finally {
+    if (instance) await stopAyni(instance.child);
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
 test("Preview QA clock works before onboarding, validates Origin, and reloads signed time without writing pedagogy", { timeout: 90000 }, async () => {
   const temp = await mkdtemp(path.join(tmpdir(), "ayni-qa-clock-"));
   let instance;

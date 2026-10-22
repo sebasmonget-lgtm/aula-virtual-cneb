@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { previewQAClockAllowed, readPreviewQAClock, previewQAClockCookie, previewQAClockForJob, validateQAClock } from "./preview-qa-clock.mjs";
+import { previewQAClockAllowed, readPreviewQAClock, previewQAClockCookie, previewQAClockForJob, resetPreviewQAClockCookie, realQAClock, validateQAClock } from "./preview-qa-clock.mjs";
 import { currentPedagogicalClock, pedagogicalNow, simulatedObservationInstant, withPedagogicalClock } from "./pedagogical-clock.mjs";
 import { limaToday } from "./activity-schedule-integrity.mjs";
 
@@ -76,4 +76,33 @@ test("durable preparation clock is honored only for the allowed teacher in Previ
   assert.deepEqual(previewQAClockForJob(job, env), job.payload.qa_clock);
   assert.equal(previewQAClockForJob(job, { ...env, VERCEL_ENV: "production" }), null);
   assert.equal(previewQAClockForJob({ ...job, teacher_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" }, env), null);
+});
+
+test("Production needs its own opt-in and exact teacher; absent or invalid cookie keeps real time", () => {
+  const production = { ...env, VERCEL_ENV: "production", AYNI_QA_PRODUCTION_CLOCK: "1", AYNI_QA_PRODUCTION_TEACHER_ID: teacherId };
+  assert.equal(previewQAClockAllowed(teacherId, "teacher", production), true);
+  for (const patch of [{ AYNI_QA_PRODUCTION_CLOCK: "0" }, { AYNI_QA_PRODUCTION_TEACHER_ID: "" },
+    { AYNI_QA_PRODUCTION_TEACHER_ID: "invalid" }, { AYNI_SESSION_SIGNING_KEY: "short" }, { VERCEL_ENV: "development" }])
+    assert.equal(previewQAClockAllowed(teacherId, "teacher", { ...production, ...patch }), false);
+  assert.equal(previewQAClockAllowed(teacherId, "admin", production), false);
+  const other = { teacherId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", role: "teacher" };
+  assert.equal(previewQAClockAllowed(other.teacherId, other.role, production), false);
+  assert.equal(readPreviewQAClock(request(""), context, production), null);
+  assert.equal(readPreviewQAClock(request("__Host-ayni_qa_clock=tampered"), context, production), null);
+  const clock = { date: "2026-03-16", time: "09:15" }, cookie = previewQAClockCookie(clock, context, production);
+  assert.deepEqual(readPreviewQAClock(request(cookie), context, production), clock);
+  assert.equal(readPreviewQAClock(request(cookie), other, production), null);
+  assert.deepEqual(previewQAClockForJob({ teacher_id: teacherId, payload: { qa_clock: clock } }, production), clock);
+  assert.equal(previewQAClockForJob({ teacher_id: other.teacherId, payload: { qa_clock: clock } }, production), null);
+  assert.equal(previewQAClockForJob({ teacher_id: teacherId, payload: {} }, production), null);
+  const reset = resetPreviewQAClockCookie(context, production);
+  assert.match(reset, /HttpOnly; Secure; SameSite=Lax; Max-Age=0$/);
+  assert.equal(readPreviewQAClock(request(reset), context, production), null);
+  assert.throws(() => resetPreviewQAClockCookie(other, production));
+  assert.throws(() => previewQAClockCookie(clock, other, production));
+});
+
+test("real time for an available inactive clock uses the Lima civil day without freezing a scope", () => {
+  assert.deepEqual(realQAClock(new Date("2026-10-23T04:59:00Z")), { date: "2026-10-22", time: "23:59" });
+  assert.deepEqual(realQAClock(new Date("2026-10-23T05:00:00Z")), { date: "2026-10-23", time: "00:00" });
 });
