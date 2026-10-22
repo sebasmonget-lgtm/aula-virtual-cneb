@@ -1615,3 +1615,7 @@ Etiquetas comunes: Prevista, Con observaciones, Sin registros; los históricos s
 ### Conclusiones después de las notas, dentro de Informe a familias · 2026-10-22
 
 Solicitud expresa: retirar el bloque de conclusiones de la revisión de notas y ofrecerlo al entrar a Informe a familias con las valoraciones pertinentes completas. Usar la comprobación del servidor y refrescarla al navegar; no inferir completitud solo del estado optimista de la última nota. Conservar lotes/textos y su consulta junto a los informes ya guardados. No generar automáticamente ni cambiar obligaciones curriculares. Implementado localmente, sin despliegue; pruebas y rollback en QA_CONCLUSIONES_EN_FAMILIAS_2026-10-22.md.
+
+### Verificación de versión antes de compartir el piloto · 2026-10-22
+
+No presentar main, un fixture local o un deployment READY como prueba de que el dominio público tiene la última revisión. Contrastar SHA y contenido de aplicación con el deployment efectivo del alias y su smoke. Los commits exclusivamente documentales pueden conservar el mismo código servido; dejar constancia de esa equivalencia. Subir a main y publicar son operaciones distintas: actualmente el proyecto Vercel no tiene integración Git. Mantener esa distinción en entregas y recibos. No desplegar como parte implícita de una auditoría de main. Ver QA_MAIN_Y_VERSIONES_PUBLICADAS_2026-10-22.md.
