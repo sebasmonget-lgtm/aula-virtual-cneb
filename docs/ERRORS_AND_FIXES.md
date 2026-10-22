@@ -1,5 +1,11 @@
 # Errores y soluciones
 
+## 2026-10-21 — Mirai devuelve Cloudflare 524 en una generación anual pesada
+
+Síntoma reproducido por solicitud expresa: un POST directo, gpt-6.1-sol high, quince proyectos y schema real con contexto inventado, termina a los 126,2 s en HTTP 524/HTML, sin ID ni resultado. El cliente permitía 300 s y no reintentó. Causa inmediata confirmada: espera agotada entre Cloudflare y el origen; la causa interna de lentitud de Mirai y los fallos históricos no se determinan con esta prueba. No es rechazo de un JSON de plan por Ayni porque no llegó contenido.
+
+Estado: no corregido en el proveedor. Se conserva la conexión original publicada y el recibo para soporte; ningún cambio a QA/producción. Streaming y otros formatos quedan sin probar. Prevención: comprobar una carga real antes de habilitar un gateway; distinguir HTML 5xx, tiempo de espera local y validación de contenido, y conservar un intento único con duración y respuesta saneada. Evidencia y fuente Cloudflare: docs/qa/QA_API_MIRAI_2026-10-20.md.
+
 ## 2026-10-20 — Gateway informa uso cero pese a descontar cuota
 
 Síntoma: Responses de Mirai devuelve JSON válido pero input/output/total cero; el panel muestra consumo. Causa: metadatos de uso del gateway no representan su cuota. Solución: conexión explícita solo para Sol/Astra, metadatos nulos cuando el total es cero y registro sin tarifa oficial. No interpretar cero como llamada gratuita. Pruebas cubren selección de credenciales, endpoint HTTPS fijado, conservación de Luna y uso desconocido; comprobación real con contenido sintético. No se declara autenticidad ni contabilidad equivalente a OpenAI. Rollback y publicación: docs/qa/QA_API_MIRAI_2026-10-20.md.

@@ -1,5 +1,11 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-21 — Publicación final solicitada para el piloto
+
+La usuaria autoriza expresamente guardar todos los cambios finales, incorporar la rama QA a main y publicar en Producción, verificando que no se use una versión antigua. Se pausa el video: el montaje de 7:55 fue rechazado por encuadres variables y saltos; la futura grabación debe mantener navegación continua y cortes solo en esperas. No presentarlo como tutorial aprobado.
+
+Preparación de release: origin/main es ancestro de la rama QA, con 142 commits pendientes antes de consolidar estas notas. Producción todavía conserva 9a092023; QA validado usa ee4bfb1 y la documentación posterior 8fbce83. Bases distintas: Producción eetdkmmspicboijcmnzv, QA lqrkhdjdxcejyamzrwoi. No copiar datos de demostración al piloto. Comprobación de esquema/configuración, staging, gates y promoción todavía pendientes al escribir esta entrada; resultado en docs/qa/QA_PUBLICACION_PILOTO_2026-10-21.md.
+
 ## 2026-10-21 — Recorrido desde cero cerrado y tutorial nuevo
 
 Diez niños, diez entrevistas y sesenta observaciones iniciales; dos proyectos con dieciocho actividades preparadas. Cuatro jornadas realizadas aportan evidencia y se añaden registros libres de cantidad. La cuenta termina con 59 observaciones cotidianas activas, 420 asistencias, treinta valoraciones y conclusiones confirmadas y diez informes familiares. Cierre real por UI, vigente al consultar, sin cambiar notas ni conclusiones. Excel cotejado texto por texto. Documentos y video en outputs/Ayni-desde-cero-2026-10-21; no confundir con los videos anteriores rechazados. Tutorial 7:55, ocho capítulos, PC principal y 17,23 s de navegador móvil; cursor suavizado en edición y voz IA declarados. Decodificación completa y subtítulos PASS.
