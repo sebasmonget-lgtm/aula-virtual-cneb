@@ -1,5 +1,13 @@
 # Memoria del proyecto Ayni Aula
 
+## 2026-10-21 — Tutorial horizontal y reloj ocultable en QA
+
+Por solicitud expresa se añade Ctrl + Alt + Q y un botón para ocultar/mostrar el reloj QA. Preferencia por pestaña conservada al recargar, sin cambiar la fecha pedagógica ni permisos. Commit abfc507 publicado exclusivamente en QA, deployment dpl_EbWGK1E3RkhMWMuwX7bvSSZEvVPW: 18 smoke checks, 66 huellas de fuentes conservadas y Producción intacta. Typecheck/lint/build Vinext y prueba funcional del componente correctos; lint mantiene la advertencia histórica. Comprobado también en el alias QA tras recargar.
+
+La usuaria autorizó borrar sin respaldo su cuenta descartable: 1149 filas propias y 17 archivos eliminados, otras cuentas/catálogos/Auth/RLS preservados. Recorrido nuevo con logo escolar genérico, diez niños, diez entrevistas y 61 observaciones iniciales; ejemplos libre y guiado por UI, repeticiones por API autorizada. Anual de quince propuestas confirmado, diagnóstico corregido/confirmado y primer proyecto con ocho actividades. Sombras sustituye la segunda propuesta, conservando la anterior. La cuenta final contiene 118 observaciones cotidianas, 420 asistencias, treinta valoraciones y conclusiones y diez informes familiares; bimestre cerrado y vigente al consultar el servidor.
+
+Entrega nueva en outputs/Ayni-video-horizontal-2026-10-21: video real de escritorio 15:55, ocho capítulos, 1920 × 1080 a 30 fps y encuadre fijo; cien subtítulos, voz femenina reutilizada, narración aparte y montaje reproducible con medios limpios. Veintidós Word y un Excel válidos, contenidos relevantes conservados y treinta valores cotejados. Decodificación completa sin errores, subtítulos/voz sin solapamientos y 75 muestras visuales revisadas. Costo pedagógico conocido USD 0,586032897 / 92 eventos; cero TTS nuevas, excluye costo histórico de voz y esta conversación. Un diálogo nativo tapó tomas: se descartaron y regrabaron consultando datos ya guardados. QA registra miniatura de foto, alcance del historial y biblioteca del diálogo pendientes; no se arreglaron durante el recorrido. Producción intacta. Ver docs/qa/QA_VIDEO_HORIZONTAL_2026-10-21.md y recibos privados .local/tutorial-horizontal-20261021. Las tomas descartadas y los videos históricos rechazados no son esta entrega.
+
 ## 2026-10-21 — Publicación final solicitada para el piloto
 
 La usuaria autoriza expresamente guardar todos los cambios finales, incorporar la rama QA a main y publicar en Producción, verificando que no se use una versión antigua. Se pausa el video: el montaje de 7:55 fue rechazado por encuadres variables y saltos; la futura grabación debe mantener navegación continua y cortes solo en esperas. No presentarlo como tutorial aprobado.
