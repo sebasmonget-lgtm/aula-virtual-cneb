@@ -36,3 +36,6 @@ Revisión: 1440×900 y 390×844, una ronda visual; prueba funcional adicional tr
 ## Decisión posterior sin ciclo manual · 2026-10-22
 
 Abrir/navegar deja de iniciar o completar. Observaciones disponibles en la guía cotidiana, posición solo de lectura conservada localmente, notas históricas legibles y talleres independientes al final de Hoy. Prevista/Con observaciones/Sin registros no confunden lectura con realización. Veredicto local listo; publicación QA autorizada y su recibo se documenta en QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md.
+
+
+Cierre: publicado solo en QA en 63ea015; segunda y última confirmación visual sobre el alias real en computadora/móvil y prueba de lectura/recarga/nota previa. Veredicto aprobado dentro del alcance solicitado. Sin raster nuevo; capturas de evidencia, no assets de producto.

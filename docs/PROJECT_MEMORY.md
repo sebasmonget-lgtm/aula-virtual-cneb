@@ -1332,3 +1332,8 @@ Aclaración de la usuaria: no debe exigirse empezar ni terminar una actividad. L
 ### 22 de octubre — Implementación sin ciclo manual
 
 La usuaria autoriza ajustar todas las dependencias y publicar solo en QA tras probar. La guía deja de escribir ejecución al abrir/avanzar; no hay iniciar/terminar y la lectura se conserva solo en el navegador. Observaciones/fechas previstas/históricos intactos. Hoy/Calendario/Mi año comparten señales de observaciones; talleres/revisión usan el mapa evaluativo común, sin contar una mera apertura antigua como realización. Notas anteriores visibles en guía/consulta; Word conserva sus fuentes. Cierres formales y confirmación docente de notas siguen. 153 regresiones PASS; typecheck/lint/build y UI local desktop/móvil. Publicación y huellas pendientes al escribir; recibo en QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md.
+
+
+### Cierre QA del flujo sin inicio/cierre · 22 de octubre
+
+63ea015 publicado solo en QA, deployment dpl_7wKLPEYG4DNVRqNAAXaqC8sZgWpv. 153 regresiones y 52 comprobaciones staging/alias PASS; controles visibles sin iniciar/terminar, lectura retomable y nota histórica comprobada. Primer staging refrescó dos tablas derivadas por un inicio ya existente; 64 fuentes intactas. Baseline final de 66 tablas conservado antes/después de publicar y del navegador: 118 observaciones, 30 valoraciones, 30 conclusiones, 10 informes y tres logs anteriores. Producción intacta, cero IA real. Detalles, límites y rollback: QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md.

@@ -40,3 +40,14 @@ Restaurar el alias QA a su deployment previo o revertir el commit de código. Si
 Primer Preview b40179d respondió todos los endpoints, pero la comparación detectó refresco de las dos tablas derivadas del mapa. Inspección de versiones 3→4: una entrada cambia solo actual_on y source_fingerprint; estado planned y cero evidencias intactos. La fuente es un log active de la actividad del 1 de abril que ya existía desde 2026-10-22T11:42:05Z, antes del baseline y del nuevo flujo. Las otras 64 tablas, incluidas observaciones, notas, conclusiones, informes y logs, son idénticas. Se conserva el historial de versiones; no se revierte ni se modifica ese log. Se guarda el primer baseline y se toma uno nuevo para comprobar estabilidad del staging definitivo.
 
 Se retiró además el display_status ready_to_close y el texto Por cerrar de la compatibilidad visual; el smoke definitivo consulta también a las 15:00 para comprobar que no se solicite cierre después del horario. No se promovió el primer Preview.
+
+
+## Publicación y verificación final: PASS
+
+Código 63ea0153727b9b0310ee87f049b5fa48ca12795f (incluye b40179d), Preview dpl_7wKLPEYG4DNVRqNAAXaqC8sZgWpv: https://ayni-aula-staging-1lkv36qhd-ayni4.vercel.app. Publicado solo en https://ayni-aula-qa-20261019.vercel.app. Checkout de publicación limpio y commit identificado. 26 comprobaciones staging y 26 del alias PASS, con autenticación, rechazos sin sesión, reloj a las 09:00 y 15:00, Hoy, Calendario, Mi año, talleres, evaluación, revisión futura, informes familiares y descargas Word/Excel válidas. Producción conserva el deployment del primer baseline.
+
+Después del refresco derivado descrito arriba, las 66 huellas del baseline final permanecen idénticas tanto tras staging y publicación como después del navegador. Permanecen 118 observaciones ordinarias vigentes, 30 valoraciones activas, 30 conclusiones, 10 informes y los tres logs anteriores: ningún inicio/cierre nuevo al recorrer las guías. No hubo IA real ni cambios de notas.
+
+Verificación visible sobre el alias real: apertura directa, libre/guiada disponibles sin iniciar (diálogos abiertos y cerrados sin guardar), navegación hasta momento 3 sin botón de terminar, regreso/recarga/reapertura conservando lectura y navegación a la actividad 1 con Nota guardada anteriormente visible. Capturas de computadora y móvil 390×844; veredicto: flujo publicado y comprobado, sin desbordamiento horizontal nuevo observado. QA queda abierto. Evidencia: outputs/hoy-simple-20261022/QA-guia-sin-inicio-cierre.png y QA-Hoy-movil.png.
+
+Límites: en QA se consultaron las observaciones/notas existentes y se probaron los diálogos sin añadir datos. Los guardados, anulación, idempotencia y protecciones nuevas se probaron en integración PGlite; no se hicieron fotos/audio ni pruebas en un teléfono físico. La ausencia de observaciones sigue siendo ausencia de constancia; no se interpreta como no realización.

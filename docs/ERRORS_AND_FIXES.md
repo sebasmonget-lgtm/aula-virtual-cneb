@@ -2404,3 +2404,8 @@ Síntoma comprobado por auditoría: el refinamiento local inicia al abrir y mant
 ## 2026-10-22 — Corrección del ciclo manual y sus proyecciones
 
 Solución validada localmente al hallazgo anterior: se separa posición de lectura en el navegador, se retiran controles/emisiones de ejecución y se habilita observación canónica sin inicio. Calendario/Mi año/Hoy comparten señales reales; talleres/revisión usan el mismo mapa y conservan completed histórico. Notas previas se exponen en consulta/guía; permisos y protecciones históricas permanecen. 153 pruebas PASS, incluida integración sin logs con observación/reprogramación/evaluación y conservación de texto y nota. El lint detectó un setState en efecto al restaurar lectura: reemplazado por useSyncExternalStore con snapshot SSR y fallback local. Prueba de rebase antigua fijada al reloj pedagógico de su escenario, sin relajar el bloqueo del pasado. Prevención: verificar que leer no cree ejecución y comparar proyecciones/datos antes de publicar. Recibo QA pendiente en QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md.
+
+
+### Cierre QA del flujo sin inicio/cierre · 22 de octubre
+
+63ea015 publicado solo en QA, deployment dpl_7wKLPEYG4DNVRqNAAXaqC8sZgWpv. 153 regresiones y 52 comprobaciones staging/alias PASS; controles visibles sin iniciar/terminar, lectura retomable y nota histórica comprobada. Primer staging refrescó dos tablas derivadas por un inicio ya existente; 64 fuentes intactas. Baseline final de 66 tablas conservado antes/después de publicar y del navegador: 118 observaciones, 30 valoraciones, 30 conclusiones, 10 informes y tres logs anteriores. Producción intacta, cero IA real. Detalles, límites y rollback: QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md.

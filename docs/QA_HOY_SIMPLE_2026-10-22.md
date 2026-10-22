@@ -26,3 +26,6 @@ Límite: la prueba UI usa harness aislado, no acredita guardado remoto ni un nue
 Capturas: outputs/hoy-simple-20261022/Hoy-computadora.png y Hoy-movil.png. Harness ignorado en .local/hoy-simple-20261022.
 
 Rollback: revertir los seis componentes cambiados, restaurar imports de los dos accesos retirados y retirar free-observation-button.tsx. Sin migraciones, cambios de RLS ni operaciones de datos. No se publicó en QA o producción.
+
+
+Actualización posterior: objetivo completo implementado y publicado solo en QA en 63ea015. Esta entrada conserva el estado histórico del análisis/prototipo; consultar QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md para el resultado vigente y sus comprobaciones.

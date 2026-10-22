@@ -1606,3 +1606,8 @@ La usuaria aclara que la intención es retirar el requisito cotidiano de empezar
 La autorización posterior implementa el objetivo completo y sustituye abrir+start: abrir/navegar es lectura, persistida solo en sessionStorage. No exigir inicio ni cierre de actividad, tampoco realizar/terminar automáticamente por fecha o navegación. Captura usa observaciones canónicas y conserva alumno, criterio, momento y fecha real sin cambiar la prevista. Los proyectos pasados conservan consulta. Talleres es una elección independiente en Hoy.
 
 Etiquetas comunes: Prevista, Con observaciones, Sin registros; los históricos se identifican y se conservan. Ausencia de registro no prueba no realización. Revisión/talleres cuentan la misma proyección del mapa (observación atribuida o completed histórico), sin usar active aislado como realización. No borrar APIs/logs antiguos, ni inferir competencias de notas libres. Las notas previas siguen consultables, y los cierres de período/año y notas docentes mantienen sus confirmaciones. QA únicamente tras commit limpio y smoke; rollback de alias/código sin migrar datos.
+
+
+### Cierre QA del flujo sin inicio/cierre · 22 de octubre
+
+63ea015 publicado solo en QA, deployment dpl_7wKLPEYG4DNVRqNAAXaqC8sZgWpv. 153 regresiones y 52 comprobaciones staging/alias PASS; controles visibles sin iniciar/terminar, lectura retomable y nota histórica comprobada. Primer staging refrescó dos tablas derivadas por un inicio ya existente; 64 fuentes intactas. Baseline final de 66 tablas conservado antes/después de publicar y del navegador: 118 observaciones, 30 valoraciones, 30 conclusiones, 10 informes y tres logs anteriores. Producción intacta, cero IA real. Detalles, límites y rollback: QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md.

@@ -51,3 +51,6 @@ Primera batería: 65 pruebas PASS en nueve archivos: activity-runner, activity-t
 Segunda batería: 56 pruebas PASS en project-slot-replacement, integrated-period-workflow y period-evaluation. Total: 121 pruebas PASS, cero fallos, más las ocho aserciones de reproducción. Incluye cambio de contexto trabajado sin nuevas observaciones, notas/conclusiones, informes, versiones, aislamiento y protección de reemplazos.
 
 Solo código/pruebas locales y bases PGlite aisladas; sin conexión de escritura a QA, sin IA real ni despliegue. No se repiten typecheck/lint/build porque esta revisión no modifica código fuente. Las verificaciones de la implementación visual anterior siguen documentadas en QA_HOY_SIMPLE_2026-10-22.md.
+
+
+Actualización posterior: objetivo completo implementado y publicado solo en QA en 63ea015. Esta entrada conserva el estado histórico del análisis/prototipo; consultar QA_ACTIVIDAD_SIN_CICLO_2026-10-22.md para el resultado vigente y sus comprobaciones.
