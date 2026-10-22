@@ -1,0 +1,7 @@
+# Recomendaciones familiares vinculadas al aprendizaje
+
+En nueve propuestas familiares preparadas en QA, tres sugerencias para identidad se centraban en emociones de personajes. Son conversaciones posibles, pero no acompañan de forma directa la emoción propia y la petición de apoyo descritas en las conclusiones. Se refuerza la instrucción general para todas las familias: conservar la actuación y el siguiente paso de la competencia al aprovechar un interés familiar; identidad requiere conectar con preferencias, emociones o decisiones propias, y convivencia con acuerdos que puedan ponerse en práctica. No se cambia el modelo, esquema, permisos, fuentes ni valoraciones.
+
+El décimo informe quedó pendiente tras dos respuestas rechazadas por validación. La clasificación durable es invalid_response; no conserva la causa concreta del rechazo y no permite atribuirlo a un campo determinado. Los nueve resultados recibidos siguen guardados como propuestas, sin confirmarse. La nueva ronda se registra por separado, dentro del límite de seis intentos por documento. No presentar la instrucción como garantía automática de exactitud.
+
+23 pruebas familiares PASS; typecheck PASS y lint sin errores con una advertencia histórica. Build y publicación QA, segunda ronda real y revisión de los Word se registrarán al terminar. Reversión: retirar únicamente la nueva frase de instrucciones, conservando propuestas, informes y conclusiones históricas. Producción queda fuera del alcance.
