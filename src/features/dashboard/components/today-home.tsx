@@ -97,7 +97,7 @@ export function TodayHome({ dashboard, refreshKey = 0, onCalendar, onConsultActi
   const canObserve = Boolean(featured?.activity_id && featured.criteria.length);
   const canObserveWithoutActivity = newAyniFeatureEnabled(process.env.NEXT_PUBLIC_AYNI_ORDINARY_OBSERVATIONS);
   const observe = () => canObserve && featured ? openEvidence(featured) : onObserveWithoutActivity();
-  const status = (block: Block) => block.status === "completed" ? "Listo" : block.id === current?.id ? "Ahora" : block.display_status === "ready_to_close" ? "Por cerrar" : "Después";
+  const status = (block: Block) => block.status === "completed" ? "Listo" : block.id === current?.id ? "Ahora" : "Disponible";
 
   async function openTodayActivity(block: Block) {
     if (openingId) return;

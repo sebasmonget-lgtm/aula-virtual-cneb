@@ -534,7 +534,7 @@ async function dashboard() {
   const journey = resolveDailyState({ now, scheduleEntries: rawBlocks, attendanceRecorded, calendarException });
   const blocks = rawBlocks.map((block) => ({
     ...block,
-    display_status: block.id === journey.currentBlock?.id ? "active" : block.status === "planned" && now >= block.end_time.slice(0, 5) ? "ready_to_close" : block.status,
+    display_status: block.status,
   }));
 
   return {

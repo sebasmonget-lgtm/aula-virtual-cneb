@@ -33,3 +33,10 @@ Autorizada únicamente en QA. Pendiente al crear este documento: commit, checkou
 ## Rollback
 
 Restaurar el alias QA a su deployment previo o revertir el commit de código. Sin migraciones ni conversión de históricos. La posición de lectura del navegador no equivale a ejecución y puede ignorarse al volver al lector anterior. Mantener archivos y registros existentes. No cambiar Producción.
+
+
+### Primer staging y corrección final
+
+Primer Preview b40179d respondió todos los endpoints, pero la comparación detectó refresco de las dos tablas derivadas del mapa. Inspección de versiones 3→4: una entrada cambia solo actual_on y source_fingerprint; estado planned y cero evidencias intactos. La fuente es un log active de la actividad del 1 de abril que ya existía desde 2026-10-22T11:42:05Z, antes del baseline y del nuevo flujo. Las otras 64 tablas, incluidas observaciones, notas, conclusiones, informes y logs, son idénticas. Se conserva el historial de versiones; no se revierte ni se modifica ese log. Se guarda el primer baseline y se toma uno nuevo para comprobar estabilidad del staging definitivo.
+
+Se retiró además el display_status ready_to_close y el texto Por cerrar de la compatibilidad visual; el smoke definitivo consulta también a las 15:00 para comprobar que no se solicite cierre después del horario. No se promovió el primer Preview.
