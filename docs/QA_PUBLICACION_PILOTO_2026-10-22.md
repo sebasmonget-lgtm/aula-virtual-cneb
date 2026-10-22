@@ -32,3 +32,8 @@ El proyecto Vercel continúa sin integración Git: un push a main no equivale a 
 ## Reversión
 
 Deployment anterior retenido: `dpl_B4ccwivp6ZtpbsiGKLYwPm767fAk`, commit `58b76428111090acde82066ba3f8164c45d1715e`. Ante una regresión comprobada, promover ese deployment de nuevo al mismo alias y repetir smoke. No restaurar datos: esta publicación no aplica migraciones ni transforma fuentes pedagógicas.
+
+
+## Actualización posterior del mismo día: reloj de una cuenta QA
+
+Esta publicación inicial fue sucedida a las 12:07 de Lima por dpl_FauD214LpJNRYEgt3Gav8LkTzxf1 / 0210191. Conserva las correcciones anteriores y añade únicamente reloj oculto Ctrl + Alt + L para Marcelo, con permiso de servidor. El reloj permanece inaccesible al resto de docentes. Producción 56 comprobaciones generales y 25 específicas PASS. Recibo actual: QA_RELOJ_OCULTO_PRODUCCION_2026-10-22.md.

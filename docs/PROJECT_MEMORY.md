@@ -1355,3 +1355,8 @@ Con autorización expresa posterior, el piloto https://project-0w0pq.vercel.app/
 ### Reloj oculto y restringido para QA en producción · 2026-10-22
 
 Autorización expresa para la cuenta docente Marcelo, contrastada con captura de administración. Ctrl + Alt + L muestra/oculta; panel oculto al cargar. Producción requiere opt-in e identificador único en servidor, separados de Preview: el atajo no concede acceso. Sin cookie se mantiene tiempo real; Restablecer reloj la elimina. Otras docentes no pueden activarlo aunque conozcan el atajo o copien cookie. Se conservan fuentes y fechas previas; la simulación posterior escribe fechas de prueba solo en esa cuenta. 12 pruebas, tipos/lint/build y UI real con API sintética PASS. Sin migraciones ni contraseñas nuevas. Publicación candidata/alias aún pendiente al escribir; recibo y rollback en QA_RELOJ_OCULTO_PRODUCCION_2026-10-22.md.
+
+
+### Cierre de publicación del reloj restringido · 2026-10-22
+
+Producción sirve 0210191 / dpl_FauD214LpJNRYEgt3Gav8LkTzxf1, con Ctrl + Alt + L oculto al cargar y permitido solo a Marcelo. Candidata final 53+25 y producción 56+25 comprobaciones PASS; typecheck/lint/build y 12 regresiones PASS. Otra docente comprobada en navegador no muestra panel con el atajo. Huellas de fuentes y tres Word por destino conservados; QA, variables globales y protecciones sin cambios. El fallo del control auxiliar no bloquea el aula. Sin migraciones ni nuevas generaciones IA. Recibo, límites y rollback en QA_RELOJ_OCULTO_PRODUCCION_2026-10-22.md. Sustituye el estado anterior de reloj totalmente desactivado en producción: ahora existe un permiso único de pruebas.
