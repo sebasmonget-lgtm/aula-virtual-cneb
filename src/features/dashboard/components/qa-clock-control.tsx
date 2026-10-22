@@ -16,7 +16,6 @@ export function QAClockControl({ children }: { children: ReactNode }) {
   const [time, setTime] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [retry, setRetry] = useState(0);
   const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
@@ -42,9 +41,9 @@ export function QAClockControl({ children }: { children: ReactNode }) {
         if (controller.signal.aborted) return;
         setQADisplayClock(value.active === false ? null : value); setClock(value); setDate(value.date); setTime(value.time); setReady(true);
       })
-      .catch(() => { if (!controller.signal.aborted) setError("No pudimos comprobar el reloj QA. Reintenta antes de continuar."); });
+      .catch(() => { if (!controller.signal.aborted) setReady(true); });
     return () => { controller.abort(); setQADisplayClock(null); };
-  }, [retry]);
+  }, []);
 
   async function apply(event: FormEvent) {
     event.preventDefault();
@@ -70,12 +69,7 @@ export function QAClockControl({ children }: { children: ReactNode }) {
     } catch { setError("No pudimos restablecer el reloj. Reintenta."); setBusy(false); }
   }
 
-  if (!ready && !error) return <>{children}</>;
-
-  if (!ready) return <div className="border-b border-amber-300 bg-amber-50 px-5 py-4 text-sm text-amber-950" role={error ? "alert" : "status"}>
-    {error || "Comprobando el reloj QA…"}
-    {error && <button type="button" onClick={() => { setError(""); setRetry(value => value + 1); }} className="ml-3 min-h-11 rounded-lg px-3 underline focus-visible:outline-2 focus-visible:outline-offset-2">Reintentar</button>}
-  </div>;
+  if (!ready) return <>{children}</>;
 
   return <>
     {clock && !hidden && <aside aria-label="Reloj de pruebas QA" aria-keyshortcuts="Control+Alt+L" className="border-b border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 sm:px-5">

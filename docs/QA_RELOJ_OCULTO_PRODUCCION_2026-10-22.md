@@ -24,3 +24,8 @@ Navegador con QAClockControl real y API sintética aislada: oculto inicial, ataj
 Publicar únicamente desde commit identificable y checkout limpio, primero candidata con configuración de producción y después alias público tras smoke. Repetir guardas de cuenta y verificar fechas/cookie y conservación de fuentes; no crear datos pedagógicos en Marcelo para probar el reloj. Recibos privados en `.local/clock-production-20261022/`. Al escribir este commit, la publicación sigue pendiente; agregar el recibo final después de comprobarla.
 
 Rollback: promover `dpl_GwkzJBptxKv24SM2cRaNjhj3MRTY` (revisión anterior del mismo día, sin reloj de producción). No requiere restauración de datos. Deshabilitar el opt-in o retirar la cuenta permitida hace que cookies anteriores sean ignoradas. Un nuevo despliegue necesita volver a especificar estas variables privadas si se mantiene esta capacidad; no basta el push Git.
+
+
+### Robustez de la consulta auxiliar
+
+La candidata inicial pasó 53 comprobaciones generales y 25 específicas del reloj. Antes de promover se endurece el cliente: un error de red/servidor al consultar el reloj no sustituye la pantalla de trabajo; se mantiene el reloj deshabilitado hasta recargar. Verificado en navegador con respuesta 500, conservando el contenido y sin panel. Se vuelve a compilar y publicar una candidata del commit final; el recibo inicial no acredita ese nuevo commit.
