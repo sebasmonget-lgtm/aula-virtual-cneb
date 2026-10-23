@@ -2442,3 +2442,8 @@ Síntomas reproducidos mediante lectura: 8/2 observaciones en registro y 0/0 en 
 ## 2026-10-22 — Etiquetas de documentos corregidas solo en la lista alternativa
 
 La inspección del piloto tras publicar 4162301 detecta que las carpetas aún muestran Confirmado para actividades preparadas. Causa: DocumentTree tiene su propia presentación, distinta de la lista de documents-screen. Se alinean etiquetas de preparado/confirmado y fecha prevista/guardado en el componente efectivo, conservando estados y datos canónicos. Verificación necesaria antes de cerrar la publicación: tipos/lint/build y carpeta real en navegador. Prevención: comprobar la variante activa del producto, además de las funciones compartidas o vistas alternativas.
+
+
+### 22 de octubre — Correcciones del informe publicadas y verificadas
+
+Con solicitud expresa de producción, el enlace https://project-0w0pq.vercel.app/ sirve 1946e799df0daf2ae6e1fb5d987755c185c387ee / dpl_42BheizR5zMcc6ap8yDqX9vi6bsQ. Incluye 4162301 y la etiqueta de DocumentTree corregida tras inspección visual. 164 pruebas locales; candidata final 137 y dominio público 140 comprobaciones PASS. Siete Word y una ficha PDF por destino comprobados; fuentes consultadas de las dos cuentas QA conservadas, cero registros pedagógicos o generaciones IA nuevos. Reloj restringido, QA, RLS, variables globales y protecciones intactos. Navegador público recargado muestra Fecha prevista y Preparado. No equivale a auditoría global ni nueva prueba anual pedagógica completa. Recibo, límites y rollback: QA_PUBLICACION_CORRECCIONES_2026-10-22.md. Las entradas anteriores de publicación pendiente quedan sustituidas por este cierre.

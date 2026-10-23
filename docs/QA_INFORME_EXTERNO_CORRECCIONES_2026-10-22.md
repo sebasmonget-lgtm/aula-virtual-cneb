@@ -60,3 +60,8 @@ Mantener pruebas que comparen el registro ordinario y el perfil, incluyendo nota
 Tras el push y la autorización de producción, 4162301 pasó 137 comprobaciones de candidata y 140 del dominio público. La inspección visual detectó que DocumentTree, la variante de carpetas activa, aún tenía etiquetas independientes de la lista alternativa. Se alinean en ese componente Preparado/Confirmado y Fecha prevista/Guardado el sin modificar fuentes ni añadir pasos. Este ajuste requiere una candidata nueva y verificación del alias antes de declarar cerrada la publicación. Los recibos finales de publicación se documentarán por separado.
 
 El ajuste de carpetas pasó typecheck, lint del componente, build Vinext y la prueba funcional de agrupación. En el navegador, el componente real muestra Fecha prevista y Preparado para proyecto y actividad. Sin cambios adicionales de flujos o datos; candidata final pendiente al crear este commit.
+
+
+## Cierre de publicación autorizado
+
+Publicado en el enlace de profesoras el 22 de octubre de 2026: aplicación 1946e79 / dpl_42BheizR5zMcc6ap8yDqX9vi6bsQ. Candidata final 137 y dominio público 140 comprobaciones PASS, además de 164 pruebas locales. Este cierre sustituye las notas anteriores de publicación pendiente. Versiones, conservación, límites y rollback en QA_PUBLICACION_CORRECCIONES_2026-10-22.md.
