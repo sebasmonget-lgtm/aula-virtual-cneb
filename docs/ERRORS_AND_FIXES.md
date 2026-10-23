@@ -2437,3 +2437,8 @@ Producción sirve 0210191 / dpl_FauD214LpJNRYEgt3Gav8LkTzxf1, con Ctrl + Alt + L
 ## 2026-10-22 — Perfil omite registros ordinarios e informes dependen de redacción adicional
 
 Síntomas reproducidos mediante lectura: 8/2 observaciones en registro y 0/0 en perfil; un lote familiar con dos resultados conservados y uno pendiente; seguimiento anual sin observaciones pese a snapshot con cuatro registros. Causas: proyección del perfil limitada a evidencias antiguas, redacción de IA como requisito para completar informes y afirmaciones iniciales no diferenciadas del contexto actualizado. Solución: integrar notas/correcciones y solo atribuciones vigentes, recuperación familiar validada desde conclusiones confirmadas, identificación de contexto inicial y sustitución acotada de ausencia global obsoleta. No modificar fuentes ni notas guardadas. Regresiones de integración comprueban anulación, aislamiento, guardado/recarga/edición y conservación de evaluaciones. Prevención y límites pedagógicos/documentales en QA_INFORME_EXTERNO_CORRECCIONES_2026-10-22.md. Código local, sin desplegar.
+
+
+## 2026-10-22 — Etiquetas de documentos corregidas solo en la lista alternativa
+
+La inspección del piloto tras publicar 4162301 detecta que las carpetas aún muestran Confirmado para actividades preparadas. Causa: DocumentTree tiene su propia presentación, distinta de la lista de documents-screen. Se alinean etiquetas de preparado/confirmado y fecha prevista/guardado en el componente efectivo, conservando estados y datos canónicos. Verificación necesaria antes de cerrar la publicación: tipos/lint/build y carpeta real en navegador. Prevención: comprobar la variante activa del producto, además de las funciones compartidas o vistas alternativas.

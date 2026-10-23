@@ -53,3 +53,10 @@ La corrección cambia presentación, lecturas derivadas, generación futura y ex
 ## Prevención
 
 Mantener pruebas que comparen el registro ordinario y el perfil, incluyendo notas sin clasificación y texto corregido; simular un proveedor familiar caído dentro de un lote; contrastar frases globales del plan con su snapshot sin borrar contexto histórico; verificar instrucciones de cada recurso infantil contra su guía docente y revisar una muestra renderizada tras cambiar paginación.
+
+
+## Ajuste encontrado durante la publicación autorizada
+
+Tras el push y la autorización de producción, 4162301 pasó 137 comprobaciones de candidata y 140 del dominio público. La inspección visual detectó que DocumentTree, la variante de carpetas activa, aún tenía etiquetas independientes de la lista alternativa. Se alinean en ese componente Preparado/Confirmado y Fecha prevista/Guardado el sin modificar fuentes ni añadir pasos. Este ajuste requiere una candidata nueva y verificación del alias antes de declarar cerrada la publicación. Los recibos finales de publicación se documentarán por separado.
+
+El ajuste de carpetas pasó typecheck, lint del componente, build Vinext y la prueba funcional de agrupación. En el navegador, el componente real muestra Fecha prevista y Preparado para proyecto y actividad. Sin cambios adicionales de flujos o datos; candidata final pendiente al crear este commit.
