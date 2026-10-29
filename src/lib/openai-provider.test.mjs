@@ -2,7 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { generateAIWorkflowV4 } from "./ai-generation-v4.mjs";
-import { OpenAIProvider, OpenAIProviderError } from "./openai-provider.mjs";
+import { OpenAIProvider, OpenAIProviderError,openAISchemaName } from "./openai-provider.mjs";
+import OpenAI from 'openai';
 
 const activityOutput = {
   title: "Sombras que cambian",
@@ -16,6 +17,12 @@ const activityOutput = {
   competency_status: "confirmed",
   competency_id: "COM_ORAL",
 };
+
+test('nombres largos de esquema respetan 64 caracteres y conservan distinción estable',()=>{
+ assert.equal(openAISchemaName('activity-v1'),'activity_v1');
+ const id='ayni-documents-project-and-first-activity-v20-protected-v30-keyed-v35';
+ const name=openAISchemaName(id);assert.equal(name.length,64);assert.match(name,/^[A-Za-z0-9_]+$/);assert.equal(openAISchemaName(id),name);assert.notEqual(openAISchemaName(id+'-otro'),name);
+});
 
 const activityInput = {
   workflow: "activity",
@@ -193,4 +200,38 @@ test("known exhausted balance is a terminal cause, including background response
    const provider=new OpenAIProvider({apiKey:'test-key',background,resumeResponseId:background?'resp_known_quota':null,client:{responses}});
    await assert.rejects(()=>generateAIWorkflowV4(activityInput,{provider,knowledgeBase:kb}),error=>error.reason==='insufficient_quota');
  }
+});
+
+test('streaming interno espera la respuesta final y mantiene esquema, privacidad y cero reintentos',async()=>{
+ const kb=await loadKnowledgeBaseV4();let streams=0,created=0;
+ const client={responses:{create:async()=>{created++;throw new Error('No debe generar otra respuesta.');},stream:(payload,options)=>{
+  streams++;assert.equal(payload.store,false);assert.equal(payload.text.format.strict,true);
+  assert.equal(options.maxRetries,0);assert.equal(options.timeout,600000);assert.ok(options.signal instanceof AbortSignal);
+  return {finalResponse:async()=>validResponse({status:'completed'})};
+ }}};
+ const provider=new OpenAIProvider({apiKey:'synthetic-key',client,store:false,streamResponse:true,timeoutMs:600000});
+ const result=await generateAIWorkflowV4(activityInput,{provider,knowledgeBase:kb});
+ assert.equal(result.output.title,activityOutput.title);assert.equal(streams,1);assert.equal(created,0);
+});
+
+test('un stream cortado o incompleto no se presenta como propuesta válida ni vuelve a generar',async()=>{
+ const kb=await loadKnowledgeBaseV4();let calls=0;
+ for(const [response,reason]of [[validResponse({status:'in_progress'}),'response_pending'],[validResponse({status:'incomplete'}),'response_incomplete'],[Object.assign(new Error('Private connection failure'),{code:'ETIMEDOUT'}),'timeout']]){
+  const provider=new OpenAIProvider({apiKey:'synthetic-key',store:false,streamResponse:true,client:{responses:{stream:()=>{calls++;return{finalResponse:async()=>{if(response instanceof Error)throw response;return response;}};}}}});
+  await assert.rejects(generateAIWorkflowV4(activityInput,{provider,knowledgeBase:kb}),error=>error.reason===reason);
+ }
+ assert.equal(calls,3,'Un intento por caso; no hay reintentos ni cambio a otra generación.');
+});
+
+test('el SDK instalado reconstruye una respuesta SSE completa antes de validar el JSON',async()=>{
+ let requests=0;
+ const full={...validResponse({status:'completed'}),object:'response',output:[{type:'message',id:'msg_synthetic',status:'completed',role:'assistant',content:[{type:'output_text',text:JSON.stringify(activityOutput),annotations:[]}]}]};
+ const events=[{type:'response.created',sequence_number:0,response:{...full,status:'in_progress',output:[],output_text:''}},{type:'response.completed',sequence_number:1,response:full}];
+ const client=new OpenAI({apiKey:'synthetic-key',maxRetries:0,fetch:async(_url,options)=>{
+  requests++;const body=JSON.parse(options.body);assert.equal(body.stream,true);assert.equal(body.store,false);
+  return new Response(events.map(event=>`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`).join(''),{headers:{'content-type':'text/event-stream'}});
+ }});
+ const provider=new OpenAIProvider({apiKey:'synthetic-key',client,store:false,streamResponse:true});
+ const result=await generateAIWorkflowV4(activityInput,{provider,knowledgeBase:await loadKnowledgeBaseV4()});
+ assert.equal(result.output.title,activityOutput.title);assert.equal(requests,1);
 });

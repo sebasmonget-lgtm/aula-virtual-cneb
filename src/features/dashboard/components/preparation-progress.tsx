@@ -16,7 +16,9 @@ async function request<T>(path:string,body?:unknown):Promise<T>{
   const result=await apiJson<T & {error?:string}>(response);if(!response.ok)throw Object.assign(new Error(result.error||"No pudimos recuperar el avance."),{status:response.status});return result;
 }
 const fields=[["purpose","Propósito"],["meaningful_situation","Situación significativa"],["teacher_preparation","Preparación docente"],["child_actions","Acciones de los niños"],["mediation","Mediación"],["evaluation_criterion","Criterio"],["expected_evidence","Evidencia esperada"],["evidence_opportunities","Oportunidades para observar"],["closure_or_continuity","Cierre o continuidad"]] as const;
-export function PreparationProgress({id,onProjectReady,onGoToday,names={}}:{id:string;onProjectReady?:(projectId:string)=>void;onGoToday?:()=>void;names?:Record<string,string>}){
+export function PreparationProgress({id,onProjectReady,onGoToday,names={},adapter}:{id:string;onProjectReady?:(projectId:string)=>void;onGoToday?:()=>void;names?:Record<string,string>;adapter?:{read:()=>Promise<PreparationJob>;retry:(acceptPotentialRepeat:boolean)=>Promise<PreparationJob>}}){
+  const adapterRef=useRef(adapter);
+  useEffect(()=>{adapterRef.current=adapter;},[adapter]);
   const [job,setJob]=useState<PreparationJob|null>(null),[activities,setActivities]=useState<ReviewActivity[]>([]),[reviewed,setReviewed]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState("");
   const [reconnecting,setReconnecting]=useState(false);
   const delivered=useRef(false),readyCallback=useRef(onProjectReady);
@@ -25,7 +27,7 @@ export function PreparationProgress({id,onProjectReady,onGoToday,names={}}:{id:s
   useEffect(()=>{delivered.current=false;},[id]);
   useEffect(()=>{let live=true;let failures=0;let timer:ReturnType<typeof setTimeout>;
     const read=async()=>{try{
-      const current=await request<PreparationJob>(`/api/preparation/${id}`);if(!live)return;setJob(current);setError("");setReconnecting(false);failures=0;
+      const current=await (adapterRef.current?adapterRef.current.read():request<PreparationJob>(`/api/preparation/${id}`));if(!live)return;setJob(current);setError("");setReconnecting(false);failures=0;
       if(current.kind==="project"&&current.status==="succeeded"&&(!current.complete_project||!!current.approved_at)&&current.project_id&&!delivered.current){delivered.current=true;readyCallback.current?.(current.project_id);}
       if(current.kind==="activity_block"&&current.status==="succeeded"){
         const review=await request<{activities:ReviewActivity[]}>(`/api/preparation/${id}/review`);if(live)setActivities(review.activities);
@@ -39,7 +41,7 @@ export function PreparationProgress({id,onProjectReady,onGoToday,names={}}:{id:s
   },[id,pollRevision]);
   async function retry(){if(busy||!job)return;
     if(job.status==="uncertain"&&!window.confirm("La última llamada pudo completarse sin dejar una respuesta guardada. ¿Quieres reintentar lo pendiente aunque pueda repetir esa llamada?"))return;
-    setBusy(true);setError("");try{setJob(await request<PreparationJob>(`/api/preparation/${id}/retry`,{acceptPotentialRepeat:job.status==="uncertain"}));
+    setBusy(true);setError("");try{setJob(await (adapterRef.current?adapterRef.current.retry(job.status==="uncertain"):request<PreparationJob>(`/api/preparation/${id}/retry`,{acceptPotentialRepeat:job.status==="uncertain"})));
       setPollRevision(value=>value+1);
     }catch(cause){setError(cause instanceof Error?cause.message:"No pudimos reintentar.");}finally{setBusy(false);}}
   async function approve(){setBusy(true);setError("");try{setJob(await request<PreparationJob>(`/api/preparation/${id}/approve`,{reviewed,activities:activities.map(item=>({id:item.id,expectedRevision:item.revision}))}));}

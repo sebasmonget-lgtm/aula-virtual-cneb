@@ -99,7 +99,7 @@ function opportunitySection(o, names) {
   return { kind:'opportunity',opportunity:o,title: names.get(o.competency_id) ?? o.competency_id, lines: [`Capacidades: ${o.capacity_names.join(" · ")}`,
     `Qué harán: ${o.child_action}`, `Condiciones: ${o.conditions}`, `Cómo acompañar: ${o.mediation}`, `Qué observar: ${o.observation}`, `Apoyos: ${o.supports}`] };
 }
-export async function renderAnnualJourneyWord(document, cards = [], {logo = null} = {}) {
+export async function renderAnnualJourneyWord(document, cards = [], {logo = null, planningSections = null} = {}) {
   if (!["active", "archived", "confirmed"].includes(document.status) || document.content?.journey_version !== 2)
     throw new Error("Confirma tu año antes de descargar el documento.");
   const age=document.age??document.document_context?.age;
@@ -114,14 +114,14 @@ export async function renderAnnualJourneyWord(document, cards = [], {logo = null
   const cell=(text,width,header=false,paragraphs=null)=>new TableCell({width:{size:width,type:WidthType.DXA},borders:Object.fromEntries(['top','bottom','left','right'].map(side=>[side,{style:BorderStyle.SINGLE,size:4,color:'C6DFE8'}])),shading:{fill:header?'DDEEF3':'FFFFFF'},margins:{top:85,bottom:85,left:100,right:100},children:paragraphs??[new Paragraph({spacing:{after:30,line:260},children:[new TextRun({text,font:'Poppins',color:'173352',bold:header,size:20})]})]});
   const widths=[550,1700,4150,2900];
   children.push(heading('Vista general de los quince proyectos'),new Table({width:{size:9300,type:WidthType.DXA},columnWidths:widths,rows:[new TableRow({tableHeader:true,children:['N.º','Fechas','Proyecto','Competencias'].map((text,i)=>cell(text,widths[i],true))}),...document.content.proposed_experiences.map((row,index)=>new TableRow({cantSplit:true,children:[String(document.content.resolved_calendar.projects.find(slot=>slot.proposal_id===row.proposal_id)?.index??index+1),`${readableDate(row.planned_start_date)}\n${readableDate(row.planned_end_date)}`,annualDisplayTitle(row.title),row.opportunities.map(item=>competencyLabels[item.competency_id]??names.get(item.competency_id)??item.competency_id).join(' · ')].map((text,i)=>cell(text,widths[i]))}))]}));
-  const sections=annualJourneyDocumentSections(document.content,names,document.display_subjects);
+  const sections=planningSections ?? annualJourneyDocumentSections(document.content,names,document.display_subjects);
   for (let i=0;i<sections.length;i++) {
     const section=sections[i];
     if(section.kind==='opportunity'){
       const group=[];while(sections[i]?.kind==='opportunity')group.push(sections[i++]);i--;
       const paragraph=(text,bold=false)=>new Paragraph({spacing:{after:55,line:260},children:[new TextRun({text:annualTeacherText(text,document.display_subjects),font:'Poppins',size:21,color:'173352',bold})]});
       children.push(new Table({width:{size:9300,type:WidthType.DXA},columnWidths:[3000,6300],rows:[new TableRow({tableHeader:true,children:[cell('Competencia y capacidades',3000,true),cell('Acción, acompañamiento y observación',6300,true)]}),...group.map(item=>{
-        const o=item.opportunity;return new TableRow({cantSplit:true,children:[cell('',3000,false,[paragraph(item.title,true),paragraph(o.capacity_names.join('; '))]),cell('',6300,false,[paragraph(`Qué harán: ${o.child_action}`),paragraph(`Condiciones: ${o.conditions}`),paragraph(`Cómo acompañar: ${o.mediation}`),paragraph(`Qué observar: ${o.observation}`),paragraph(`Apoyo: ${o.supports}`)])]});
+        const o=item.opportunity;return new TableRow({cantSplit:true,children:[cell('',3000,false,[paragraph(item.title,true),...(!planningSections||o.capacity_names.length?[paragraph(o.capacity_names.join('; '))]:[])]),cell('',6300,false,[paragraph(`Qué harán: ${o.child_action}`),...(!planningSections||o.conditions?[paragraph(`Condiciones: ${o.conditions}`)]:[]),paragraph(`Cómo acompañar: ${o.mediation}`),paragraph(`Qué observar: ${o.observation}`),...(!planningSections||o.supports?[paragraph(`Apoyo: ${o.supports}`)]:[])])]});
       })]}));continue;
     }
     children.push(heading(section.title));

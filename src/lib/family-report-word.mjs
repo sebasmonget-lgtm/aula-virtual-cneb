@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import JSZip from 'jszip';
+import {keepShortTableTogether} from './teacher-guide-word-layout.mjs';
 import { AlignmentType, BorderStyle, Document, Footer, Header, HeadingLevel, ImageRun, PageNumber, Packer, Paragraph, Table, TableCell, TableLayoutType, TableRow, TextRun, VerticalAlign, WidthType } from 'docx';
 import { competencyVisual } from './competency-visuals.mjs';
 import { competencyLabels } from './competency-labels.mjs';
@@ -62,7 +64,7 @@ async function competencyIcon(id,index){
   return new ImageRun({data,type:'png',transformation:{width:20,height:20},altText:{id:String(index+2),name:`Competencia ${id}`,title:competencyLabels[id],description:'Símbolo de la competencia'}});
 }
 
-async function competencyBlock(section,names,achievementLevels,index){
+async function competencyBlock(section,names,achievementLevels,index,blank=false){
   section=familyReportSectionForReader(section);
   const id=clean(section.competency_id),name=names.get(id)||competencyLabels[id]||'Aprendizajes observados';
   const theme=competencyVisual(id),fill=theme?.background.slice(1)??'EDF6FB',color=theme?.foreground.slice(1)??INK;
@@ -70,9 +72,9 @@ async function competencyBlock(section,names,achievementLevels,index){
   const icon=await competencyIcon(id,index),short=competencyLabels[id]??name;
   const header=[new Paragraph({heading:HeadingLevel.HEADING_2,keepNext:true,spacing:{after:45,line:285},children:[...(icon?[icon,text('  ')]:[]),text(short,{size:25,bold:true,color})]}),
     ...(short!==name?[paragraph(name,{keepNext:true,spacing:{after:0,line:225},children:[text(name,{size:17,color:INK})]})]:[])];
-  const gradeCell=gradeTheme?[new Paragraph({alignment:AlignmentType.CENTER,keepNext:true,spacing:{after:15},children:[text(grade,{size:30,bold:true,color:gradeTheme.ink})]}),
+  const gradeCell=blank?[label('Valoración'),paragraph('')]:gradeTheme?[new Paragraph({alignment:AlignmentType.CENTER,keepNext:true,spacing:{after:15},children:[text(grade,{size:30,bold:true,color:gradeTheme.ink})]}),
     new Paragraph({alignment:AlignmentType.CENTER,keepNext:true,spacing:{after:0,line:220},children:[text(gradeTheme.label,{size:17,bold:true,color:gradeTheme.ink})]})]:[paragraph('Sin valoración',{keepNext:true,alignment:AlignmentType.CENTER})];
-  const summary=clean(section.progress_summary)?[label('Lo que hemos visto'),paragraph(section.progress_summary)]:[];
+  const summary=blank?[label(section.blank_summary_title??'Lo que observamos'),paragraph(''),paragraph('')]:clean(section.progress_summary)?[label('Lo que hemos visto'),paragraph(section.progress_summary)]:[];
   const examples=group('Así lo vimos',section.examples),support=group('Apoyos en el aula',section.support_or_conditions),next=group('Qué seguiremos trabajando',section.next_steps);
   const home=group('Ideas para casa',section.family_suggestions);
   const children=[new TableRow({cantSplit:true,tableHeader:true,children:[cell(header,WIDTH-1540,{columnSpan:2,shading:{fill}}),cell(gradeCell,1540,{shading:{fill:gradeTheme?.fill??fill}})]})];
@@ -81,8 +83,34 @@ async function competencyBlock(section,names,achievementLevels,index){
   if(support.length&&next.length)children.push(new TableRow({cantSplit:true,children:[cell(support,4957,{shading:{fill:'F7FAFC'}}),cell(next,4957,{columnSpan:2,shading:{fill:'F7FAFC'}})]}));
   else if(support.length||next.length)children.push(new TableRow({cantSplit:true,children:[cell([...support,...next],WIDTH,{columnSpan:3})]}));
   if(home.length)children.push(new TableRow({cantSplit:true,children:[cell(home,WIDTH,{columnSpan:3,shading:{fill:'F2F9F5'}})]}));
+  if(blank)children.push(new TableRow({cantSplit:true,children:[cell([label('Cómo acompañaremos'),paragraph(''),paragraph('')],WIDTH,{columnSpan:3,shading:{fill:'F2F9F5'}})]}));
   if(clean(section.insufficiency_note))children.push(new TableRow({cantSplit:true,children:[cell([label('Seguimos observando'),paragraph(section.insufficiency_note)],WIDTH,{columnSpan:3,shading:{fill:'FFF6E5'}})]}));
   return table(children,[4957,3417,1540]);
+}
+
+/** Editable instruments reuse the original family report's cards, icons and stationery. */
+export async function renderBlankFamilyReports(context,{conclusions=false}={}){
+ const title=conclusions?'Conclusiones descriptivas':'Informe a la familia',sections=[];
+ const wave=await readFile(path.join(process.cwd(),'assets/templates/family-cover-wave.png'));
+ let iconIndex=0;
+ for(const [studentIndex,student]of context.students.entries()){
+  const cards=context.competencies.find(g=>g.age===student.age)?.cards??[],names=new Map(cards.map(c=>[c.id,c.name]));
+  const children=[new Paragraph({spacing:{after:0},children:[new ImageRun({data:wave,type:'png',transformation:{width:794,height:208},altText:{id:String(1000+studentIndex),name:'Carátula Ayni'},floating:{horizontalPosition:{relative:'page',align:'center'},verticalPosition:{relative:'page',align:'bottom'},behindDocument:true,wrap:{type:'none'}}})]}),
+   table([new TableRow({children:[cell([paragraph(title,{children:[text(title,{size:38,bold:true})]}),paragraph(student.name,{children:[text(student.name,{size:32,bold:true})]}),paragraph(context.institution)],WIDTH,{shading:{fill:'EDF5FA'},margins:{top:260,bottom:220,left:260,right:260}})]})]),space(),
+   table([new TableRow({children:[cell([label('Aula y edad'),paragraph(`${context.section} · ${student.age} años`)],WIDTH/2),cell([label('Docente y año'),paragraph(`${context.teacher} · ${context.year}`)],WIDTH/2)]}),new TableRow({children:[cell([label('Período'),paragraph(`${['I','II','III','IV'][context.period-1]} bimestre`)],WIDTH/2),cell([label('Fecha'),paragraph('')],WIDTH/2)]})],[WIDTH/2,WIDTH/2]),space()];
+  const schoolDetails=[['UGEL',context.ugel],['Distrito',context.district],['Director o directora',context.director],['Código de institución',context.institutionCode],['Nacimiento',date(student.birthDate)]].filter(([,value])=>value);
+  if(schoolDetails.length)children.push(table(schoolDetails.map(([name,value])=>new TableRow({cantSplit:true,children:[cell([label(name)],2600,{shading:{fill:'EDF5FA'}}),cell([paragraph(value)],WIDTH-2600)]})),[2600,WIDTH-2600]),space());
+  children.push(paragraph('Completa en Word o en papel a partir de tus registros. Puedes dejar apartados pendientes; una casilla vacía no indica un nivel de aprendizaje.',{children:[text('Completa en Word o en papel a partir de tus registros. Puedes dejar apartados pendientes; una casilla vacía no indica un nivel de aprendizaje.',{size:20,color:MUTED})]}));
+  if(cards.length)children.push(new Paragraph({pageBreakBefore:true,spacing:{after:0,line:20},children:[text('',{size:2})]}));
+  for(const card of cards)children.push(await competencyBlock({competency_id:card.id,blank_summary_title:conclusions?'Conclusión descriptiva':'Lo que observamos'},names,[],iconIndex++,true),space());
+  children.push(table([new TableRow({children:[cell([label('Acuerdos y comentarios'),paragraph(''),paragraph('')],WIDTH)]})]),space(),paragraph('Firma de la profesora ______________________________'));
+  sections.push({properties:{page:{size:{width:11906,height:16838},margin:{top:1300,right:996,bottom:1000,left:996,header:300,footer:430}}},
+   headers:{default:new Header({children:[paragraph(`${context.institution} · ${student.name} · ${student.age} años`,{children:[text(`${context.institution} · ${student.name} · ${student.age} años`,{size:16,bold:true})]}),paragraph(`Docente: ${context.teacher} · Aula ${context.section} · ${context.year}`,{children:[text(`Docente: ${context.teacher} · Aula ${context.section} · ${context.year}`,{size:16})]})]})},
+   footers:{default:new Footer({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[text(`${context.section} · ${context.year} · Página `,{size:15,color:MUTED}),new TextRun({children:[PageNumber.CURRENT],font:'Poppins',size:15,color:MUTED})]})]})},children});
+ }
+ const zip=await JSZip.loadAsync(await Packer.toBuffer(new Document({creator:'Ayni Aula',title,styles:{default:{document:{run:{font:'Poppins',size:22,color:INK},paragraph:{spacing:{after:90,line:275}}}}},sections})));
+ const xml=await zip.file('word/document.xml').async('string');zip.file('word/document.xml',xml.replace(/<w:tbl\b[^>]*>[\s\S]*?<\/w:tbl>/g,keepShortTableTogether));
+ return zip.generateAsync({type:'nodebuffer',compression:'DEFLATE'});
 }
 
 /** Presentation only: confirmed prose, grades and private photo remain source controlled. */

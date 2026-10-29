@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
 import { ObservationPermissionError } from "./ordinary-observation-service.mjs";
+import { captureCurriculumScope } from './student-curriculum-service.mjs';
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const validId = value => typeof value === "string" && uuid.test(value);
@@ -8,14 +9,20 @@ const validId = value => typeof value === "string" && uuid.test(value);
 async function ownedObservation(db, teacherId, observationId) {
   if (!validId(observationId) || !validId(teacherId)) throw new TypeError("Observación no válida.");
   const observation = (await db.query(`select o.*, ag.age_years as age,c.castellano_l2_applicable,c.religion_applicable,
+      coalesce((to_jsonb(c)->>'curriculum_contract_version')::int,1) as curriculum_contract_version,
       coalesce(r.corrected_text,o.raw_text) as effective_text
     from ordinary_observations o join classrooms c on c.id=o.classroom_id
-    join age_grades ag on ag.id=c.age_grade_id
+    left join age_grades ag on ag.id=c.age_grade_id
     join students s on s.id=o.student_id and s.classroom_id=o.classroom_id
     left join lateral (select corrected_text from ordinary_observation_revisions
       where observation_id=o.id order by revision desc limit 1) r on true
     where o.id=$1 and o.created_by=$2 and c.teacher_id=$2`, [observationId, teacherId])).rows[0];
   if (!observation) throw new ObservationPermissionError();
+  if(observation.curriculum_contract_version===2){
+    const curriculum=await captureCurriculumScope(db,teacherId,observation.student_id,observation.activity_id,observation.captured_criterion_id);
+    if(curriculum.curriculum_assignment_id!==observation.curriculum_assignment_id)throw new ObservationPermissionError();
+    observation.age=curriculum.curricular_age;
+  }
   return observation;
 }
 
@@ -67,6 +74,7 @@ export async function confirmOrdinaryAttribution(db, teacherId, observationId, {
   if (observation.status === "voided") throw new TypeError("Una observación anulada no se puede atribuir.");
   if (uniqueCriteria.length && !observation.activity_id) throw new TypeError("Una observación espontánea no tiene criterio de actividad.");
   if (uniqueCriteria.length) {
+    if(observation.curriculum_contract_version===2)for(const criterionId of uniqueCriteria)await captureCurriculumScope(db,teacherId,observation.student_id,observation.activity_id,criterionId);
     const criteria = (await db.query(`select id,competency_v4_id from activity_criteria
       where id=any($1::uuid[]) and activity_id=$2 and status='active'`,
     [uniqueCriteria, observation.activity_id])).rows;

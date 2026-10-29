@@ -3,6 +3,12 @@ import { beginAIQATrace, endAIQATrace } from "./ai-qa-trace.mjs";
 import OpenAI from "openai";
 import { AIProvider } from "./ai-provider.mjs";
 import { recordAiUsage } from "./ai-usage-service.mjs";
+import {createHash} from 'node:crypto';
+
+export function openAISchemaName(id){
+  const name=String(id??'ayni_schema').replace(/[^a-zA-Z0-9_]/g,'_')||'ayni_schema';
+  return name.length<=64?name:name.slice(0,47)+'_'+createHash('sha256').update(name).digest('hex').slice(0,16);
+}
 
 export class OpenAIProviderError extends Error {
   constructor(reason, details = {}) {
@@ -60,7 +66,7 @@ export function providerRetryAfterMs(headers, now = Date.now()) {
 
 export class OpenAIProvider extends AIProvider {
   constructor({ apiKey, baseURL, client = null, timeoutMs = 30_000, model = null,
-    background = false, resumeResponseId = null, onResponseStarted = async () => {} } = {}) {
+    background = false, resumeResponseId = null, onResponseStarted = async () => {}, store, streamResponse = false } = {}) {
     super({ id: "openai", model: null });
     this.apiKey = apiKey;
     this.baseURL = baseURL;
@@ -71,6 +77,8 @@ export class OpenAIProvider extends AIProvider {
     this.background = background;
     this.resumeResponseId = resumeResponseId;
     this.onResponseStarted = onResponseStarted;
+    this.store = store;
+    this.streamResponse = streamResponse;
   }
 
   getClient(model = this.configuredModel) {
@@ -97,6 +105,7 @@ export class OpenAIProvider extends AIProvider {
     try {
       const payload = {
         model: plan.model,
+        ...(this.store === false ? { store: false } : {}),
         ...(this.background ? { background: true, store: false } : {}),
         ...(plan.reasoning_effort ? { reasoning: { effort: plan.reasoning_effort } } : {}),
         instructions: ["Actúa como asistente pedagógico de Educación Inicial. Usa exclusivamente el AIContextBundle entregado; respeta constraints.must y constraints.must_not; no inventes hechos sobre estudiantes ni presentes paráfrasis semánticas como citas literales MINEDU. Respeta edad, propósito, contexto, materiales y estado de competencia. Produce únicamente el objeto requerido por el schema.", request.skill_instructions].filter(Boolean).join("\n\n"),
@@ -104,7 +113,7 @@ export class OpenAIProvider extends AIProvider {
         text: {
           format: {
             type: "json_schema",
-            name: request.output_schema.id.replace(/[^a-zA-Z0-9_]/g, "_"),
+            name: openAISchemaName(request.output_schema.id),
             strict: true,
             schema: activityJsonSchema(request.output_schema),
           },
@@ -114,6 +123,8 @@ export class OpenAIProvider extends AIProvider {
       const providerStarted = performance.now();
       response = this.resumeResponseId
         ? await client.responses.retrieve(this.resumeResponseId, {}, { timeout: this.timeoutMs, maxRetries: 0 })
+        : this.streamResponse && !this.background
+          ? await client.responses.stream(payload, { timeout: this.timeoutMs, maxRetries: 0, signal: AbortSignal.timeout(this.timeoutMs) }).finalResponse()
         : await client.responses.create(payload, { timeout: this.timeoutMs, maxRetries: 0 });
       providerDurationMs = performance.now() - providerStarted;
       if (this.background && !this.resumeResponseId) {

@@ -19,6 +19,7 @@ type Row = {
   conclusion: string;
   state: string;
   valuation_confirmed: boolean;
+  curricular_age?:number;
 };
 
 const statusLabel: Record<string, string> = {
@@ -33,11 +34,12 @@ const statusLabel: Record<string, string> = {
   pending: "Pendiente",
 };
 
-export function PeriodConsolidated({ classroomId, periodId, periodLabel, onReview }: {
+export function PeriodConsolidated({ classroomId, periodId, periodLabel, onReview, multiAge=false }: {
   classroomId: string;
   periodId: string;
   periodLabel: string;
   onReview: (studentId: string, competencyId: string) => void;
+  multiAge?:boolean;
 }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState("");
@@ -47,10 +49,12 @@ export function PeriodConsolidated({ classroomId, periodId, periodLabel, onRevie
   const [statusFilter,setStatusFilter]=useState("all");
   const [showConclusions,setShowConclusions]=useState(false);
   const [downloading,setDownloading]=useState(false);
+  const [ageFilter,setAgeFilter]=useState('');
+  const endpoint=multiAge?'/api/multi-age/periods':'/api/period-evaluations';
 
   useEffect(() => {
     const controller = new AbortController();
-    const url = `${localDatabaseApiUrl}/api/period-evaluations/consolidated?classroomId=${encodeURIComponent(classroomId)}&periodId=${encodeURIComponent(periodId)}`;
+    const url = `${localDatabaseApiUrl}${endpoint}/consolidated?classroomId=${encodeURIComponent(classroomId)}&periodId=${encodeURIComponent(periodId)}`;
     apiFetch(url, { signal: controller.signal, cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("No se pudo cargar el consolidado.");
@@ -59,19 +63,19 @@ export function PeriodConsolidated({ classroomId, periodId, periodLabel, onRevie
       .then((result) => { if (!controller.signal.aborted) { setRows(result.rows); setError(""); } })
       .catch(() => { if (!controller.signal.aborted) setError("No se pudo cargar el consolidado. Vuelve a intentarlo."); });
     return () => controller.abort();
-  }, [classroomId, periodId, retry]);
+  }, [classroomId, periodId, retry, endpoint]);
 
-  const students = [...new Map((rows ?? []).map((row) => [row.student_id, row.student_name])).entries()];
+  const students = [...new Map((rows ?? []).map((row) => [row.student_id, multiAge?`${row.student_name} · ${row.curricular_age} años`:row.student_name])).entries()];
   const competencies = [...new Map((rows ?? []).map((row) => [row.competency_id, row.competency_name])).entries()];
-  const filtered = (rows ?? []).filter((row) => (!studentFilter || row.student_id === studentFilter) && (!competencyFilter || row.competency_id === competencyFilter));
+  const filtered = (rows ?? []).filter((row) => (!studentFilter || row.student_id === studentFilter) && (!competencyFilter || row.competency_id === competencyFilter)&&(!multiAge||!ageFilter||row.curricular_age===Number(ageFilter)));
   const visible = filtered.filter(row=>statusFilter==="all"||(statusFilter==="complete"?row.state==="confirmed":row.state!=="confirmed"));
   const confirmed = visible.filter((row) => row.valuation_confirmed).length;
   const visibleStudents=students.filter(([id])=>visible.some(row=>row.student_id===id));
   const visibleCompetencies=competencies.filter(([id])=>(!competencyFilter||id===competencyFilter)&&visible.some(row=>row.competency_id===id));
   const cellIndex=new Map(visible.map(row=>[`${row.student_id}:${row.competency_id}`,row]));
-  const exportQuery = `classroomId=${encodeURIComponent(classroomId)}&periodId=${encodeURIComponent(periodId)}${studentFilter ? `&studentId=${encodeURIComponent(studentFilter)}` : ""}${competencyFilter ? `&competencyId=${encodeURIComponent(competencyFilter)}` : ""}${statusFilter!=="all"?`&status=${statusFilter}`:""}`;
+  const exportQuery = `classroomId=${encodeURIComponent(classroomId)}&periodId=${encodeURIComponent(periodId)}${studentFilter ? `&studentId=${encodeURIComponent(studentFilter)}` : ""}${competencyFilter ? `&competencyId=${encodeURIComponent(competencyFilter)}` : ""}${statusFilter!=="all"?`&status=${statusFilter}`:""}${multiAge&&ageFilter?`&age=${ageFilter}`:''}`;
   async function downloadExcel(){setDownloading(true);setError("");try{
-    const response=await apiFetch(`${localDatabaseApiUrl}/api/period-evaluations/consolidated.xlsx?${exportQuery}`,{cache:"no-store"});
+    const response=await apiFetch(`${localDatabaseApiUrl}${endpoint}/consolidated.xlsx?${exportQuery}`,{cache:"no-store"});
     if(!response.ok)throw new Error("No pudimos descargar el Excel. Vuelve a intentarlo.");
     const url=URL.createObjectURL(await response.blob()),link=document.createElement("a");
     link.href=url;link.download=`Consolidado - ${periodLabel.replace(/[\\/:*?"<>|]/g,"")}.xlsx`;
@@ -87,6 +91,7 @@ export function PeriodConsolidated({ classroomId, periodId, periodLabel, onRevie
     {!rows&&!error&&<p role="status" className="text-sm text-[#526b87]">Cargando consolidado…</p>}
     {rows&&<>
       <div className="grid items-end gap-4 rounded-xl bg-[#f5f9fc] p-3 md:grid-cols-2 xl:grid-cols-[1fr_1.2fr_auto]">
+        {multiAge&&<label className="min-w-0 text-sm font-semibold">Grupo curricular<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={ageFilter} onChange={event=>setAgeFilter(event.target.value)}><option value="">Todas las edades</option>{[3,4,5].filter(age=>(rows??[]).some(row=>row.curricular_age===age)).map(age=><option key={age} value={age}>{age} años</option>)}</select></label>}
         <label className="min-w-0 text-sm font-semibold">Niño o niña<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={studentFilter} onChange={event=>setStudentFilter(event.target.value)}><option value="">Todos los niños</option>{students.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
         <label className="min-w-0 text-sm font-semibold">Competencia<select className="mt-1 block min-h-11 w-full rounded-xl border bg-white px-3" value={competencyFilter} onChange={event=>setCompetencyFilter(event.target.value)}><option value="">Todas las competencias</option>{competencies.map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
         <fieldset className="min-w-0"><legend className="mb-1 text-sm font-semibold">Registro</legend><div className="flex flex-wrap gap-1">{[["all","Todos"],["pending","Pendientes"],["complete","Completos"]].map(([value,label])=><button key={value} type="button" aria-pressed={statusFilter===value} onClick={()=>setStatusFilter(value)} className={`min-h-11 rounded-xl px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087d96] ${statusFilter===value?"bg-[#087d96] text-white":"bg-white text-[#345372] hover:bg-[#e3eef5]"}`}>{label}</button>)}</div></fieldset>
@@ -100,7 +105,7 @@ export function PeriodConsolidated({ classroomId, periodId, periodLabel, onRevie
             <button type="button" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-2 py-1.5 hover:bg-[#e8f3f8] focus-visible:outline-2 focus-visible:outline-[#087d96]" onClick={()=>onReview(id,cid)} title={statusLabel[row.state]??row.state} aria-label={`Ver evaluación de ${name} en ${row.competency_name}: ${row.achievement_level??"Sin valoración"}. ${statusLabel[row.state]??row.state}`}>
               <span data-level={row.valuation_confirmed?row.achievement_level:undefined} className={`inline-flex min-w-10 justify-center rounded-full px-2 py-1 font-bold ${gradeStyles.level} ${gradeStyles.chip}`}>{row.achievement_level??"—"}</span>
               {row.valuation_confirmed?<CheckCircle2 aria-hidden="true" className="size-3.5 text-[#12634e]"/>:<Clock3 aria-hidden="true" className="size-3.5 text-[#88520b]"/>}
-            </button>{showConclusions&&<p className="px-2 pb-2 text-left text-xs leading-relaxed whitespace-pre-wrap">{row.conclusion||"Conclusión pendiente"}</p>}
+            </button>{showConclusions&&<p className="px-2 pb-2 text-left text-xs leading-relaxed whitespace-pre-wrap">{row.conclusion||(multiAge&&row.achievement_level==='AD'&&row.valuation_confirmed?'Sin conclusión registrada (opcional para AD)':'Conclusión pendiente')}</p>}
           </>:<span aria-label="Fuera del filtro" className="text-xs text-[#526b87]">—</span>}</td>;})}</tr>)}</tbody>
         </table>{!visible.length&&<p className="p-5 text-sm text-[#526b87]">No hay registros que coincidan con estos filtros.</p>}
       </div>

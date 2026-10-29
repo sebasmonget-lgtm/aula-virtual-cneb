@@ -1,6 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { loadSavedDocument } from "./document-library-service.mjs";
 import { prepareWordDownload } from "./document-word-export.mjs";
+import {supportsCommonPlanning,AYNI_PLANNING_PRESENTATION} from './ayni-planning-document.mjs';
+import {planningExportRoster} from './ayni-planning-export-roster.mjs';
 import { versionTransaction, VersionConflictError } from "./version-integrity.mjs";
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
@@ -41,9 +43,11 @@ export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, k
     throw new Error("Prepara primero el Word del proyecto confirmado.");
   const sourceHash = hash(JSON.stringify(document));
   if(expectedSourceHash && sourceHash!==expectedSourceHash)throw new VersionConflictError("El documento cambió durante la descarga. Prepara una descarga nueva; los archivos anteriores se conservan.");
-  const templateBase = kind === "annual_plan" ? document.content?.journey_version === 2 ? "annual-journey-readable-v7" : document.document_context?.template_version === "annual-unified-v1" ? "annual-unified-v1-layout2" : document.content?.plan_format === "twelve_projects_flexible_weeks" ? "annual-flexible-layout2" : document.content?.experience_context ? "annual-experience-v1" : document.document_context?.template_version ?? "annual-legacy-v1"
+  const printRoster=supportsCommonPlanning(document)?await planningExportRoster(db,teacherId,kind,sourceId):null;
+  const presentationKey=supportsCommonPlanning(document)?`${AYNI_PLANNING_PRESENTATION}-${kind}-${hash(JSON.stringify({sourceHash,roster:printRoster})).slice(0,16)}`:null;
+  const templateBase = presentationKey??(kind === "annual_plan" ? document.content?.journey_version === 2 ? "annual-journey-readable-v7" : document.document_context?.template_version === "annual-unified-v1" ? "annual-unified-v1-layout2" : document.content?.plan_format === "twelve_projects_flexible_weeks" ? "annual-flexible-layout2" : document.content?.experience_context ? "annual-experience-v1" : document.document_context?.template_version ?? "annual-legacy-v1"
     : kind === "experience" ? `${document.content?.document_template_version ?? "experience-legacy-v1"}-layout9`
-    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout14" : kind === "diagnostic_summary" ? "-layout4" : ["family_report","period_closure"].includes(kind) ? "-layout2" : ""}-snapshot-${sourceHash.slice(0,16)}`;
+    : `${document.content?.document_template_version ?? document.content?.document_format ?? kind}${kind === "activity" ? "-layout14" : kind === "diagnostic_summary" ? "-layout4" : ["family_report","period_closure"].includes(kind) ? "-layout2" : ""}-snapshot-${sourceHash.slice(0,16)}`);
   // Branding is a render input, independent of the confirmed pedagogical source.
   // Retain old immutable files while resolving the current logo for a new download.
   const templateVersion = `${templateBase}-logo-${logo ? hash(logo).slice(0,16) : 'none'}`;
@@ -71,7 +75,7 @@ export async function prepareConfirmedDocumentArtifact(db, storage, teacherId, k
     let bytes;
     try { bytes = await storage.read(key,teacherId); }
     catch {
-      const generated = await render(db,teacherId,kind,sourceId,cards,{ logo,photoStorage });
+      const generated = await render(db,teacherId,kind,sourceId,cards,{ logo,photoStorage,roster:printRoster });
       if (!generated?.buffer?.length) throw new Error("Word no disponible.");
       bytes = await storage.save(key,generated.buffer,teacherId);
     }

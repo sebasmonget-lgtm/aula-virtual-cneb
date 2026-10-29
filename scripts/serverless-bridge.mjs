@@ -30,6 +30,11 @@ async function adaptRequest(webRequest, options) {
   let payload = Buffer.alloc(0);
   let ended = false;
   const response = {
+    scheduleDocumentGenerator: options.after ? teacherId => options.after(async () => {
+      const {drainDocumentGeneratorQueue}=await import('./local-db-server.mjs');
+      await drainDocumentGeneratorQueue(new URL(webRequest.url).origin,teacherId,
+        process.env.VERCEL==='1'?webRequest.headers.get('x-vercel-oidc-token'):null);
+    }) : undefined,
     schedulePreparation: options.after ? () => options.after(async () => {
       const { drainPreparationQueue } = await import("./local-db-server.mjs");
       await drainPreparationQueue(new URL(webRequest.url).origin,

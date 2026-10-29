@@ -6,6 +6,7 @@ export function normalizeSetupDraft(input) {
   for (const [key, max] of Object.entries({ teacherName: 100, institutionName: 200, section: 80, institutionCode: 40, district: 100, ugel: 100, directorName: 120, logoInitials: 3 })) {
     result[key] = typeof input[key] === "string" ? input[key].slice(0, max) : "";
   }
+  if(Array.isArray(input.ages))result.ages=[...new Set(input.ages.filter(age=>[3,4,5].includes(age)))].sort();
   result.age = [3, 4, 5].includes(input.age) ? input.age : null;
   result.year = Number.isInteger(input.year) && input.year >= 2020 && input.year <= 2100 ? input.year : 2026;
   result.createLogo = input.createLogo === true;

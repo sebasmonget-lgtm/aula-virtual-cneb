@@ -33,8 +33,8 @@ async function readPreparation(proposalId:string,id?:string){
   const job=jobs.jobs.find(item=>item.complete_project&&item.proposal_id===proposalId&&(item.annual_plan_id===plan?.id||saved.prepared_current&&item.project_id===saved.project?.id&&(plan?.status==='active'||samePrepared)))??null;
   return {today:saved.today,plan:plan??null,hasConfirmed:!!plans.active,job,projectId:saved.project?.id??null,canReplace:saved.can_replace,canRestore:saved.can_restore,blockedDates:saved.blocked_dates??[],activities:saved.activities};
 }
-export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConfirmed,embedded=false,planId,onRequireConfirmation,onPlanChanged}:{
-  proposalId:string;onGoAnnual?:()=>void;onGoToday?:()=>void;onConfirmed?:()=>void;embedded?:boolean;planId?:string;onRequireConfirmation?:()=>void;onPlanChanged?:(id:string)=>Promise<void>;
+export function CompleteProjectWorkspace({documentsOnly=false,proposalId,onGoAnnual,onGoToday,onConfirmed,embedded=false,planId,onRequireConfirmation,onPlanChanged}:{
+  documentsOnly?:boolean;proposalId:string;onGoAnnual?:()=>void;onGoToday?:()=>void;onConfirmed?:()=>void;embedded?:boolean;planId?:string;onRequireConfirmation?:()=>void;onPlanChanged?:(id:string)=>Promise<void>;
 }){
   const [plan,setPlan]=useState<Plan|null>(null),[job,setJob]=useState<PreparationJob|null>(null),[chat,setChat]=useState(false);
   const [reviewBeforePrepare,setReviewBeforePrepare]=useState(false);
@@ -83,7 +83,7 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
     writeWorkspaceLocation('Planificar',{annualProposal:item.proposal_id});await onPlanChanged?.(target.id);setRestore(null);
   }catch(cause){setError(cause instanceof Error?cause.message:'No pudimos usar esta propuesta.');}finally{setBusy(false);}}
   if(loading)return <LoadingState label="Abriendo tu proyecto…"/>;
-  if(consultId)return <ActivityConsultation key={consultId} id={consultId} activities={activities} onActivity={setConsultId} onBack={()=>setConsultId('')}/>;
+  if(consultId)return <ActivityConsultation documentsOnly={documentsOnly} key={consultId} id={consultId} activities={activities} onActivity={setConsultId} onBack={()=>setConsultId('')}/>;
   if(detail&&proposal&&plan)return <ProjectDetailView projectId={savedProjectId} row={proposal} index={plan.proposal.resolved_calendar?.projects.find(slot=>slot.proposal_id===proposalId)?.index??plan.proposal.proposed_experiences.indexOf(proposal)+1} names={names} onBack={()=>setDetail('')} onChange={past?undefined:()=>setChat(true)} changeDialog={chat?<ProjectChangeChat planId={plan.id} row={proposal} index={(plan.proposal.resolved_calendar?.projects.find(slot=>slot.proposal_id===proposalId)?.index??plan.proposal.proposed_experiences.indexOf(proposal)+1)} names={names} hasConfirmedYear={hasConfirmed} teacherName={plan.document_context?.teacher_name} futureProjectId={savedProjectId&&!canReplace?savedProjectId:undefined} onPrepared={setJob} onClose={()=>{setChat(false);setReviewBeforePrepare(false);}} onApplied={async id=>{await load(id);await onPlanChanged?.(id);}}/>:null}/>;
   return <section className="min-w-0 space-y-5">
     {!embedded&&<header><h1 className="text-3xl font-extrabold text-[#172b52]">Preparar proyecto</h1><p className="mt-2 text-[#526b87]">Revisa la propuesta. Si ya está como quieres, Ayni preparará todas sus actividades.</p></header>}
@@ -104,7 +104,7 @@ export function CompleteProjectWorkspace({proposalId,onGoAnnual,onGoToday,onConf
     {!!activities.length&&<section className="overflow-hidden rounded-2xl border bg-white" aria-label="Actividades del proyecto">
       <h2 className="p-4 font-bold text-[#172b52]">{activities.length} {activities.length===1?'actividad guardada':'actividades guardadas'}</h2>
       <ol className="divide-y">{activities.map(item=><li key={item.id} className="grid min-h-24 items-center gap-3 px-4 py-4 sm:grid-cols-[9rem_1fr_auto]">
-        <span className="text-sm text-[#526b87]">{displayDate(item.date)}</span><div className="min-w-0"><strong className="break-words text-sm text-[#172b52]">{item.title}</strong><AnnualCompetencies ids={item.competency_ids??[]} names={names}/></div><div className="flex flex-wrap items-center gap-2 sm:justify-end"><span className="rounded-full bg-[#e9f7f7] px-3 py-1 text-xs text-[#07576c]">{item.state}</span><Button variant="outline" className="text-sm" onClick={()=>writeWorkspaceLocation('Hoy',{activity:item.id})}>Ver en Hoy</Button><Button variant="outline" className="text-sm" onClick={()=>setConsultId(item.id)}>Ver detalles</Button></div>
+        <span className="text-sm text-[#526b87]">{displayDate(item.date)}</span><div className="min-w-0"><strong className="break-words text-sm text-[#172b52]">{item.title}</strong><AnnualCompetencies ids={item.competency_ids??[]} names={names}/></div><div className="flex flex-wrap items-center gap-2 sm:justify-end"><span className="rounded-full bg-[#e9f7f7] px-3 py-1 text-xs text-[#07576c]">{item.state}</span>{!documentsOnly&&<Button variant="outline" className="text-sm" onClick={()=>writeWorkspaceLocation('Hoy',{activity:item.id})}>Ver en Hoy</Button>}<Button variant="outline" className="text-sm" onClick={()=>setConsultId(item.id)}>Ver detalles</Button></div>
       </li>)}</ol>
     </section>}
     {!proposal&&!error&&<p>Este proyecto no está en la versión actual. Vuelve a Mi año para elegirlo.</p>}

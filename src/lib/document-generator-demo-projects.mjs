@@ -1,0 +1,18 @@
+/** Editorial examples for the document-generator demo, never observed interests or AI output. */
+export const DOCUMENT_GENERATOR_DEMO_PROJECTS = [
+  ['Nos conocemos jugando','COM_ORAL','Compartir nombres, preferencias de juego y formas de pedir ayuda.','Invitar a elegir un juego y contar, señalar o mostrar cómo quieren participar.'],
+  ['Construimos nuestros acuerdos','PS_CONVIVE','Proponer acuerdos sencillos para jugar juntos y cuidar el espacio compartido.','Conversar sobre situaciones de juego y representar maneras de pedir un turno o resolver un desacuerdo.'],
+  ['Así soy y así me siento','PS_IDENTIDAD','Reconocer y expresar preferencias, características personales y emociones.','Ofrecer distintas formas de mostrar cómo se sienten, sin exigir contar experiencias privadas.'],
+  ['Mi cuerpo descubre caminos','PSICO_MOTRICIDAD','Explorar movimientos y recorridos seguros según las posibilidades de cada niño.','Proponer caminos al nivel del suelo que puedan recorrer, modificar o evitar voluntariamente.'],
+  ['Los cuentos nos llevan de viaje','COM_LECTURA','Explorar ilustraciones y construir sentidos durante una lectura compartida.','Elegir un cuento disponible, mirar sus imágenes y conversar sobre lo que podría suceder.'],
+  ['¿Qué necesita una planta?','CYT_INDAGA','Plantear preguntas y explorar cambios en una planta mediante observaciones sucesivas.','Proponer observar una planta que la profesora pueda conseguir y registrar preguntas y cambios sin anticipar resultados.'],
+  ['Abrimos una tienda de juego','MAT_CANTIDAD','Resolver situaciones de agrupación y cantidad al organizar un juego de tienda.','Elegir objetos seguros disponibles, organizarlos y buscar maneras de entregar lo que cada participante pide.'],
+  ['Construimos puentes y caminos','MAT_FORMA','Explorar formas, posiciones y recorridos al construir con materiales disponibles.','Invitar a construir un camino o puente de juego y probar distintas maneras de conectarlo.'],
+  ['Creamos con colores y texturas','COM_ARTE','Explorar materiales y comunicar ideas mediante creaciones propias.','Ofrecer materiales seguros confirmados por la profesora para elegir, combinar y transformar libremente.'],
+  ['Exploramos el agua','CYT_INDAGA','Proponer preguntas y comparar lo que ocurre al explorar agua con materiales seguros.','Invitar a anticipar, probar y comentar qué sucede con pequeñas cantidades de agua bajo acompañamiento adulto.'],
+  ['Mensajes para compartir','COM_ESCRITURA','Explorar maneras propias de escribir un mensaje con un destinatario y un propósito.','Proponer un mensaje para alguien del aula y permitir dibujos, trazos, letras o dictado a la profesora.'],
+  ['Historias de nuestras familias','COM_ORAL','Compartir voluntariamente historias cotidianas y escuchar distintas experiencias familiares.','Invitar a contar, representar o inventar una historia familiar, respetando a quien prefiera no compartir.'],
+  ['Damos otra vida a los materiales','CYT_INDAGA','Explorar posibilidades de transformación de materiales reutilizables seguros.','Elegir materiales previamente revisados por la profesora y probar qué nuevos usos de juego pueden tener.'],
+  ['Abrimos nuestro pequeño teatro','COM_ARTE','Crear personajes y comunicar ideas mediante juego dramático y distintos lenguajes artísticos.','Ofrecer la posibilidad de representar una historia, mover un personaje o participar como público.'],
+  ['Compartimos nuestros descubrimientos','COM_ORAL','Elegir y comunicar experiencias de los proyectos que cada niño quiera compartir.','Proponer una muestra de juego con producciones que existan realmente y decidir juntos cómo presentarlas.'],
+].map(([title,competencyId,purpose,invitation])=>Object.freeze({title,competencyId,purpose,invitation}));

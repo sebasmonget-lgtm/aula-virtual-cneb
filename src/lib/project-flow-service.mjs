@@ -1,4 +1,6 @@
+import {DOCUMENT_GENERATOR_PROJECT_RULES} from './document-generator-prompts.mjs';
 import { randomUUID, createHash } from "node:crypto";
+import {AYNI_TRANSVERSAL_APPROACHES,adultCenteredSituation} from './ayni-planning-policy.mjs';
 import { VersionConflictError } from "./version-integrity.mjs";
 import { recordAIQAResult } from "./ai-qa-trace.mjs";
 import { resolveAIExecutionPlan } from "./ai-execution-router-v4.mjs";
@@ -43,9 +45,10 @@ const activitySchema = object({ date: string, title: text(180), purpose: text(50
   materials: texts(160), mediation_notes: text(800), continuity_from_previous: text(400),
   continuity_to_next: text(400), flexibility_notes: text(500),
   role_in_project: text(400), expected_progression: text(400),
-  estimated_minutes: { type: "integer", minimum: 10, maximum: 180 } });
+  child_decisions: text(350), estimated_minutes: { type: "integer", minimum: 10, maximum: 180 } });
 export const PROJECT_MASTER_SCHEMA = schema("project-master-v1", {
   meaningful_situation: text(1200), foundation: text(1500), closing_description: text(700), closing_rationale: text(700), resources: texts(160),
+  document_planning: object({shared_challenge:text(350),planning_with_children:text(650),child_decisions:text(350),organization:text(550),mediation:text(450),age_support:text(450),closing_review:text(650),transversal_approaches:{type:'array',minItems:1,maxItems:2,items:object({name:{type:'string',enum:AYNI_TRANSVERSAL_APPROACHES},attitude:text(300),teacherAction:text(350)})}}),
   activities: { type: "array", minItems: 1, maxItems: 15, items: activitySchema },
 });
 export const PROJECT_FORMAL_SCHEMA = schema("project-formal-v1", {
@@ -104,6 +107,21 @@ export function validateProjectDependents(output, competencyIds, referenceOption
 }
 
 export function validateProjectMaster(output, decisions, dependents, availableDates, referenceOptions = {}) {
+  if(output?.document_planning){
+    if(adultCenteredSituation(output.meaningful_situation))fail('adult_centered_meaningful_situation','Comienza la situación significativa con los niños, su aula y lo que hicieron o preguntaron; conserva la fuente docente sin usarla como narradora inicial.');
+    const planning=output.document_planning;
+    if(['shared_challenge','planning_with_children','child_decisions','organization','mediation','age_support','closing_review'].some(key=>!hasText(planning[key],700))
+      ||!Array.isArray(planning.transversal_approaches)||!planning.transversal_approaches.length||planning.transversal_approaches.length>2||new Set(planning.transversal_approaches.map(row=>row.name)).size!==planning.transversal_approaches.length||planning.transversal_approaches.some(row=>!AYNI_TRANSVERSAL_APPROACHES.includes(row.name)||['name','attitude','teacherAction'].some(key=>!hasText(row[key],350))))
+      fail('incomplete_document_planning','Completa la planificación con los niños, los apoyos, los enfoques y la revisión del proyecto.');
+    if(referenceOptions.strictInstructions){
+      const paragraphs=[...['shared_challenge','planning_with_children','child_decisions','organization','mediation','age_support','closing_review'].map(key=>[key,planning[key]]),
+        ...planning.transversal_approaches.flatMap((row,index)=>['attitude','teacherAction'].map(key=>[`transversal_approaches[${index}].${key}`,row[key]]))];
+      const unfinished=paragraphs.find(([,value])=>!/[.!?…][»”"')]*$/u.test(value.trim()));
+      if(unfinished)fail('incomplete_document_planning_text',`El apartado ${unfinished[0]} debe terminar en una frase completa. Reescribe con menos palabras antes de llegar al límite; no cortes la frase.`);
+    }
+    if(!/planific.*(?:niñ|nin)/iu.test(output.activities?.[0]?.title??''))fail('missing_child_planning','La primera actividad debe planificar el proyecto con los niños.');
+    if(output.activities?.some(row=>!hasText(row.child_decisions,350)))fail('missing_child_decisions','Indica qué podrán decidir los niños en cada actividad.');
+  }
   if (!hasText(output?.meaningful_situation, 1200))
     fail("missing_meaningful_situation", "Explica de dónde surge este proyecto, por qué tiene sentido para el aula y qué pregunta o reto podrán explorar los niños, usando solo el contexto confirmado.");
   if(Array.isArray(output?.resources)&&output.resources.some(isMaterialPlaceholder))
@@ -170,6 +188,9 @@ export function validateProjectMaster(output, decisions, dependents, availableDa
     continuity_to_next: item.continuity_to_next, flexibility_notes: item.flexibility_notes,
     role_in_project: item.role_in_project, expected_progression: item.expected_progression,
     estimated_minutes: item.estimated_minutes,
+    ...(item.child_decisions?{child_decisions:item.child_decisions}:{}),
+    ...(output.document_planning?.age_support?{age_support:output.document_planning.age_support}:{}),
+    ...(output.document_planning?.mediation?{age_mediation:output.document_planning.mediation}:{}),
   })) };
 }
 
@@ -200,7 +221,7 @@ export function projectDetails({ source, preview, decisions, dependents, master,
     preview, decisions, dependents, planning_feedback: previous?.planning_feedback ?? null,
     ...(previous?.rebased_from?{rebased_from:previous.rebased_from}:{}),
     project_master: { meaningful_situation: master.meaningful_situation, foundation: master.foundation, closing_description: master.closing_description,
-      closing_rationale: master.closing_rationale, resources: master.resources },
+      closing_rationale: master.closing_rationale, resources: master.resources,...(master.document_planning?{document_planning:master.document_planning}:{}) },
     activity_route: route, teacher_overrides: previous?.teacher_overrides ?? [],
   };
 }
@@ -285,7 +306,7 @@ async function call({ workflow, task, context, outputSchema, resolvePlan, create
   const response = await createProvider(plan, { timeoutMs: 180_000, ...providerOptions })
     .generate(buildProviderRequest(workflow, { ...context, task: `${context.task}${feedbackInstruction} Cuando el esquema incluya official_performance_refs, selecciona entre 1 y 3 IDs pertinentes de didactic_knowledge.official_performance_catalog para CADA criterio general y diario, también los adicionales. Lee el desempeño completo y vincúlalo con la actuación realmente propuesta, la competencia y la edad; no selecciones por palabras sueltas ni obligues a demostrar todo el desempeño en un día. Si no hay desempeño publicado para esa competencia y edad, devuelve [] y usa el referente de ciclo. No inventes IDs ni copies otra edad. En mediation_notes da dos o tres indicaciones concretas, idealmente de hasta 500 caracteres; el esquema deja holgura hasta 800. Termina cada indicación con puntuación. Sintetiza antes de alcanzar el límite de cualquier campo, sin cortar palabras ni frases.`,
       didactic_knowledge: didacticKnowledge },
-      plan, outputSchema, await loadSkill()));
+      plan, outputSchema, `${await loadSkill()}${context.document_generation_mode?"\n"+DOCUMENT_GENERATOR_PROJECT_RULES:""}`));
   return { output: response.output, metadata: { provider: response.provider_metadata?.provider ?? plan.provider,
     model: response.provider_metadata?.model ?? plan.model, reasoning_effort: plan.reasoning_effort,
     routing_policy_version: plan.routing_policy_version, usage: response.provider_metadata?.usage ?? null,
@@ -332,7 +353,7 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
     return result;
   };
   if (context.modern) {
-    const outputSchema = { ...PROJECT_MASTER_SCHEMA, id: "project-single-master-v3",
+    const outputSchema = { ...PROJECT_MASTER_SCHEMA, id: "project-single-master-v6",
       required: [...PROJECT_MASTER_SCHEMA.required, ...PROJECT_DEPENDENTS_SCHEMA.required],
       properties: { ...PROJECT_MASTER_SCHEMA.properties, ...PROJECT_DEPENDENTS_SCHEMA.properties } };
     const requestContext = { ...context, official_performance_version: OFFICIAL_PERFORMANCE_VERSION, confirmed_decisions: providerDecisions,
@@ -360,6 +381,17 @@ export async function generateProjectMaster({ context, decisions, providerDecisi
     }
     catch (error) {
       if (!(error instanceof ProjectFlowError)) throw error;
+      if(error.reason==='incomplete_document_planning_text'){
+        const repair=await masterCall('document_planning_repair',{workflow:'annual_journey_repair',task:'generation',resolvePlan,createProvider,loadSkill,
+          outputSchema:schema('project-document-planning-repair-v1',{document_planning:PROJECT_MASTER_SCHEMA.properties.document_planning}),
+          context:{...requestContext,invalid_document_planning:result.output.document_planning,validation_error:error.message,
+            task:'Reescribe únicamente document_planning para corregir el apartado señalado. Conserva sus ideas y las decisiones recibidas. Usa frases breves, completas y con puntuación final en cada texto, dentro de cada límite. Para organization bastan dos frases concretas. Sintetiza antes de alcanzar el límite, sin cortar palabras ni frases. No inventes recursos, hechos ni resultados. No generes actividades, criterios, fechas ni una secuencia nueva.'}});
+        if(!repair.output?.document_planning)fail('incomplete_document_planning','La reparación debe conservar la planificación del proyecto.');
+        const validated={...result,...validate({...result.output,document_planning:repair.output.document_planning}),
+          metadata:{...repair.metadata,repair_used:true,repair_scope:'document_planning',primary:result.metadata}};
+        await recordAIQAResult('annual_journey_repair',validated,{validators:['complete_document_planning_text','unchanged_activity_sequence','confirmed_decisions'],downstream:['activity','assessment_context']});
+        return validated;
+      }
       const repair = await masterCall("repair", { workflow: "annual_journey_repair", task: "generation", resolvePlan, createProvider, loadSkill,
         outputSchema, context: { ...requestContext, invalid_output: result.output, validation_error: error.message,
           task: `${requestContext.task} Corrige únicamente el error indicado en validation_error. Conserva las fechas, competencias y decisiones confirmadas. No agregues días ni dividas una fecha en varias actividades.` } });

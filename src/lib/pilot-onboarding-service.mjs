@@ -1,3 +1,4 @@
+import {writeMultiAgeClassroom} from './multi-age-local-service.mjs';
 import { createHash, randomUUID } from "node:crypto";
 import { writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
@@ -19,14 +20,14 @@ export function validatePilotSetup(value) {
   return result;
 }
 
-export async function createPilotClassroom(db, teacherId, input, { assetsDir, logoStorage } = {}) {
+export async function createPilotClassroom(db, teacherId, input, { assetsDir, logoStorage, multiAge, assetsRelativeRoot } = {}) {
   const value = validatePilotSetup(input);
   const submissionId = input?.submissionId ?? null;
   if (submissionId !== null && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(submissionId)) throw new TypeError("Identificador de guardado inválido.");
   if (input?.createLogo && input?.logoUpload) throw new TypeError("Elige subir un logo o crearlo con iniciales.");
   const logoBytes = await measureSetupPhase("logo_decode", () => input?.logoUpload ? normalizeInstitutionLogoUpload(input.logoUpload)
     : input?.createLogo ? buildInstitutionInitialsLogo({ initials: input.logoInitials, primary: input.logoPrimary, accent: input.logoAccent }) : null);
-  const fingerprint = createHash("sha256").update(JSON.stringify(value)).update(logoBytes ?? "").digest("hex");
+  const fingerprint = createHash("sha256").update(JSON.stringify(multiAge?{...value,multiAge}:value)).update(logoBytes ?? "").digest("hex");
   const logoExtension = input?.createLogo ? "svg" : "png";
   const logoMimeType = input?.createLogo ? "image/svg+xml" : "image/png";
   const logoSize = input?.createLogo ? 512 : 384;
@@ -34,7 +35,7 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir, lo
   const logoAssetId = logoBytes ? randomUUID() : null;
   let createdLogoPath = null;
   let commitAttempted = false;
-  const classroomId = randomUUID();
+  let classroomId = randomUUID();
   await db.exec("begin");
   try {
     await db.query("select pg_advisory_xact_lock(hashtext($1))", [`pilot-setup:${teacherId}`]);
@@ -48,8 +49,8 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir, lo
       throw new VersionConflictError("Ya existe un aula activa. Recarga para revisar sus datos antes de editarla.");
     }
     await db.query(`insert into profiles(user_id,display_name) values($1,$2) on conflict(user_id) do update set display_name=excluded.display_name,preferences=profiles.preferences-'classroom_setup',updated_at=now()`, [teacherId, value.teacherName]);
-    await db.query(`insert into levels(id,name) values('20000000-0000-4000-8000-000000000001','Educación Inicial') on conflict(id) do nothing`);
-    await db.query(`insert into age_grades(id,level_id,label,age_years) values($1,'20000000-0000-4000-8000-000000000001',$2,$3) on conflict(level_id,age_years) do nothing`, [gradeId(value.age), `${value.age} años`, value.age]);
+    if(!(await db.query("select id from levels where id='20000000-0000-4000-8000-000000000001'")).rows.length)await db.query(`insert into levels(id,name) values('20000000-0000-4000-8000-000000000001','Educación Inicial') on conflict(id) do nothing`);
+    if(!(await db.query("select id from age_grades where level_id='20000000-0000-4000-8000-000000000001' and age_years=$1",[value.age])).rows.length)await db.query(`insert into age_grades(id,level_id,label,age_years) values($1,'20000000-0000-4000-8000-000000000001',$2,$3) on conflict(level_id,age_years) do nothing`, [gradeId(value.age), `${value.age} años`, value.age]);
     const grade = (await db.query(`select id from age_grades where level_id='20000000-0000-4000-8000-000000000001' and age_years=$1`, [value.age])).rows[0];
     const schoolYearId = randomUUID();
     await db.query(`insert into school_years(id,owner_id,year,starts_on,ends_on) values($1,$2,$3,$4::date,$5::date) on conflict(owner_id,year) do nothing`, [schoolYearId, teacherId, value.year, value.startsOn, value.endsOn]);
@@ -65,7 +66,7 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir, lo
         relativePath = await measureSetupPhase("logo_upload", () => logoStorage.save({ teacherId, assetId: logoAssetId, mimeType: logoMimeType, bytes: logoBytes }));
         createdLogoPath = relativePath;
       } else {
-        relativePath = `.local/assets/${logoAssetId}.${logoExtension}`;
+        relativePath = `${assetsRelativeRoot??".local/assets"}/${logoAssetId}.${logoExtension}`;
         const filePath = path.join(assetsDir, `${logoAssetId}.${logoExtension}`);
         await writeFile(filePath, logoBytes, { flag: "wx", mode: 0o600 });
         createdLogoPath = filePath;
@@ -75,7 +76,12 @@ export async function createPilotClassroom(db, teacherId, input, { assetsDir, lo
         values ($1, $2, 'logo', $3, $3, $4, $5, $5)`, [logoAssetId, teacherId, relativePath, logoMimeType, logoSize]);
       await db.query(`update institution_profiles set logo_asset_id=$1 where owner_user_id=$2`, [logoAssetId, teacherId]);
     }
+    if(multiAge){
+      const saved=await writeMultiAgeClassroom(db,teacherId,{...input,...multiAge},multiAge);classroomId=saved.classroomId;
+      if(submissionId)await db.query('update classrooms set setup_submission=$2::jsonb where id=$1',[classroomId,JSON.stringify({id:submissionId,fingerprint})]);
+    }else{
     await db.query(`insert into classrooms(id,school_year_id,teacher_id,age_grade_id,institution_name,section,castellano_l2_applicable,religion_applicable${submissionId ? ",setup_submission" : ""}) values($1,$2,$3,$4,$5,$6,$7,$8${submissionId ? ",$9::jsonb" : ""})`, [classroomId, actualYear.id, teacherId, grade.id, value.institutionName, value.section, value.castellanoL2Applicable, value.religionApplicable, ...(submissionId ? [JSON.stringify({ id: submissionId, fingerprint })] : [])]);
+    }
     commitAttempted = true;
     await db.exec("commit");
     return { classroomId, schoolYearId: actualYear.id, initialProfile: {

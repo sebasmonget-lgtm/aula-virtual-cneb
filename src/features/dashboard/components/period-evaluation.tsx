@@ -1,10 +1,11 @@
 "use client";
+import {PeriodEvaluationNavigation} from "./period-evaluation-navigation";
 import Image from "next/image";
 import styles from "./period-review.module.css";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 
 import { useCallback, useEffect, useState } from "react";
-import { ArrowRight, Check, ChevronDown, Sparkles, Users, CheckCircle2, Clock3, LockKeyhole, RotateCcw, CalendarDays, BookOpen, Heart, Table2 } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Sparkles, Users, CheckCircle2, Clock3, LockKeyhole, RotateCcw, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
@@ -173,7 +174,7 @@ export function PeriodEvaluation({ initialStudentId = "", initialCompetencyId = 
   if (!workspace) return <p className="rounded-2xl border bg-white p-6">{message || "Cargando evaluación del período…"}</p>;
   if(process.env.NEXT_PUBLIC_AYNI_EXPERIENCE!=="0"&&["student","conclusions","family","consolidated"].includes(view))return <section className="mx-auto w-full min-w-0 max-w-7xl space-y-5">
     <header className={styles.header} data-view={view}><div><h1>{view==="family"?"Informe a familias":view==="consolidated"?"Consolidado":"Evaluación del bimestre"}</h1>{currentPeriod&&<p className={styles.periodDates}><CalendarDays aria-hidden="true" className="size-4"/><strong>{currentPeriod.label}</strong><span>{formatDate(currentPeriod.starts_on)} a {formatDate(currentPeriod.ends_on)}</span></p>}</div><label className={styles.periodSelector}>Período<select className="mt-1 min-h-11 w-full rounded-xl border bg-white px-3" value={periodId} onChange={event=>{if(!canLeaveWorkspace())return;setMessage("");setReopenReason("");setReviewPair({studentId:"",competencyId:""});setStudentId("");setCompetencyId("");setDetail(null);setOverview(null);setPeriodId(event.target.value);}}>{periods.map(period=><option key={period.id} value={period.id}>{period.label} · {formatDate(period.starts_on)} a {formatDate(period.ends_on)}</option>)}</select></label><Image src={view==="family"?"/evaluation/family-caregivers.webp":"/ayni-thinking-v2.webp"} width={110} height={90} unoptimized alt="" aria-hidden="true" className={styles.headerImage}/></header>
-    <nav className={styles.navigation} aria-label="Espacios de Evaluar">{([["student","Evaluación del bimestre",BookOpen],["family","Informe a familias",Heart],["consolidated","Consolidado",Table2]] as const).map(([target,label,Icon])=>{const active=view===target||view==="conclusions"&&target==="student";return <Button key={target} aria-label={label} aria-current={active?"page":undefined} data-active={active} variant={active?"default":"outline"} onClick={()=>setView(target)}><Icon aria-hidden="true"/><span className="hidden sm:inline">{label}</span><span className="sm:hidden">{target==="student"?"Evaluación":target==="family"?"Informes":"Consolidado"}</span></Button>;})}</nav>
+    <PeriodEvaluationNavigation view={view} onChange={setView}/>
     {message&&<p role="status" className="text-sm">{message}</p>}
     {overviewError&&<p role="alert">{overviewError}<Button variant="outline" onClick={()=>setOverviewRetry(value=>value+1)}>Reintentar</Button></p>}
     {!overview&&!overviewError&&<p role="status">Cargando evaluación…</p>}

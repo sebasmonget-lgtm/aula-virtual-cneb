@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { ArrowRight, CaseUpper, ImageIcon, LogOut, School, Upload, Users } from "lucide-react";
 import { useUnsavedWork } from "@/src/lib/use-unsaved-work";
@@ -25,8 +25,10 @@ async function encodeLogo(file: File): Promise<NonNullable<PilotSetupDraft["logo
   return { mimeType: file.type as NonNullable<PilotSetupDraft["logoUpload"]>["mimeType"], base64: dataUrl.split(",")[1] ?? "" };
 }
 
-export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
-  onReady: (dashboard: LocalDashboard) => void; accountYear?: number; initialDraft?: PilotSetupDraft | null; onSignOut?: () => void;
+export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut, documentsOnly=false,adapter }: {
+  documentsOnly?:boolean;
+  adapter?:{ageFields?:ReactNode;calendarFields?:ReactNode;save:(draft:PilotSetupDraft,fields:FormData,submissionId:string)=>Promise<void>};
+  onReady?: (dashboard: LocalDashboard) => void; accountYear?: number; initialDraft?: PilotSetupDraft | null; onSignOut?: () => void;
 }) {
   const currentYear = accountYear ?? displayNow().getFullYear();
   const [draft, setDraft] = useState<PilotSetupDraft>(() => initialDraft ?? {
@@ -87,7 +89,9 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
 
   async function save() {
     if (saving.current || readingLogo || !formRef.current) return;
-    const submitted: PilotSetupDraft = readPilotSetupForm(new FormData(formRef.current), JSON.parse(latest.current));
+    // Capture successful controls before busy disables them and autosave yields.
+    const submittedFields = new FormData(formRef.current);
+    const submitted: PilotSetupDraft = readPilotSetupForm(submittedFields, JSON.parse(latest.current));
     change(submitted);
     for (const [field, message, minimum] of [
       ["institutionName", "Escribe el nombre de la institución para continuar.", 2],
@@ -98,16 +102,16 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
         setError(message); formRef.current.querySelector<HTMLInputElement>(`[name="${field}"]`)?.focus(); return;
       }
     }
-    if (submitted.age === null) { setError("Selecciona la edad del aula para continuar."); return; }
+    if (!adapter && submitted.age === null) { setError("Selecciona la edad del aula para continuar."); return; }
     const dates = pilotSchoolYearDefaults(submitted.year);
-    if (!dates) { setError(`Aún no está disponible el calendario oficial de ${submitted.year}. Selecciona 2026 para continuar.`); return; }
+    if (!adapter && !dates) { setError(`Aún no está disponible el calendario oficial de ${submitted.year}. Selecciona 2026 para continuar.`); return; }
     saving.current = true; submissionId.current ??= crypto.randomUUID();
     const started = performance.now();
     setBusy(true); setError("");
     try {
       await queue.current.catch(() => {});
-      onReady(await savePilotSetup({ ...submitted, age: submitted.age, submissionId: submissionId.current,
-        startsOn: dates.startsOn, endsOn: dates.endsOn, castellanoL2Applicable: false, religionApplicable: false }));
+      if(adapter)await adapter.save(submitted,submittedFields,submissionId.current);else onReady!(await savePilotSetup({ ...submitted, age: submitted.age!, submissionId: submissionId.current,
+        startsOn: dates!.startsOn, endsOn: dates!.endsOn, castellanoL2Applicable: false, religionApplicable: false }));
       if (process.env.NEXT_PUBLIC_AYNI_QA_CLOCK === "1") requestAnimationFrame(() => console.info("ayni_setup_frontend", JSON.stringify({ clickToFrameMs: Math.round(performance.now() - started), withLogo: Boolean(draft.logoUpload || draft.createLogo) })));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo configurar el aula."); }
     finally { saving.current = false; setBusy(false); }
@@ -122,10 +126,10 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
     </div></header>
     <main className={styles.content}>
       <div className={styles.intro}>
-        <h1>Crea tu salón</h1>
+        <h1>Crea tu salón</h1>{documentsOnly&&<p className="font-semibold">Generador de documentos</p>}
         <p>Completa estos datos una sola vez para empezar a usar Ayni con tu grupo.</p>
         <Image className={styles.illustration} src="/ayni-classroom-welcome.png" alt="" width={1536} height={1024} sizes="380px" preload />
-        <PreparationSteps current={1} className={styles.steps} disabled={busy||readingLogo} onSelect={step=>{if(step===2)formRef.current?.requestSubmit();else if(step>2)setError("Primero configura tu aula y añade a tus niños para continuar.");}}/>
+        <PreparationSteps documentsOnly={documentsOnly} current={1} className={styles.steps} disabled={busy||readingLogo} onSelect={step=>{if(step===2)formRef.current?.requestSubmit();else if(step>2)setError("Primero configura tu aula y añade a tus niños para continuar.");}}/>
       </div>
       <form ref={formRef} onSubmit={event => { event.preventDefault(); void save(); }} onInvalidCapture={() => {
         if (formRef.current) change(readPilotSetupForm(new FormData(formRef.current), JSON.parse(latest.current)));
@@ -161,10 +165,13 @@ export function PilotSetup({ onReady, accountYear, initialDraft, onSignOut }: {
           <div className={styles.fields}>
             <label>Nombre de la profesora {required}<Input required minLength={2} maxLength={100} autoComplete="name" disabled={busy} placeholder="Tu nombre completo" name="teacherName" value={draft.teacherName} onChange={event => change({teacherName:event.target.value})}/></label>
             <label>Sección {required}<Input required maxLength={80} disabled={busy} placeholder="Ej. A, B, Única" name="section" value={draft.section} onChange={event => change({section:event.target.value})}/></label>
+            {adapter?<fieldset className="col-span-full"><legend className="font-semibold">{documentsOnly?'Edades de tu aula':'Edades de tu aula · Unidocencia'}</legend><p className="my-2 text-sm">{documentsOnly?'Elige la edad o las edades de tus alumnos.':'Elige las dos o tres edades que acompañas.'}</p><div className="flex gap-6">{[3,4,5].map(age=><label key={age} className="flex min-h-11 items-center gap-2"><input type="checkbox" name="groupAge" value={age} disabled={busy} checked={draft.ages?.includes(age)??false} onChange={e=>change({ages:e.target.checked?[...(draft.ages??[]),age]:(draft.ages??[]).filter(value=>value!==age)})} className="!m-0 !h-5 !min-h-0 !w-5"/>{age} años</label>)}</div>{adapter.ageFields}</fieldset>:<>
             <label>Edad del aula {required}<select required disabled={busy} name="age" value={draft.age ?? ""} onChange={event => change({age:event.target.value ? Number(event.target.value) : null})}><option value="">Selecciona edad</option><option value={3}>3 años</option><option value={4}>4 años</option><option value={5}>5 años</option></select></label>
-            <label>Año escolar {required}<select required disabled={busy} name="year" value={draft.year} aria-describedby={!officialDates ? "school-year-help" : undefined} onChange={event => change({year:Number(event.target.value)})}>{[...new Set([currentYear,2026,draft.year])].sort().map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+            <label>Año escolar {required}<select required disabled={busy} name="year" value={draft.year} aria-describedby={!officialDates ? "school-year-help" : undefined} onChange={event => change({year:Number(event.target.value)})}>{[...new Set([currentYear,2026,draft.year])].sort().map(value => <option key={value} value={value}>{value}</option>)}</select></label></>}
+
           </div>
-          {!officialDates && <p id="school-year-help" role="alert" className={styles.error}>Aún no está disponible el calendario oficial de {draft.year}. Selecciona 2026 para continuar.</p>}
+          {adapter?.calendarFields}
+          {!adapter && !officialDates && <p id="school-year-help" role="alert" className={styles.error}>Aún no está disponible el calendario oficial de {draft.year}. Selecciona 2026 para continuar.</p>}
           {error && <p role="alert" className={styles.error}>{error}</p>}
           <div className={styles.footer}>
             <AsyncButton type="submit" className={styles.primary} disabled={readingLogo} busy={busy} busyLabel="Guardando aula…"><ArrowRight aria-hidden="true"/>Guardar aula y continuar</AsyncButton>

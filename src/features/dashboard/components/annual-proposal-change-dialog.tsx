@@ -14,7 +14,7 @@ import {presentMaterials} from "@/src/lib/annual-proposal-intent.mjs";
 import {initialProjectChat,presentProjectChat} from "@/src/lib/project-chat-greeting.mjs";
 import {annualDisplayTitle} from "@/src/lib/annual-year-editor.mjs";
 
-export type ChangeProposal={proposal_id:string;title:string;purpose:string;primary_competency_ids:string[];
+export type ChangeProposal={proposal_id:string;title:string;purpose:string;summary?:string;primary_competency_ids:string[];
   rationale?:string;invitation?:string;
   opportunities?:{competency_id:string;child_action:string;conditions:string;mediation:string;observation:string;supports:string}[];
   period:string;duration_weeks:number;planned_start_date?:string;planned_end_date?:string;children_actions:string[];materials:string[]};

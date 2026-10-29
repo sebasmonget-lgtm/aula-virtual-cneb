@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {activityReadingStages,readingSentences} from './activity-reading-content.mjs';
+test('una acción numerada ocupa un solo paso y conserva sus preguntas y continuaciones',()=>{
+ const steps=['Coloca las cajas. Los niños eligen dónde ponerlas.','Pregunta: «¿Cómo lo probamos?». Recoge sus propuestas.','Prueben los pedidos.'];
+ assert.deepEqual(readingSentences(steps.map((s,i)=>`${i+1}. ${s}`).join('\n')),steps);
+ assert.deepEqual(readingSentences(steps.map((s,i)=>`${i+1}) ${s}`).join('\n')),steps);
+ assert.deepEqual(readingSentences('Usa 1.5 litros como referencia. Luego compara.'),['Usa 1.5 litros como referencia.','Luego compara.']);
+});
 test('a quoted question retains its lowercase continuation in the same instruction',()=>{
   const action='Acompañar la prueba; preguntar «¿Qué piensas que podría pasar?» y escuchar sin confirmar una respuesta.';
   assert.deepEqual(readingSentences(action),[action]);

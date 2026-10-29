@@ -143,12 +143,13 @@ export function reserveWordHeaderSpace(xml) {
 }
 
 /** A small, source-backed guide uses the unused space on a document cover. */
-export function insertCoverQuickView(xml, title, rows) {
+export function insertCoverQuickView(xml, title, rows, {illustrationMarker=null}={}) {
   const breakParagraph = (xml.match(paragraphPattern) ?? []).find((part) => /<w:br\b[^>]*w:type="page"/.test(part));
   if (!breakParagraph || !rows.length) return xml;
-  const cell = (value, width, shaded = false) => `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${shaded ? '<w:shd w:fill="EAF3F8"/>' : ""}<w:tcMar><w:top w:w="90" w:type="dxa"/><w:left w:w="130" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:right w:w="130" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:r><w:rPr>${shaded ? "<w:b/>" : ""}<w:sz w:val="18"/><w:color w:val="173352"/></w:rPr><w:t>${xmlEscape(value)}</w:t></w:r></w:p></w:tc>`;
+  const cell = (value, width, shaded = false, span=1) => `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${span>1?`<w:gridSpan w:val="${span}"/>`:''}${shaded ? '<w:shd w:fill="EAF3F8"/>' : ""}${illustrationMarker?'<w:vAlign w:val="center"/>':''}<w:tcMar><w:top w:w="90" w:type="dxa"/><w:left w:w="130" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:right w:w="130" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:r><w:rPr>${shaded ? "<w:b/>" : ""}<w:sz w:val="18"/><w:color w:val="173352"/></w:rPr><w:t>${xmlEscape(value)}</w:t></w:r></w:p></w:tc>`;
   const heading = `<w:p><w:pPr><w:spacing w:before="180" w:after="90"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="23"/><w:color w:val="075D70"/></w:rPr><w:t>${xmlEscape(title)}</w:t></w:r></w:p>`;
-  const table = `<w:tbl><w:tblPr><w:tblW w:w="10300" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:color="C9DFE9"/><w:bottom w:val="single" w:sz="4" w:color="C9DFE9"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="2600"/><w:gridCol w:w="7700"/></w:tblGrid>${rows.map(([label, value]) => `<w:tr>${cell(label, 2600, true)}${cell(value, 7700)}</w:tr>`).join("")}</w:tbl>`;
+  const grid=illustrationMarker?'<w:gridCol w:w="2600"/><w:gridCol w:w="6200"/><w:gridCol w:w="1500"/>':'<w:gridCol w:w="2600"/><w:gridCol w:w="7700"/>';
+  const table = `<w:tbl><w:tblPr><w:tblW w:w="10300" w:type="dxa"/>${illustrationMarker?'<w:tblLayout w:type="fixed"/>':''}<w:tblBorders><w:top w:val="single" w:sz="4" w:color="C9DFE9"/><w:bottom w:val="single" w:sz="4" w:color="C9DFE9"/></w:tblBorders></w:tblPr><w:tblGrid>${grid}</w:tblGrid>${rows.map(([label, value],index) => `<w:tr>${cell(label, 2600, true)}${illustrationMarker&&index===rows.length-1?cell(value,6200)+cell(`{{${illustrationMarker}}}`,1500):cell(value,7700,false,illustrationMarker?2:1)}</w:tr>`).join("")}</w:tbl>`;
   const stableRows=table.replaceAll('<w:tr>','<w:tr><w:trPr><w:cantSplit/></w:trPr>');
   return xml.replace(breakParagraph, `${heading}${stableRows}${breakParagraph}`);
 }
@@ -244,7 +245,9 @@ async function insertInlineImages(archive, xml, images) {
       .flatten({ background: "#ffffff" }).jpeg({ quality: 82, mozjpeg: true }).toBuffer();
     const metadata = await sharp(bytes).metadata();
     const width = metadata.width ?? 720, height = metadata.height ?? 480;
-    const scale = Math.min(2.3 * 914400 / width, 2.1 * 914400 / height);
+    const maxWidth=Number.isFinite(item.maxWidthInches)?Math.min(2.3,Math.max(0.3,item.maxWidthInches)):2.3;
+    const maxHeight=Number.isFinite(item.maxHeightInches)?Math.min(2.1,Math.max(0.3,item.maxHeightInches)):2.1;
+    const scale = Math.min(maxWidth * 914400 / width, maxHeight * 914400 / height);
     const cx = Math.round(width * scale), cy = Math.round(height * scale);
     const relation = `rId${nextRel++}`, filename = `ayni-project-${String(index + 1).padStart(2, "0")}.jpg`;
     const pictureId = 9000 + index;

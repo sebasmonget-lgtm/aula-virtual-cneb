@@ -182,6 +182,7 @@ export async function loadAiUsageSummary(): Promise<AiUsageSummary> {
 }
 
 export type PilotSetupDraft = {
+  ages?:number[];
   teacherName: string; institutionName: string; section: string; institutionCode: string; district: string; ugel: string; directorName: string;
   age: number | null; year: number; createLogo: boolean; logoInitials: string; logoPrimary: string; logoAccent: string;
   logoUpload?: { mimeType: "image/png" | "image/jpeg" | "image/webp"; base64: string };

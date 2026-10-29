@@ -27,6 +27,8 @@ export function createAIProviderForPlan(executionPlan, options = {}) {
       background: options.background,
       resumeResponseId: options.resumeResponseId,
       onResponseStarted: options.onResponseStarted,
+      store: options.store,
+      streamResponse: options.streamResponse,
     });
   }
   throw new AIProviderFactoryError("provider_not_implemented", { provider: executionPlan.provider });

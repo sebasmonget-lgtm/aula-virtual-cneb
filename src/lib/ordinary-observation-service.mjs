@@ -2,6 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { VersionConflictError, versionTransaction } from "./version-integrity.mjs";
 import { lockClassroomSchedule } from "./activity-schedule-integrity.mjs";
 import { activityPedagogicalBlocks } from "./pedagogical-blocks.mjs";
+import { captureCurriculumScope } from "./student-curriculum-service.mjs";
+import { assertPeriodOpen } from './period-edit-guard.mjs';
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const validId = value => typeof value === "string" && uuid.test(value);
@@ -27,7 +29,8 @@ export function validateOrdinaryObservation(input) {
 export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath = null, mediaMimeType = null, mediaFingerprint = null, occurredAt = new Date() } = {}) {
   const capture = validateOrdinaryObservation({ ...input, hasMedia: Boolean(mediaPath) });
   if (!validId(teacherId)) throw new TypeError("Docente no válido.");
-  const student = (await db.query(`select s.id,s.classroom_id from students s
+  const student = (await db.query(`select s.id,s.classroom_id,
+    coalesce((to_jsonb(c)->>'curriculum_contract_version')::int,1) as curriculum_contract_version from students s
     join classrooms c on c.id=s.classroom_id where s.id=$1 and s.status='active'
     and c.teacher_id=$2 and c.status='active'`, [capture.studentId, teacherId])).rows[0];
   if (!student) throw new ObservationPermissionError();
@@ -84,6 +87,10 @@ export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath 
       if (existing.request_fingerprint !== fingerprint) throw new VersionConflictError("La solicitud ya se usó con otro contenido.");
       return { observation: existing, created: false };
     }
+    const curriculum = student.curriculum_contract_version === 2
+      ? await captureCurriculumScope(tx, teacherId, capture.studentId, capture.activityId, capture.criterionId) : null;
+    if(curriculum&&period)await assertPeriodOpen(tx,student.classroom_id,period.id);
+    if (curriculum) context = { ...context, curriculum };
     if (capture.activityId) {
       const current = (await tx.query("select occurs_on::text from activities where id=$1", [capture.activityId])).rows[0];
       if (!current || current.occurs_on !== context.activity_date)
@@ -91,11 +98,12 @@ export async function saveOrdinaryObservation(db, teacherId, input, { mediaPath 
     }
     const observation = (await tx.query(`insert into ordinary_observations
       (id,classroom_id,student_id,created_by,client_request_id,request_fingerprint,occurred_at,
-       raw_text,media_path,media_mime_type,source_kind,context_snapshot,activity_id,project_id,blueprint_id,captured_criterion_id)
-      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15,$16) returning *`,
+       raw_text,media_path,media_mime_type,source_kind,context_snapshot,activity_id,project_id,blueprint_id,captured_criterion_id${curriculum ? ',curriculum_assignment_id' : ''})
+      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14,$15,$16${curriculum ? ',$17' : ''}) returning *`,
     [randomUUID(), student.classroom_id, capture.studentId, teacherId, capture.clientRequestId,
       fingerprint, eventTime, capture.rawText, mediaPath, mediaMimeType,
-      capture.sourceKind, JSON.stringify(context), capture.activityId, projectId, blueprintId, capture.criterionId])).rows[0];
+      capture.sourceKind, JSON.stringify(context), capture.activityId, projectId, blueprintId, capture.criterionId,
+      ...(curriculum ? [curriculum.curriculum_assignment_id] : [])])).rows[0];
     return { observation, created: true };
   });
 }

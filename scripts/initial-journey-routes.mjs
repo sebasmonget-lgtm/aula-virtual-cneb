@@ -68,7 +68,10 @@ export async function suggestSavedCapture({db,teacherId,id,v24=null,classifier})
 }
 export async function handleStudentPhoto({request,response,url,db,teacherId,origin,send,sendAsset,readJson,storage}) {
   const match=/^\/api\/students\/([0-9a-f-]{36})\/photo$/i.exec(url.pathname);if(!match)return false;
-  const student=await ownedStudent(db,teacherId,match[1]);
+  // Photos need ownership of the active pupil, not a scalar classroom age.
+  const student=(await db.query(`select s.* from students s join classrooms c on c.id=s.classroom_id
+    where s.id=$1 and c.teacher_id=$2 and c.status='active' and s.status='active'`,[match[1],teacherId])).rows[0];
+  if(!student)throw new Error('Niño no disponible.');
   if(!storage){send(response,503,{error:"Storage privado no configurado."},origin);return true;}
   if(request.method==="GET"){if(!student.profile_photo_path){send(response,404,{error:"Sin foto."},origin);return true;}const media=await storage.read(student.profile_photo_path,{teacherId,studentId:student.id});sendAsset(response,200,media.data,media.mimeType,origin,"private, no-store");return true;}
   if(!["PUT","DELETE"].includes(request.method))return false;

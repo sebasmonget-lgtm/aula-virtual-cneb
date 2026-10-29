@@ -1,5 +1,39 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+
+test('una frase cortada se repara una vez sin regenerar la secuencia ni facturar de nuevo al recuperar',async()=>{
+  const planning={shared_challenge:'¿Cómo cambian las plantas?',planning_with_children:'Recojan preguntas y acuerden qué observar.',child_decisions:'Eligen qué planta observar.',organization:'Organizan los registros antes de',mediation:'Pide mostrar qué cambió.',age_support:'Permite señalar antes de explicar.',closing_review:'Comparen los registros con sus preguntas.',transversal_approaches:[{name:'Enfoque ambiental',attitude:'Cuidan las plantas.',teacherAction:'Acompaña el cuidado.'}]};
+  const output={...master,...dependents,meaningful_situation:'Los niños del aula exploraron las plantas y preguntaron cómo cambian.',document_planning:planning,activities:master.activities.map((row,index)=>({...row,title:index===0?'Planificamos el proyecto con los niños':row.title,child_decisions:'Eligen qué registro mostrar.'}))};
+  const repaired={...planning,organization:'Organizan los registros en una mesa. Trabajan juntos para comparar sus dibujos.'};
+  const dates=['2026-04-13','2026-04-14'],checkpoint={},calls=[];
+  const createProvider=(_plan,options)=>({generate:async request=>{
+    calls.push({id:request.output_schema.id,resume:options.resumeResponseId});
+    if(request.output_schema.id==='project-single-master-v6')return {output};
+    assert.equal(request.output_schema.id,'project-document-planning-repair-v1');
+    assert.deepEqual(request.output_schema.required,['document_planning']);
+    assert.deepEqual(request.ai_context_bundle.invalid_document_planning,planning);
+    assert.deepEqual(request.ai_context_bundle.confirmed_decisions,decisions);
+    assert.equal(request.output_schema.properties.activities,undefined);
+    if(!options.resumeResponseId){await options.onResponseStarted('resp_planning_only');throw Object.assign(new Error('Pending'),{reason:'response_pending'});}
+    assert.equal(options.resumeResponseId,'resp_planning_only');return {output:{document_planning:repaired}};
+  }});
+  const args={context:{modern:true,age:5},decisions,availableDates:dates,checkpoint,backgroundExecution:true,onCheckpoint:async()=>{},createProvider,loadSkill:async()=> 'Skill'};
+  await assert.rejects(()=>generateProjectMaster(args),error=>error.reason==='response_pending');
+  const result=await generateProjectMaster(args);
+  assert.equal(calls.filter(row=>row.id==='project-single-master-v6').length,1);
+  assert.equal(calls.filter(row=>row.id==='project-document-planning-repair-v1'&&!row.resume).length,1);
+  assert.equal(result.metadata.repair_scope,'document_planning');
+  assert.deepEqual(result.output.activities,output.activities);
+  assert.deepEqual(result.dependents,dependents);
+  assert.deepEqual(result.output.document_planning,repaired);
+  assert.equal(validateProjectMaster(output,decisions,dependents,dates).document_planning.organization,planning.organization,'Leer un histórico no aplica restricciones nuevas');
+  for(const response of [{document_planning:planning},{}]){
+    let attempts=0;
+    await assert.rejects(()=>generateProjectMaster({...args,checkpoint:{},backgroundExecution:false,createProvider:()=>({generate:async()=>({output:++attempts===1?output:response})})}),error=>['incomplete_document_planning_text','incomplete_document_planning'].includes(error.reason));
+    assert.equal(attempts,2,'No hay bucle ilimitado ni regeneración completa al fallar la reparación puntual');
+  }
+});
+
 import { nationalCalendarBlocks2026, nationalSchoolHolidays2026 } from "./annual-plan-calendar.mjs";
 import { fixtureCalendar } from "./test-fixtures/annual-journey.mjs";
 import { solveAnnualJourneyCalendar } from "./annual-journey-calendar.mjs";
@@ -276,4 +310,24 @@ test("proyecto moderno: repara una sola vez fechas inválidas y conserva decisio
   assert.equal(calls.length,2);assert.equal(result.metadata.repair_used,true);
   assert.deepEqual(calls[1].ai_context_bundle.confirmed_decisions,decisions);
   await assert.rejects(()=>generateProjectMaster({context:{modern:true,age:5},decisions,availableDates:["2026-04-13","2026-04-14"],createProvider:provider({...master,...dependents,activities:[]}),loadSkill:async()=>"Skill"}));
+});
+test('la nueva guía llega del Master al proyecto y a la actividad sin perder decisiones ni apoyos', async () => {
+  const {canonicalProjectDetails,canonicalProjectRoute}=await import('./planning-contract-v3.mjs');
+  const {saveActivityDetails}=await import('./experience-lineage.mjs');
+  const planning={shared_challenge:'¿Cómo cambian las plantas?',planning_with_children:'Recojan preguntas, propongan acciones y ordenen juntos qué observar.',child_decisions:'Eligen qué planta observar primero.',organization:'Trabajan en una mesa con sus registros.',mediation:'Pregunta qué cambió y pide mostrarlo.',age_support:'Permite señalar antes de explicar.',closing_review:'Comparen los registros con sus primeras preguntas.',transversal_approaches:[{name:'Enfoque ambiental',attitude:'Cuidan las plantas.',teacherAction:'Acompaña el cuidado sin reemplazar las decisiones.'}]};
+  const generated=await generateProjectMaster({context:{modern:true,age:5},decisions,availableDates:['2026-04-13','2026-04-14'],loadSkill:async()=> 'Skill',createProvider:provider({...master,...dependents,meaningful_situation:'Los niños del aula exploran las plantas y preguntan cómo cambian.',document_planning:planning,activities:master.activities.map((row,index)=>({...row,title:index===0?'Planificamos el proyecto con los niños':row.title,child_decisions:index===0?'Eligen qué pregunta explorar.':'Eligen qué registro mostrar.'}))},request=>{
+    assert.ok(request.output_schema.required.includes('document_planning'));
+    assert.ok(request.output_schema.properties.activities.items.required.includes('child_decisions'));
+  })});
+  const details=canonicalProjectDetails(projectDetails({source:{title:'Plantas',primary_competency_ids:['CYT_INDAGA']},preview:{context_summary:'Observamos plantas cercanas.'},decisions,dependents:generated.dependents,master:generated.output}));
+  assert.deepEqual(details.project_master.document_planning,planning);
+  const route=canonicalProjectRoute(details)[0],activity=saveActivityDetails({purpose:route.specific_purpose,competency_id:route.competency_id,evaluation_criterion:route.evaluation_criterion,expected_evidence:route.expected_evidence},route);
+  assert.equal(activity.child_decisions,'Eligen qué pregunta explorar.');
+  assert.equal(activity.age_support,planning.age_support);
+  assert.equal(activity.age_mediation,planning.mediation);
+  assert.equal(activity.document_template_version,'activity-unified-v1');
+  assert.throws(()=>validateProjectMaster({...generated.output,meaningful_situation:'La docente relata que los niños encontraron semillas.'},decisions,generated.dependents,['2026-04-13','2026-04-14']),error=>error.reason==='adult_centered_meaningful_situation');
+  for(const approaches of [[{...planning.transversal_approaches[0],name:'Cuidado de lo compartido'}],[planning.transversal_approaches[0],planning.transversal_approaches[0]]]){
+    assert.throws(()=>validateProjectMaster({...generated.output,document_planning:{...planning,transversal_approaches:approaches}},decisions,generated.dependents,['2026-04-13','2026-04-14']),error=>error.reason==='incomplete_document_planning');
+  }
 });

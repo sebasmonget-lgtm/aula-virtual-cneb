@@ -1,6 +1,7 @@
 import { currentSchoolYear, provisionAccountSchoolYear } from "../src/lib/account-school-year.mjs";
 import { dniLoginAlias } from "./dni-login.mjs";
 import { supabaseServiceHeaders } from "../src/lib/supabase-service-headers.mjs";
+import {AYNI_PRODUCT_MODES,chooseAyniProductMode} from '../src/lib/ayni-product-mode.mjs';
 
 async function adminRequest({ url, key, fetchImpl }, pathname, options = {}) {
   const endpoint = url ? new URL(url) : null;
@@ -33,6 +34,8 @@ export async function listAuthUsers(config) {
 }
 
 export async function createTeacherAccount(config) {
+  if(config.productMode!==undefined&&!AYNI_PRODUCT_MODES.includes(config.productMode))throw new TypeError('Elige una modalidad válida de Ayni.');
+  if(config.productMode==='documents'&&config.documentGeneratorAvailable!==true)throw new TypeError('El generador todavía no está habilitado.');
   const alias = accountInput(config);
   const schoolYear = currentSchoolYear();
   const name = String(config.name ?? "").trim();
@@ -40,9 +43,10 @@ export async function createTeacherAccount(config) {
   const created = await adminRequest(config, "/auth/v1/admin/users", {
     method: "POST",
     body: JSON.stringify({ email: alias, password: config.password, email_confirm: true,
-      app_metadata: { ayni_role: "teacher", school_year: schoolYear }, ...(name ? { user_metadata: { display_name: name } } : {}) }),
+      app_metadata: { ayni_role: "teacher", school_year: schoolYear,...(config.productMode?{ayni_product_mode:config.productMode}:{}) }, ...(name ? { user_metadata: { display_name: name } } : {}) }),
   });
   if (config.db) await provisionAccountSchoolYear(config.db, created.id, schoolYear, name || "Docente");
+  if(config.db&&config.productMode)await chooseAyniProductMode(config.db,created.id,{mode:config.productMode});
   return { id: created.id };
 }
 

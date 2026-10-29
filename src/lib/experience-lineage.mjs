@@ -45,6 +45,9 @@ export function saveActivityDetails(proposal, routeItem = null, previous = null,
     }
   }
   return { ...proposal, route_item_id: routeItem?.id ?? previous?.route_item_id ?? null,
+    ...(routeItem?.child_decisions?{child_decisions:routeItem.child_decisions}:{}),
+    ...(routeItem?.age_support?{age_support:routeItem.age_support}:{}),
+    ...(routeItem?.age_mediation?{age_mediation:routeItem.age_mediation}:{}),
     document_template_version: withWorkshop ? "activity-with-workshop-v1" : (previous?.document_template_version ?? "activity-unified-v1"), teacher_overrides: overrides };
 }
 

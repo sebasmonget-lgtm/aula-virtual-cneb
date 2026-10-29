@@ -1,3 +1,8 @@
+import {documentGeneratorCloudEnabled,documentCloudScope,documentCloudLegacyRouteAllowed,documentCloudOperationAllowed,documentDispatchHeaders,acceptDocumentDispatch,drainDocumentCloud} from './document-generator-cloud.mjs';
+import {loadAyniProductMode,isDocumentGenerator} from '../src/lib/ayni-product-mode.mjs';
+import {documentGeneratorSavedFilename} from '../src/lib/document-generator-downloads.mjs';
+import {buildDocumentGeneratorProjectZip} from '../src/lib/document-generator-project-zip.mjs';
+import {downloadContentDisposition} from '../src/lib/document-download-name.mjs';
 import {loadActivityRecordSignals} from "../src/lib/activity-record-signals.mjs";
 import { loadWorkshopPrintContext, renderWorkshopPrint } from "../src/lib/workshop-print.mjs";
 import { workshopCatalog } from "../src/lib/workshop-catalog.mjs";
@@ -21,6 +26,12 @@ import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { createDatabase } from "./database-adapter.mjs";
+import { openMultiAgeLocalDb, openMultiAgePersistentDb, multiAgeLocalStorage } from './multi-age-local-db.mjs';
+import { multiAgeAppLocalEnabled, handleMultiAgeAppRoutes, multiAgeLegacyRouteBlocked } from './multi-age-app-routes.mjs';
+import { handleDocumentGeneratorRoutes } from './document-generator-routes.mjs';
+import { multiAgeAIConfig, multiAgeProviderForJob } from './multi-age-ai-runtime.mjs';
+import { runMultiAgeGenerationStep, interruptExpiredMultiAgeGenerations } from '../src/lib/multi-age-generation-jobs.mjs';
+import {advanceDocumentGeneratorProjects} from '../src/lib/document-generator-project-preparation.mjs';
 import { configuredOrigins } from "./allowed-origins.mjs";
 import { resolveDailyState } from "../src/lib/daily-state.mjs";
 import { teacherTodayActions } from "../src/lib/teacher-today-actions.mjs";
@@ -150,9 +161,14 @@ import { authorizeRequestSelectors, RequestAccessError } from "./request-authori
 import { loadLibraryResources, publicLibraryResource, saveLibraryResourceToDownloads } from "./library-resources.mjs";
 
 const root = process.cwd();
+const multiAgeAppEnabled = multiAgeAppLocalEnabled();
+const cloudDocumentsEnabled=documentGeneratorCloudEnabled();
+const multiAgeAI = multiAgeAppEnabled ? multiAgeAIConfig() : {mode:'off'};
+const multiAgeDatabase = !multiAgeAppEnabled ? null : process.env.AYNI_MULTI_AGE_STORAGE==='persistent'
+  ? await openMultiAgePersistentDb({storeName:process.env.AYNI_MULTI_AGE_STORE_NAME??'unidocencia'}) : await openMultiAgeLocalDb();
 const dataDir = process.env.AYNI_LOCAL_DATA_DIR ? path.resolve(process.env.AYNI_LOCAL_DATA_DIR) : path.join(root, ".local", "pgdata");
 const migrationsDir = path.join(root, "local-db", "migrations");
-const assetsDir = path.join(root, ".local", "assets");
+const assetsDir = multiAgeAppEnabled ? path.join(root,'.local','multi-age-stores',multiAgeLocalStorage(multiAgeDatabase).storeName??'temporary-assets','assets') : path.join(root, ".local", "assets");
 const evidenceAssetsDir = path.join(assetsDir, "evidences");
 const port = Number(process.env.AYNI_LOCAL_DB_PORT ?? 8788);
 const authMode = process.env.AYNI_AUTH_MODE ?? "local";
@@ -183,7 +199,7 @@ const listenHost = process.env.AYNI_API_HOST ?? "127.0.0.1";
 if (authMode === "local" && !["127.0.0.1", "localhost", "::1"].includes(listenHost)) {
   throw new Error("El modo local de identidad solo puede escuchar en este equipo.");
 }
-const localTeacherId = authMode === "local" ? (process.env.AYNI_LOCAL_TEACHER_ID || "00000000-0000-4000-8000-000000000001") : undefined;
+const localTeacherId = authMode === "local" ? (multiAgeAppEnabled ? multiAgeLocalStorage(multiAgeDatabase).teacherId??randomUUID() : process.env.AYNI_LOCAL_TEACHER_ID||"00000000-0000-4000-8000-000000000001") : undefined;
 const requestAuth = createRequestAuth({ mode: authMode, localTeacherId,
   supabaseUrl: process.env.AYNI_SUPABASE_URL,
   publishableKey: process.env.AYNI_SUPABASE_PUBLISHABLE_KEY,
@@ -216,7 +232,11 @@ if (dbMode === "local") {
   await mkdir(assetsDir, { recursive: true });
   await mkdir(evidenceAssetsDir, { recursive: true });
 }
-const database = await createDatabase({ mode: dbMode, dataDir, connectionString: process.env.SUPABASE_DB_URL });
+const database = multiAgeAppEnabled ? await (async () => {
+  const temporary = multiAgeDatabase;
+  await temporary.query("insert into profiles(user_id,display_name) values($1,'Docente de prueba') on conflict(user_id) do nothing", [localTeacherId]);
+  return { mode: 'local', db: temporary, requestDb: () => temporary, close: () => temporary.close() };
+})() : await createDatabase({ mode: dbMode, dataDir, connectionString: process.env.SUPABASE_DB_URL });
 const requestDatabaseScope = new AsyncLocalStorage();
 const db = new Proxy(database.db, {
   get(target, property) {
@@ -225,7 +245,8 @@ const db = new Proxy(database.db, {
     return typeof value === "function" ? value.bind(active) : value;
   },
 });
-if (dbMode === "local") await migrate();
+if (multiAgeAppEnabled) { await interruptExpiredMultiAgeGenerations(multiAgeDatabase,{restarted:true}); }
+else if (dbMode === "local") await migrate();
 else {
   const schema = (await db.query(`select to_regclass('public.profiles') as profiles,
     to_regclass('public.ai_pending_generations') as generations,
@@ -864,7 +885,7 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
           send(response, 503, { error: "La carga de logos estará disponible al conectar Storage." }, origin);
           return;
         }
-        const saved = await measureSetupPhase("save", () => createPilotClassroom(db, teacherId, body, { assetsDir, logoStorage }));
+        const saved = await measureSetupPhase("save", () => createPilotClassroom(db, teacherId, body, { assetsDir, logoStorage, assetsRelativeRoot:path.relative(root,assetsDir).replaceAll('\\','/') }));
         const data = body.initialSnapshot === true && !saved.replayed
           ? initialClassroomDashboard(saved, qaDailyClock ?? {
             date: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()),
@@ -1539,6 +1560,18 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
     if (request.method === "GET" && url.pathname === "/api/documents") {
       send(response, 200, { documents: await listSavedDocuments(db, teacherId) }, origin); return;
     }
+    const projectBundle=/^\/api\/documents\/experience\/([0-9a-f-]{36})\/bundle\.zip$/i.exec(url.pathname);
+    if(request.method==='GET'&&projectBundle){
+      try{
+        const knowledge=await loadKnowledgeBaseV4(),logo=await loadInstitutionLogoForDocuments(db,teacherId,logoStorage??assetsDir);
+        const cards=knowledge.competencyCards.map(card=>({id:card.id,name:card.official_name,area_name:card.area_name,capacities:card.capacities,ages:card.ages}));
+        const result=await buildDocumentGeneratorProjectZip(db,teacherId,projectBundle[1],{legacy:true,cards,logo});
+        response.setHeader('content-disposition',downloadContentDisposition(result.filename));
+        if(origin)response.setHeader('access-control-expose-headers','content-disposition');
+        sendAsset(response,200,result.bytes,'application/zip',origin,'private, no-store');
+      }catch(error){send(response,httpStatusForError(error,422),{error:publicErrorMessage(error)},origin);}
+      return;
+    }
     if (request.method === "GET" && url.pathname.startsWith("/api/documents/") && url.pathname.endsWith("/download")) {
       const parts = url.pathname.split("/");
       if (parts.length !== 6 || parts[5] !== "download") { send(response, 404, { error: "Documento no disponible." }, origin); return; }
@@ -1552,9 +1585,11 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const logo = await loadInstitutionLogoForDocuments(db, teacherId, logoStorage ?? assetsDir);
       const download = await prepareWordDownload(db, teacherId, parts[3], parts[4], cards, { logo,photoStorage:ordinaryStorage,today:qaDailyClock?.date??limaToday() });
       if (!download) { send(response, 404, { error: "Documento no disponible." }, origin); return; }
+      const documentsOnly=await isDocumentGenerator(db,teacherId);
+      const normalizedFilename=documentsOnly?await documentGeneratorSavedFilename(db,teacherId,requestedDocument):null;
       const headers = {
         "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "content-disposition": `attachment; filename="${download.filename}"`,
+        "content-disposition": normalizedFilename?downloadContentDisposition(normalizedFilename):`attachment; filename="${download.filename}"`,
         "content-length": String(download.buffer.length), "cache-control": "private, no-store",
         "x-content-type-options": "nosniff",
       };
@@ -1810,12 +1845,13 @@ const handleWorkshopRoute = createWorkshopRouteHandler({ db, teacherId, readJson
       const priorityReview = plan.source_priority_review_id ? (await db.query(`select details from diagnostic_priority_reviews
         where id=$1 and classroom_id=$2 and status='confirmed'`, [plan.source_priority_review_id,classroom.id])).rows[0] : null;
       const planPriorities = priorityReview?.details?.priorities ?? classroom.confirmed_priorities;
-      const aiContext = { school_year: classroom.year, age: classroom.age,
-        group_context: safe(plan.document_context?.diagnostic_group?.strengths || classroom.group_context),
+      const documentsOnly=await isDocumentGenerator(db,teacherId);
+      const aiContext = { ...(documentsOnly?{document_generation_mode:true}:{}), school_year: classroom.year, age: classroom.age,
+        ...(documentsOnly?{}:{group_context: safe(plan.document_context?.diagnostic_group?.strengths || classroom.group_context),
         group_needs: safe(plan.document_context?.diagnostic_group?.needs || classroom.diagnostic_group?.needs),
         confirmed_priorities: planPriorities.map((item) => ({ title: safe(item.title), reason: safe(item.reason),
           competency_ids: item.related_competency_ids })),
-        group_interests: (plan.document_context?.group_interests ?? []).map(safe),
+        group_interests: (plan.document_context?.group_interests ?? []).map(safe)}),
         annual_proposal: source, calendar: { starts_on: slot.starts_on, ends_on: slot.ends_on,
           duration_weeks: slot.duration_weeks }, curriculum };
       const selection = (await db.query(`select pcs.id,pcs.status,pcs.revision from project_calendar_selections pcs
@@ -3066,7 +3102,7 @@ async function runPreparationWorker() {
       return prepareConfirmedDocumentArtifact(db,documentArtifactStorage,job.teacher_id,item.kind,item.source_id,
         {cards:knowledge.competencyCards.map(card=>({...card,name:card.official_name})),logo,photoStorage:ordinaryStorage,expectedSourceHash:item.source_hash});
     }});
-  return runPreparationStep(db,(job,checkpoint)=>withPedagogicalClock(previewQAClockForJob(job),()=>execute(job,checkpoint)));
+  return runPreparationStep(db,(job,checkpoint)=>withPedagogicalClock(previewQAClockForJob(job),()=>execute(job,checkpoint)),multiAgeAppEnabled?{teacherId:localTeacherId}:{});
 }
 
 export async function drainPreparationQueue(origin,oidcToken=null){
@@ -3107,6 +3143,19 @@ export async function drainDiagnosticQueue(origin,oidcToken=null){
   }
 }
 
+export async function drainDocumentGeneratorQueue(origin,teacherId,oidcToken=null){
+  if(!cloudDocumentsEnabled)return;
+  const raw=database.requestDb(),scoped=documentCloudScope(raw,teacherId);
+  try{await drainDocumentCloud({db:scoped,teacherId,continueWork:async()=>{
+    const secret=preparationDispatchSecret(),deploymentOrigin=process.env.VERCEL_URL?`https://${process.env.VERCEL_URL}`:origin;
+    if(!secret||!deploymentOrigin||!allowedOrigins.has(deploymentOrigin))throw new Error('Destino de continuación no disponible.');
+    const reply=await fetch(deploymentOrigin+'/api/internal/document-generator/run',{method:'POST',headers:{...documentDispatchHeaders(secret,teacherId),
+      ...(process.env.VERCEL==='1'&&oidcToken?{'x-vercel-trusted-oidc-idp-token':oidcToken}:{})},redirect:'error',signal:AbortSignal.timeout(12000)});
+    if(!reply.ok)recordOperationalEvent('document_cloud_continuation_failed',{status:reply.status});
+  }});}catch{recordOperationalEvent('document_cloud_worker_failed',{status:503});}
+  finally{await raw.close();}
+}
+
 export async function handleApiRequest(request, response) {
   const origin = request.headers.origin;
   const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
@@ -3128,7 +3177,7 @@ export async function handleApiRequest(request, response) {
     return;
   }
   if (request.method === "GET" && url.pathname === "/health") {
-    send(response, 200, { ok: true, engine: dbMode, ...(dbMode === "local" ? { storage: ".local/pgdata" } : {}) }, origin);
+    send(response, 200, { ok: true, engine: dbMode, ...(dbMode === "local" ? { storage: multiAgeAppEnabled ? multiAgeLocalStorage(multiAgeDatabase).storage==='persistent-local'?'persistent-multi-age':'temporary-multi-age' : '.local/pgdata' } : {}) }, origin);
     return;
   }
   if(['/api/internal/preparation/run','/api/internal/diagnostics/run'].includes(url.pathname)) {
@@ -3145,6 +3194,17 @@ export async function handleApiRequest(request, response) {
     }); }catch{send(response,503,{error:"No se pudo procesar la cola."});}
     finally{if(dbMode==="postgres")await workerDb.close();}
     return;
+  }
+  if(url.pathname==='/api/internal/document-generator/run'){
+    if(!cloudDocumentsEnabled||request.method!=='POST'){send(response,404,{error:'Ruta no disponible.'});return;}
+    const workerDb=database.requestDb();
+    try{
+      const teacherId=await acceptDocumentDispatch(workerDb,request.headers,preparationDispatchSecret());
+      if(!teacherId){send(response,401,{error:'Acceso no autorizado.'});return;}
+      if(!response.scheduleDocumentGenerator){send(response,503,{error:'Continuación no disponible.'});return;}
+      response.scheduleDocumentGenerator(teacherId);send(response,202,{scheduled:true});
+    }catch{send(response,503,{error:'No se pudo procesar la cola.'});}
+    finally{await workerDb.close();}return;
   }
   if (request.method === "GET" && url.pathname === "/api/auth/config") {
     send(response, 200, { mode: authMode }, origin);
@@ -3183,7 +3243,7 @@ export async function handleApiRequest(request, response) {
     try {
       const body = await readJson(request);
       if (!validSetupKey(body.setupKey)) { send(response, 403, { error: "Clave de configuración inválida." }, origin); return; }
-      await createFirstAdmin({ ...authAdminConfig, dni: body.dni, password: body.password, name: body.name });
+      await createFirstAdmin({ ...authAdminConfig, dni: body.dni, password: body.password, name: body.name,productMode:body.productMode,documentGeneratorAvailable:cloudDocumentsEnabled });
       send(response, 201, { ok: true }, origin);
     } catch {
       send(response, 400, { error: "No se pudo crear el administrador. Revisa los datos o si ya existe uno." }, origin);
@@ -3245,13 +3305,13 @@ export async function handleApiRequest(request, response) {
     }
     try {
       if (request.method === "GET" && url.pathname === "/api/admin/accounts") {
-        send(response, 200, await loadAdminDirectory(context.db, authAdminConfig), origin); return;
+        send(response, 200, {...await loadAdminDirectory(context.db, authAdminConfig),documentGeneratorAvailable:cloudDocumentsEnabled}, origin); return;
       }
       if (request.method === "POST" && url.pathname === "/api/admin/accounts") {
         const body = await readJson(request);
         if (typeof body.name !== "string" || body.name.trim().length < 2 || body.name.trim().length > 100)
           throw new Error("Nombre inválido.");
-        const result = await createTeacherAccount({ ...authAdminConfig, db:context.db, dni: body.dni, password: body.password, name: body.name });
+        const result = await createTeacherAccount({ ...authAdminConfig, db:context.db, dni: body.dni, password: body.password, name: body.name,productMode:body.productMode,documentGeneratorAvailable:cloudDocumentsEnabled });
         send(response, 201, result, origin); return;
       }
       const reset = url.pathname.match(/^\/api\/admin\/accounts\/([0-9a-f-]{36})\/password$/i);
@@ -3273,6 +3333,40 @@ export async function handleApiRequest(request, response) {
   }
   if (context.role !== "teacher") {
     send(response, 403, { error: "Esta sección es para docentes." }, origin); return;
+  }
+  const product=await loadAyniProductMode(context.db,context.teacherId);
+  if(context.authMode==='supabase'&&product.mode==='documents'){
+    if(!cloudDocumentsEnabled){
+      if(url.pathname==='/api/product-mode'){send(response,200,{...product,available:false},origin);return;}
+      if(url.pathname==='/api/curriculum/entry'&&request.method==='GET'){send(response,200,{enabled:false},origin);return;}
+      send(response,503,{error:'El generador no está disponible por el momento. Tus documentos se conservan.'},origin);return;
+    }
+    const scoped=documentCloudScope(context.db,context.teacherId),documentContext={...context,db:scoped};
+    try{await requestDatabaseScope.run(scoped,async()=>{
+      if(await handleDocumentGeneratorRoutes({request,response,url,context:documentContext,origin,send,sendAsset,readJson,assetsDir,logoStorage,available:true}))return;
+      if(!documentCloudOperationAllowed(request.method,url.pathname)){send(response,403,{error:'Esta operación no corresponde al generador de documentos.'},origin);return;}
+      if(await handleMultiAgeAppRoutes({request,response,url,context:documentContext,enabled:true,origin,send,readJson,aiConfig:{mode:'openai'}})){
+        if(/^\/api\/multi-age\/(?:generation|document-project)/u.test(url.pathname))response.scheduleDocumentGenerator?.(context.teacherId);
+        return;
+      }
+      if(!documentCloudLegacyRouteAllowed(request.method,url.pathname)){send(response,403,{error:'Esta operación no corresponde al generador de documentos.'},origin);return;}
+      const body=['POST','PUT','PATCH','DELETE'].includes(request.method)?await readJson(request):null;
+      await authorizeRequestSelectors({db:scoped,teacherId:context.teacherId,url,body});
+      await handleAuthenticatedRequest(documentContext,request,response);
+    });}catch(error){send(response,httpStatusForError(error),{error:publicErrorMessage(error)},origin);}
+    return;
+  }
+  if (await handleDocumentGeneratorRoutes({ request, response, url, context, origin, send, sendAsset, readJson, assetsDir, logoStorage, available:multiAgeAppEnabled||cloudDocumentsEnabled,assetsRelativeRoot:path.relative(root,assetsDir).replaceAll('\\','/') })) return;
+  if (await handleMultiAgeAppRoutes({ request, response, url, context, enabled: multiAgeAppEnabled, origin, send, readJson, aiConfig:multiAgeAI })) return;
+  const sharedRosterRoute=(request.method==='GET'&&url.pathname==='/api/students/inactive')||/^\/api\/students\/[0-9a-f-]{36}\/photo$/i.test(url.pathname);
+  if (multiAgeAppEnabled&&!sharedRosterRoute) {
+    try {
+      if (await multiAgeLegacyRouteBlocked(context, true)) {
+        send(response, 409, { error: 'Esta aula usa el recorrido multiedad. Vuelve a abrir Ayni para continuar.' }, origin); return;
+      }
+    } catch {
+      send(response, 503, { error: 'No se pudo verificar la configuración del aula. Vuelve a intentar.' }, origin); return;
+    }
   }
   const previewClock = readPreviewQAClock(request, context);
   if (url.pathname === "/api/qa/setup-benchmark") {
@@ -3328,25 +3422,37 @@ if (process.env.AYNI_SERVERLESS !== "1") {
   server.listen(port, listenHost, () => {
     console.log(`Ayni API ready at http://${listenHost}:${port} (${authMode})`);
   });
+  let multiAgeRunning=null;
+  const generationOptions=multiAgeAppEnabled ? {...multiAgeAI,providerForJob:multiAgeProviderForJob(multiAgeDatabase)} : null;
+  const multiAgeTimer=multiAgeAppEnabled?setInterval(()=>{
+    if(multiAgeRunning)return;
+    multiAgeRunning=runMultiAgeGenerationStep(multiAgeDatabase,generationOptions).then(()=>advanceDocumentGeneratorProjects(multiAgeDatabase,generationOptions)).catch(()=>{/* Error details and children's texts never enter logs. */}).finally(()=>{multiAgeRunning=null;});
+  },500):null;
+  multiAgeTimer?.unref();
   let preparationRunning=false;
   const preparationTimer=setInterval(async()=>{
     if(preparationRunning)return;preparationRunning=true;
-    try{await runPreparationWorker();}catch{/* Persisted jobs recover on the next tick; no private data in logs. */}
+    try{
+      if(multiAgeAppEnabled&&!(await db.query('select id from classrooms where teacher_id=$1 and status=\'active\' and curriculum_contract_version=1',[localTeacherId])).rows.length)return;
+      await runPreparationWorker();
+    }catch{/* Persisted jobs recover on the next tick; no private data in logs. */}
     finally{preparationRunning=false;}
   },2000);
-  preparationTimer.unref();
+  preparationTimer?.unref();
   let diagnosticRunning=false;
-  const diagnosticTimer=setInterval(async()=>{
+  const diagnosticTimer=multiAgeAppEnabled ? null : setInterval(async()=>{
     if(diagnosticRunning)return;diagnosticRunning=true;
     try{await runDiagnosticGenerationStep(db);}catch{/* Resume the saved identifier on a later tick. */}
     finally{diagnosticRunning=false;}
   },2000);
-  diagnosticTimer.unref();
+  diagnosticTimer?.unref();
   for (const signal of ["SIGINT", "SIGTERM"]) {
     process.on(signal, async () => {
+      clearInterval(multiAgeTimer);
       clearInterval(preparationTimer);
       clearInterval(diagnosticTimer);
       await new Promise((resolve) => server.close(resolve));
+      if(multiAgeRunning)await multiAgeRunning;
       await database.close();
       process.exit(0);
     });

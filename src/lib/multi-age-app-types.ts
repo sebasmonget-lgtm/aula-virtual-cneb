@@ -1,0 +1,43 @@
+export type CurriculumEntry = { enabled: boolean; contract?: number | null; classroomId?: string | null };
+export type Opportunity = { age: number; competency_id: string; child_action: string; mediation: string; observation: string; official_performance_refs: string[]; supports?:string };
+export type AnnualProposal = { title: string; organization: string; proposals: { slot_id: string; title: string; purpose: string; summary?:string; rationale?:string; common_invitation: string; one_teacher_organization: string; opportunities: Opportunity[] }[]; everyday_opportunities: Opportunity[] };
+export type AnnualPlan = { id: string; version: number; revision: number; status: string; current: boolean;teacher_confirmed_at?:string|null; proposal: AnnualProposal; document_context: { generation_job_id?:string; calendar: { projects: CalendarSlot[] } } };
+export type CalendarSlot = { slot_id: string; starts_on: string; ends_on: string; instructional_dates: string[] };
+export type CriterionVariant = { curricular_age: number; criterion_text: string; expected_evidence: string; observation_moments: string[]; official_performance_refs: string[] };
+export type ActivityBlueprint = { title: string; purpose: string; occursOn: string; participantAges: number[]; commonSequence: { opening: string; development: string; closure: string }; criteriaFamilies: { competency_id: string; variants: CriterionVariant[] }[] };
+export type MultiAgeProject={id:string;title:string;purpose:string;version:number;commonSequence:ActivityBlueprint['commonSequence'];annual_plan_id:string;annual_slot_id:string;fingerprint:string;nextPosition:number;criteriaFamilies:ActivityBlueprint['criteriaFamilies'];activities:{id:string;title:string;occurs_on:string;position:number}[]};
+export type DiagnosticFinding = { competency_id: string; observation_ids: string[]; teacher_reading: string; planning_priority: string };
+export type GroupDiagnosticReading={age:number;competency_id:string;review_ids:string[];teacher_reading:string;planning_priority:string};
+export type MultiAgeGroupDiagnosticState={classroomId:string;ages:number[];sourceFingerprint:string;draftFingerprint:string|null;ready:boolean;current:boolean;
+ groups:{age:number;enrolled:number;reviewed:number;coverage:{competency_id:string;name:string;enrolled:number;withTeacherSources:number;withConfirmedReading:number}[]}[];
+ eligibleReadings:(DiagnosticFinding&{age:number;reviewId:string;reviewVersion:number;studentName:string})[];
+ draft:{id:string;version:number;details:{readings:GroupDiagnosticReading[];organization:string;draft_revision?:number}}|null;
+ confirmed:{id:string;version:number;details:{readings:GroupDiagnosticReading[];organization:string;draft_revision?:number}}|null;
+ history:{id:string;status:string;version:number;details:{readings:GroupDiagnosticReading[];organization:string}}[]};
+export type DiagnosticChild = {
+  id: string; first_name: string; last_name: string; age: number; assignmentId: string; sourceFingerprint: string; current: boolean; pendingCompetencyIds: string[];
+  catalog: { id: string; title: string; teacher_instructions?: string; aspects: { id: string; competency_id: string; competency_name: string; prompt: string; age_reference: string; teacher_steps?: string[]; look_for?: string }[] }[];
+  observations: { id: string; competency_v4_id: string; observation_status: string; observation_text: string; observed_at: string }[];
+  family: { id:string;details: { family_text: string } } | null;
+  review: { id: string; version: number; details: { findings: DiagnosticFinding[]; pending_competency_ids: string[] } } | null;
+};
+export type AssessmentContext = { sourceFingerprint: string; sourceRows: { observation_text: string; activity_title?: string; criterion_text?: string }[]; assessmentContext: { curriculum: { age_performances: { text: string }[] } } };
+export type MultiAgeAppState = {
+  capabilities?: {storage:'temporary'|'persistent-local'|'postgres-tenant';ai:'off'|'fixture'|'openai'};
+  workspace: {
+    planningContext?:{curriculum:{age:number;cards:{id:string;official_name:string}[]}[]};
+    classroom: { id: string; section: string; institution_name: string; teacher_name?: string; curriculum_revision: number; ages: number[]; starts_on: string; ends_on: string; year: number };
+    students: { id: string; first_name: string; last_name: string;preferred_name:string|null; enrolled_on?:string; age: number; birth_date: string | null; assignment_id: string;assignment_revision:number;correction_fingerprint:string }[];
+    projects?:MultiAgeProject[];
+    activities: { id: string; title: string;purpose?:string; occurs_on: string; annual_slot_id: string | null; project_id?:string;project_title?:string;experience_type?:string;details: { common_sequence: ActivityBlueprint['commonSequence'];activity_contract?:{position?:number};workshop_snapshot?:{content:{materials:string[];preparation:string;resources?:unknown}} } }[];
+    criteria: { id: string; activity_id: string; curricular_age: number; competency_v4_id: string; criterion_text: string; details: { official_performance_refs: string[]; expected_evidence?:string;observation_moments?:string[] } }[];
+    periods: { id: string; label: string; starts_on: string; ends_on: string; closed:boolean }[];
+    pairs: { studentId: string; competencyId: string; periodId: string; current: boolean; grade: { id: string; achievement_level: string } | null; conclusion: { id:string; details: { conclusion_text: string } } | null }[];
+    reports: { id: string; student_id: string; period_start: string; period_end: string; details: {sections:{competency_id:string;progress_summary:string}[]} }[];
+    reportHistory: { id:string;student_id:string;status:string;version:number;title:string;age:number;classroom:string;period_start:string;period_end:string;details:{sections:{competency_id:string;progress_summary:string}[]} }[];
+  } | null;
+  diagnostic: { ready: boolean; students: DiagnosticChild[]; groups: { age: number; enrolled: number; reviewed: number }[];groupReview?:MultiAgeGroupDiagnosticState } | null;
+  planning: { sourceFingerprint: string;protectedSlots:{slotId:string;reason:string}[];projectLinks:{slot_id:string;project_id:string}[]; exampleProposal: AnnualProposal; plans: AnnualPlan[]; calendar: { projects: CalendarSlot[] }; coverage: { age: number; competencies: { id: string; name: string; hasAgePerformance: boolean }[] }[] } | null;
+  planningUnavailable?: string | null;
+  documents: { id: string; kind: string; title: string; version: number; historical: boolean; status: string; ages: number[]; schoolYear: number; exportReady: boolean;date?:string;position?:number;projectId?:string;projectDocumentId?:string;projectVersion?:number }[];
+};

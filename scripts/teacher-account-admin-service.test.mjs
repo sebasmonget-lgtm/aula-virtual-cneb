@@ -85,3 +85,17 @@ test("initial recovery changes only the never-used administrator's login and pas
     { ...admin, last_sign_in_at: "2026-09-30T17:00:00Z" }, teacher,
   ] }) }), /no está disponible/);
 });
+
+
+test('el alta conserva la modalidad elegida en Auth y en el perfil sin modificar otras cuentas',async()=>{
+ const {openMultiAgeLocalDb}=await import('./multi-age-local-db.mjs');
+ const db=await openMultiAgeLocalDb();
+ try{
+  const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',calls=[];
+  await createTeacherAccount({...base,db,name:'Docente ficticia',productMode:'documents',documentGeneratorAvailable:true,fetchImpl:async(_url,options)=>{calls.push(JSON.parse(options.body));return Response.json({id});}});
+  assert.equal(calls[0].app_metadata.ayni_product_mode,'documents');
+  const profile=(await db.query('select display_name,preferences from profiles where user_id=$1',[id])).rows[0];
+  assert.equal(profile.preferences.ayni_product_mode,'documents');assert.equal(profile.display_name,'Docente ficticia');
+  for(const extra of [{productMode:'otro',documentGeneratorAvailable:true},{productMode:'documents',documentGeneratorAvailable:false}])await assert.rejects(()=>createTeacherAccount({...base,...extra,fetchImpl:()=>{throw new Error('No debe crear una cuenta inválida');}}),/modalidad|habilitado/);
+ }finally{await db.close();}
+});

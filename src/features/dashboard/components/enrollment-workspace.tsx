@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, Camera, ChevronDown, ImageIcon, Info, ListPlus, LogOut, Pencil, Plus, Save, Search, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,9 +32,15 @@ async function mutate(path:string,body:Record<string,unknown>,dashboard?:LocalDa
   return result.dashboard;
 }
 
-export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSignOut}: {
-  dashboard:LocalDashboard;onUpdated:(data:LocalDashboard)=>void;onBack:()=>void;onContinue:(step?:3|4)=>Promise<void>;onSignOut?:()=>void;
-}) {
+export type EnrollmentBackend={
+  students:LocalStudent[];teacherName:string;
+  save:(students:{firstName:string;lastName:string;birthDate?:string|null;preferredName?:string}[],editing:LocalStudent|null,requestId:string)=>Promise<string|undefined>;
+  remove:(student:LocalStudent)=>Promise<void>;refresh:()=>Promise<void>;
+  onEdit:(student:LocalStudent|null)=>void;dirty?:boolean;extraFields:ReactNode;recover:(id:string)=>Promise<void>;
+};
+export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSignOut,documentsOnly=false,backend}: {
+  documentsOnly?:boolean;onBack:()=>void;onContinue:(step?:3|4)=>Promise<void>;onSignOut?:()=>void;
+} & ({dashboard:LocalDashboard;onUpdated:(data:LocalDashboard)=>void;backend?:never}|{backend:EnrollmentBackend;dashboard?:never;onUpdated?:never})) {
   const [query,setQuery]=useState("");
   const [editing,setEditing]=useState<LocalStudent|null>(null);
   const [form,setForm]=useState<Form>(empty);
@@ -56,16 +62,16 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
   const lock=useRef(false);
   const importIntent=useRef<{payload:string;id:string}|null>(null);
   const {confirmation,confirm}=useSaveConfirmation();
-  const dirty=JSON.stringify(form)!==JSON.stringify(editing?studentForm(editing):empty)||Boolean(photo)||Boolean(csv.trim());
+  const dirty=Boolean(backend?.dirty)||JSON.stringify(form)!==JSON.stringify(editing?studentForm(editing):empty)||Boolean(photo)||Boolean(csv.trim());
   const allowLeave=useUnsavedWork(dirty||Boolean(photoRetry),busy||photoBusy);
   const unavailable=busy||photoBusy;
-  const students=dashboard.students;
+  const students=backend?.students??dashboard!.students;
   const visible=students.filter(student=>fullName(student).toLocaleLowerCase("es-PE").includes(query.trim().toLocaleLowerCase("es-PE")));
   const normalized=(name:string)=>name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toLocaleLowerCase("es-PE");
   const duplicateNames=(review??[]).map(row=>normalized(`${row.firstName} ${row.lastName}`)).filter((name,index,all)=>all.indexOf(name)!==index || students.some(student=>normalized(fullName(student))===name));
 
-  function reset(){importIntent.current=null;setEditing(null);setForm(empty);setPhoto(null);setPhotoMenu(false);setError("");}
-  function edit(student:LocalStudent){if(unavailable||photoRetry||!allowLeave())return;setEditing(student);setForm(studentForm(student));setPhoto(null);setPhotoMenu(false);setError("");nameInput.current?.focus();}
+  function reset(){backend?.onEdit(null);importIntent.current=null;setEditing(null);setForm(empty);setPhoto(null);setPhotoMenu(false);setError("");}
+  function edit(student:LocalStudent){if(unavailable||photoRetry||!allowLeave())return;backend?.onEdit(student);setEditing(student);setForm(studentForm(student));setPhoto(null);setPhotoMenu(false);setError("");nameInput.current?.focus();}
   async function choose(file?:File){if(!file)return;setPhotoBusy(true);setError("");try{setPhoto(await preparePrivateMedia(file,{maxEdge:512,maxBytes:100_000}));setPhotoMenu(false);}catch(cause){setError(cause instanceof Error?cause.message:"No se pudo preparar la foto.");}finally{setPhotoBusy(false);}}
   async function save(useCsv=false){
     if(lock.current||unavailable||photoRetry)return;
@@ -75,9 +81,14 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
       const input={students:useCsv?review!.map(row=>({...row,preferredName:row.preferredName??undefined,birthDate:row.birthDate??undefined})):[form]};
       const payload=JSON.stringify(input);
       if(importIntent.current?.payload!==payload)importIntent.current={payload,id:crypto.randomUUID()};
-      const next=editing&&!useCsv ? await mutate(`/api/students/${editing.id}/details`,{...form,preferredName:editing.preferred_name??null,expected:{...studentForm(editing),birthDate:editing.birth_date??null,preferredName:editing.preferred_name??null}},dashboard)
-        : await importPilotStudents(input,importIntent.current.id,dashboard);
-      const savedId=editing?.id ?? next.students.find(student=>!students.some(old=>old.id===student.id))?.id;
+      let next:LocalDashboard|undefined;
+      let savedId:string|undefined;
+      if(backend)savedId=await backend.save(input.students,editing&&!useCsv?editing:null,importIntent.current.id);
+      else {
+        next=editing&&!useCsv ? await mutate(`/api/students/${editing.id}/details`,{...form,preferredName:editing.preferred_name??null,expected:{...studentForm(editing),birthDate:editing.birth_date??null,preferredName:editing.preferred_name??null}},dashboard)
+          : await importPilotStudents(input,importIntent.current.id,dashboard);
+        savedId=editing?.id ?? next.students.find(student=>!students.some(old=>old.id===student.id))?.id;
+      }
       if(useCsv){setCsv("");setReview(null);setImportOpen(false);setNamesReviewed(false);}else reset();
       let photoSaved=true;
       if(photo&&savedId&&!useCsv){
@@ -85,7 +96,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
         catch(cause){photoSaved=false;setPhotoRetry({id:savedId,media:photo});setError(`Los datos del niño se guardaron. ${cause instanceof Error?cause.message:"La foto está pendiente."} Reintenta guardarla sin añadirlo de nuevo.`);}
       }
       // Publish the roster after the upload to avoid avatar reads competing with the first photo write.
-      onUpdated(next);
+      if(backend)await backend.refresh();else if(next)onUpdated!(next);
       importIntent.current=null;
       if(photoSaved)confirm(editing?"¡Datos del niño actualizados!":useCsv?"¡Lista registrada!":"¡Niño añadido!","Registro guardado.");
     }catch(cause){setError(cause instanceof Error?cause.message:"No se pudo guardar al niño.");}
@@ -93,7 +104,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
   }
   async function remove(){
     if(!deleting||lock.current)return;lock.current=true;setBusy(true);setAction("remove");setError("");
-    try{onUpdated(await mutate(`/api/students/${deleting.id}/enrollment`,{status:"inactive",expectedStatus:"active"}));if(editing?.id===deleting.id)reset();setDeleting(null);confirm("Niño eliminado de la lista.","Su historial se conserva para recuperarlo.");}
+    try{if(backend){await backend.remove(deleting);await backend.refresh();}else onUpdated!(await mutate(`/api/students/${deleting.id}/enrollment`,{status:"inactive",expectedStatus:"active"}));if(editing?.id===deleting.id)reset();setDeleting(null);confirm("Niño eliminado de la lista.","Su historial se conserva para recuperarlo.");}
     catch(cause){setError(cause instanceof Error?cause.message:"No se pudo eliminar. Inténtalo de nuevo.");}
     finally{lock.current=false;setBusy(false);}
   }
@@ -105,7 +116,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
     finally{lock.current=false;setBusy(false);}
   }
   async function continueRegistration(step:3|4=3){if(lock.current||photoRetry||!allowLeave())return;if(!students.length){setError("Añade al menos un niño o niña para continuar.");return;}lock.current=true;setBusy(true);setAction("continue");setError("");try{await onContinue(step);}catch(cause){setError(cause instanceof Error?cause.message:"No se pudo continuar. Inténtalo de nuevo.");}finally{lock.current=false;setBusy(false);}}
-  const teacherName=dashboard.profile.teacher_name;
+  const teacherName=backend?.teacherName??dashboard!.profile.teacher_name;
   return <div className={`${shell.page} ${styles.page}`} data-ayni-screen="enrollment">
     <header className={shell.topbar}><div className={styles.topbarInner}>
       <div className={styles.brand}><span className={styles.brandSymbol}><svg aria-hidden="true" viewBox="0 0 48 40" width={40} height={36}><circle cx="24" cy="8" r="6" fill="white"/><circle cx="9" cy="14" r="4.5" fill="#ffd357"/><circle cx="39" cy="14" r="4.5" fill="#ffd357"/><path d="M16 39V24a8 8 0 0 1 16 0v15h-6V29h-4v10ZM1 34V26a8 8 0 0 1 13-6v16H8v-8H6v6ZM47 34V26a8 8 0 0 0-13-6v16h6v-8h2v6Z" fill="white"/></svg></span><div><strong>Ayni Aula</strong><small>Tu aliada en Inicial</small></div></div>
@@ -116,13 +127,13 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
         <button type="button" className={styles.backLink} disabled={unavailable} onClick={()=>{if(allowLeave())onBack();}}><ArrowLeft size={18}/>Volver</button>
         <h1>Añade a tus niños</h1><p>Registra a los niños de tu aula. Puedes <strong>añadirlos</strong> uno por uno o varios a la vez.</p>
         <Image className={`${shell.illustration} ${styles.illustration}`} src="/ayni-classroom-welcome.png" alt="" width={1536} height={1024} sizes="440px" preload/>
-        <PreparationSteps current={2} className={styles.steps} disabled={unavailable} onSelect={step=>{if(step===1){if(allowLeave())onBack();}else if(step===3||step===4)void continueRegistration(step);}}/>
+        <PreparationSteps documentsOnly={documentsOnly} current={2} className={styles.steps} disabled={unavailable} onSelect={step=>{if(step===1){if(allowLeave())onBack();}else if(step===3||step===4)void continueRegistration(step);}}/>
       </div>
       <div className={styles.columns}>
         <section className={`${shell.card} ${styles.listCard}`} aria-labelledby="registered-children-title">
           <div className={styles.listHeading}><span className={shell.classroomIcon}><Users size={32} aria-hidden="true"/></span><div><h2 id="registered-children-title">Niños registrados ({students.length})</h2><p>Aquí aparecen los niños registrados.</p><p className={styles.hint}><Info size={17} aria-hidden="true"/>Usa editar para cambiar foto, nombre o fecha de nacimiento.</p></div><label className={styles.search}><Search size={21} aria-hidden="true"/><span className="sr-only">Buscar niño o niña</span><Input placeholder="Buscar niño o niña…" value={query} onChange={event=>setQuery(event.target.value)}/></label></div>
-          <div className={styles.tableScroll}><table className={styles.table}><thead><tr><th>Foto</th><th>Nombre completo</th><th>Acciones</th></tr></thead><tbody>{visible.map(student=><tr key={student.id} data-selected={editing?.id===student.id||undefined}><td><StudentPhoto id={student.id} name={fullName(student)} revision={revisions[student.id]??0} className={styles.studentPhoto}/></td><th scope="row">{fullName(student)}{editing?.id===student.id&&<span className={styles.editingBadge}>Editando</span>}</th><td><div className={styles.actions}><button type="button" disabled={unavailable||Boolean(photoRetry)} aria-label={`Editar a ${fullName(student)}`} onClick={()=>edit(student)}><Pencil size={24}/></button><button type="button" disabled={unavailable||Boolean(photoRetry)} aria-label={`Eliminar a ${fullName(student)}`} onClick={()=>{setError("");setDeleting(student);}}><Trash2 size={24}/></button></div></td></tr>)}</tbody></table>{!visible.length&&<div className={styles.empty}><Users size={38} aria-hidden="true"/><p>{students.length?"No encontramos niños con ese nombre.":"Aún no has añadido niños."}</p><small>{students.length?"Prueba con otro nombre.":"Añade el primero con el formulario de al lado."}</small></div>}</div>
-          <div className={styles.listTools}><Button type="button" variant="outline" disabled={unavailable||Boolean(editing)||Boolean(photoRetry)} aria-expanded={importOpen} onClick={()=>setImportOpen(value=>!value)}><ListPlus size={17}/>Importar lista</Button><StudentEnrollment disabled={unavailable||Boolean(editing)||Boolean(photoRetry)} onSaved={async()=>{onUpdated(await loadLocalDashboard());}}/></div>
+          <div className={styles.tableScroll}><table className={styles.table}><thead><tr><th>Foto</th><th>Nombre completo</th><th>Acciones</th></tr></thead><tbody>{visible.map(student=><tr key={student.id} data-selected={editing?.id===student.id||undefined}><td><StudentPhoto id={student.id} name={fullName(student)} revision={revisions[student.id]??0} className={styles.studentPhoto}/></td><th scope="row">{fullName(student)}{backend&&<small className="block font-normal">{student.age_years} años</small>}{editing?.id===student.id&&<span className={styles.editingBadge}>Editando</span>}</th><td><div className={styles.actions}><button type="button" disabled={unavailable||Boolean(photoRetry)} aria-label={`Editar a ${fullName(student)}`} onClick={()=>edit(student)}><Pencil size={24}/></button><button type="button" disabled={unavailable||Boolean(photoRetry)} aria-label={`Eliminar a ${fullName(student)}`} onClick={()=>{setError("");setDeleting(student);}}><Trash2 size={24}/></button></div></td></tr>)}</tbody></table>{!visible.length&&<div className={styles.empty}><Users size={38} aria-hidden="true"/><p>{students.length?"No encontramos niños con ese nombre.":"Aún no has añadido niños."}</p><small>{students.length?"Prueba con otro nombre.":"Añade el primero con el formulario de al lado."}</small></div>}</div>
+          <div className={styles.listTools}><Button type="button" variant="outline" disabled={unavailable||Boolean(editing)||Boolean(photoRetry)} aria-expanded={importOpen} onClick={()=>setImportOpen(value=>!value)}><ListPlus size={17}/>Importar lista</Button><StudentEnrollment onChangeEnrollment={backend?async(id)=>backend.recover(id):undefined} disabled={unavailable||Boolean(editing)||Boolean(photoRetry)} onSaved={async()=>{if(backend)await backend.refresh();else onUpdated!(await loadLocalDashboard());}}/></div>
           {importOpen&&<section className={styles.importPanel} aria-label="Importar lista de niños"><label>Lista de niños en CSV<Textarea disabled={unavailable} value={csv} onChange={event=>{setCsv(event.target.value);setReview(null);setNamesReviewed(false);}} placeholder={'first_name,last_name,preferred_name,birth_date\nMaría,López,,2021-05-14'}/></label><p>Hasta 40 niños. Columnas: first_name,last_name,preferred_name; birth_date es opcional (AAAA-MM-DD).</p><input ref={csvInput} hidden type="file" accept=".csv,text/csv" onChange={event=>{const file=event.target.files?.[0];if(!file)return;if(file.size>20000){setError("El archivo CSV admite hasta 20 KB.");return;}void file.text().then(value=>{setCsv(value);setReview(null);setNamesReviewed(false);}).catch(()=>setError("No se pudo leer el CSV."));event.target.value="";}}/><div><Button type="button" variant="outline" disabled={unavailable} onClick={()=>csvInput.current?.click()}>Seleccionar CSV</Button><Button type="button" variant="outline" disabled={unavailable||!csv.trim()} onClick={()=>{try{setReview(validateStudentsForImport(parseStudentCsv(csv)));setNamesReviewed(false);setError("");}catch(cause){setError(cause instanceof Error?cause.message:"Revisa la lista.");}}}>Revisar lista antes de añadir</Button></div>{review&&<><ul>{review.map((row,index)=><li key={index}>{row.firstName} {row.lastName}<button type="button" disabled={unavailable} onClick={()=>{setReview(review.filter((_,i)=>i!==index));setNamesReviewed(false);}}>Quitar</button></li>)}</ul>{duplicateNames.length>0&&<label className={styles.duplicate}><input type="checkbox" checked={namesReviewed} onChange={event=>setNamesReviewed(event.target.checked)}/>Revisé los nombres repetidos y confirmo que son niños diferentes.</label>}<AsyncButton busy={busy&&action==="import"} busyLabel="Importando…" disabled={unavailable||!review.length||duplicateNames.length>0&&!namesReviewed||Boolean(form.firstName||form.lastName||photo)} onClick={()=>void save(true)}>Añadir {review.length} {review.length===1?"niño":"niños"}</AsyncButton></>}</section>}
         </section>
         <section className={`${shell.card} ${styles.editor}`} data-editing={Boolean(editing)} aria-labelledby="student-editor-title">
@@ -132,6 +143,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
             <input ref={fileInput} hidden type="file" accept="image/jpeg,image/png,image/webp" disabled={unavailable} onChange={event=>{void choose(event.target.files?.[0]);event.target.value="";}}/><input ref={cameraInput} hidden type="file" capture="user" accept="image/jpeg,image/png,image/webp" disabled={unavailable} onChange={event=>{void choose(event.target.files?.[0]);event.target.value="";}}/>
             {photoBusy&&<p role="status">Preparando foto…</p>}
             <div className={shell.fields}><label htmlFor="enrollment-first-name">Nombres <span className={shell.required} aria-hidden="true">*</span><Input id="enrollment-first-name" ref={nameInput} required minLength={2} maxLength={80} disabled={unavailable||Boolean(photoRetry)} placeholder="Ej. Mariana Valentina" autoComplete="off" value={form.firstName} onChange={event=>{const value=event.target.value;setForm(current=>({...current,firstName:value}));}}/></label><label htmlFor="enrollment-last-name">Apellidos <span className={shell.required} aria-hidden="true">*</span><Input id="enrollment-last-name" required minLength={2} maxLength={80} disabled={unavailable||Boolean(photoRetry)} placeholder="Ej. Ramírez Flores" autoComplete="off" value={form.lastName} onChange={event=>{const value=event.target.value;setForm(current=>({...current,lastName:value}));}}/></label><label className={shell.full} htmlFor="enrollment-birth-date">Fecha de nacimiento <span className={shell.optional}>(opcional)</span><Input id="enrollment-birth-date" type="date" min="2000-01-01" max={new Date().toISOString().slice(0,10)} disabled={unavailable||Boolean(photoRetry)} value={form.birthDate} onInput={event=>{const value=event.currentTarget.value;setForm(current=>({...current,birthDate:value}));}} onChange={event=>{const value=event.target.value;setForm(current=>({...current,birthDate:value}));}}/></label></div>
+            {backend?.extraFields}
             <AsyncButton type="submit" busy={busy&&action==="save"} busyLabel="Guardando…" className={`${shell.primary} ${styles.save}`} disabled={unavailable||Boolean(photoRetry)||form.firstName.trim().length<2||form.lastName.trim().length<2}>{editing?<Save size={22}/>:<Plus size={23}/>} {editing?"Guardar cambios":"Agregar niño"}</AsyncButton>
             {editing&&<button type="button" className={styles.cancelEdit} disabled={unavailable} onClick={reset}>Cancelar edición</button>}
           </form>
@@ -139,7 +151,7 @@ export function EnrollmentWorkspace({dashboard,onUpdated,onBack,onContinue,onSig
           {photoRetry&&<div className={styles.retry}><AsyncButton busy={busy&&action==="photo"} busyLabel="Guardando foto…" disabled={unavailable} variant="outline" onClick={()=>void retryPhoto()}>Reintentar guardar foto</AsyncButton><Button variant="ghost" disabled={unavailable} onClick={()=>{setPhotoRetry(null);setError("");}}>Continuar sin esta foto</Button></div>}
         </section>
       </div>
-      <footer className={`${shell.card} ${styles.footer}`}><Button type="button" variant="outline" disabled={unavailable} onClick={()=>{if(allowLeave())onBack();}}><ArrowLeft/>Volver</Button><AsyncButton busy={busy&&action==="continue"} busyLabel="Continuando…" className={shell.primary} disabled={unavailable||!students.length||dirty||Boolean(photoRetry)} onClick={()=>void continueRegistration()}>Continuar a entrevistas y observaciones<ArrowRight/></AsyncButton></footer>
+      <footer className={`${shell.card} ${styles.footer}`}><Button type="button" variant="outline" disabled={unavailable} onClick={()=>{if(allowLeave())onBack();}}><ArrowLeft/>Volver</Button><AsyncButton busy={busy&&action==="continue"} busyLabel="Continuando…" className={shell.primary} disabled={unavailable||!students.length||dirty||Boolean(photoRetry)} onClick={()=>void continueRegistration()}>{documentsOnly?"Conversar con Ayni":"Continuar a entrevistas y observaciones"}<ArrowRight/></AsyncButton></footer>
       <SaveConfirmation confirmation={confirmation}/>
     </main>
     <AlertDialog open={Boolean(deleting)} onOpenChange={open=>{if(!open&&!busy)setDeleting(null);}}><AlertDialogContent><AlertDialogTitle>¿Eliminar a {deleting?fullName(deleting):"este niño"} de la lista?</AlertDialogTitle><AlertDialogDescription>El niño y su historial quedarán ocultos hasta que lo recuperes.</AlertDialogDescription>{error&&<WorkflowFeedback tone="error">{error}</WorkflowFeedback>}<AlertDialogFooter><AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel><AsyncButton busy={busy&&action==="remove"} busyLabel="Eliminando…" disabled={busy} onClick={()=>void remove()}>Confirmar eliminación</AsyncButton></AlertDialogFooter></AlertDialogContent></AlertDialog>

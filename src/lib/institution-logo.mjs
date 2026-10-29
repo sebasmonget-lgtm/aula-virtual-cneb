@@ -43,7 +43,7 @@ export async function loadInstitutionLogoForDocuments(db, teacherId, assetsRoot)
   try {
     let bytes;
     if (typeof assetsRoot === "string") {
-      const target = path.resolve(path.dirname(assetsRoot), "..", row.original_path);
+      const target = path.resolve(assetsRoot, path.basename(row.original_path));
       if (!target.startsWith(path.resolve(assetsRoot) + path.sep)) throw new Error("Ruta de logo no permitida.");
       bytes = await readFile(target);
     } else {

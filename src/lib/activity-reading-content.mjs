@@ -3,6 +3,10 @@ export const savedText=value=>typeof value==='string'?value.trim():'';
 export function readingSentences(value){
   if(Array.isArray(value))return value.filter(item=>typeof item==='string'&&item.trim()).map(item=>item.trim());
   const text=savedText(value);if(!text)return [];
+  // The guide supplies its own visible step numbers. Keep each authored numbered
+  // action whole, including questions, instead of segmenting "1." as a sentence.
+  const numbered=[...text.matchAll(/(?:^|\n)\s*\d+[.)]\s+/g)];
+  if(numbered.length&&numbered[0].index===0)return numbered.map((match,index)=>text.slice(match.index+match[0].length,numbered[index+1]?.index??text.length).trim()).filter(Boolean);
   const sentences=[];
   for(const item of new Intl.Segmenter('es-PE',{granularity:'sentence'}).segment(text)){
     const part=item.segment.trim();if(!part)continue;

@@ -7,6 +7,7 @@ export function readPilotSetupForm(formData, draft) {
   }
   const age = Number(formData.get('age'));
   result.age = [3, 4, 5].includes(age) ? age : null;
-  result.year = Number(formData.get('year'));
+  if(formData.has('year'))result.year = Number(formData.get('year'));
+  if(formData.has('groupAge'))result.ages=formData.getAll('groupAge').map(Number);
   return result;
 }

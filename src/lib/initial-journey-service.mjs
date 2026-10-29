@@ -1,3 +1,4 @@
+import { DOCUMENT_GENERATOR_CONVERSATION_RULES, DOCUMENT_GENERATOR_PROMPT_VERSION } from './document-generator-prompts.mjs';
 import { randomUUID, createHash } from "node:crypto";
 import { versionTransaction, VersionConflictError } from "./version-integrity.mjs";
 import { journeyFail } from "./annual-journey-contract.mjs";
@@ -28,13 +29,15 @@ non_context_turns contiene los índices de los aportes que SOLO tienen indicacio
 Usa teacher_decision_sources para copiar la fuente y su source_turn explícito. El primer aporte tiene source_turn 0; el segundo 1; el tercero 2. No cuentes desde uno ni uses índices de mensajes de conversación.
 Las respuestas docentes siguen siendo preferencias, nunca intereses observados del grupo.`;
 
+export const documentPlanningConversationRules=()=>`${DOCUMENT_GENERATOR_CONVERSATION_RULES}\nmessage contiene el reconocimiento o resumen y question la única pregunta, sin repetirla; chips son respuestas opcionales neutrales. Usa ready cuando haya contexto suficiente o la docente quiera continuar; question y chips vacíos en ready. insufficient_core_information solo si faltan aula, edad o currículo.\n${PLANNING_CONVERSATION_RULES.slice(PLANNING_CONVERSATION_RULES.indexOf('context_items resume'))}`;
+
 export function buildAnnualPlanningBrief({context,snapshot,curriculum,calendar}) {
-  return {contract:"AnnualPlanningBrief/v1",classroom:{age:context.age,student_count:snapshot.student_count,year:context.year,languages:context.language_context,applicability:{castellano_l2:context.castellano_l2_applicable,religion:context.religion_applicable},institutional_context:context.annual_planning_context},
+  return {contract:"AnnualPlanningBrief/v1",...(context.document_generation_mode?{document_generation_mode:true,prompt_version:DOCUMENT_GENERATOR_PROMPT_VERSION,planning_goal:'Reunir contexto y decisiones para preparar Mi año, sin diagnóstico.'}:{}),classroom:{age:context.age,student_count:snapshot.student_count,year:context.year,languages:context.language_context,applicability:{castellano_l2:context.castellano_l2_applicable,religion:context.religion_applicable},institutional_context:context.annual_planning_context},
     sources:snapshot.facts.map(({source_refs,ai_support_text,support_text,...fact})=>{void source_refs;return {...fact,support_text:ai_support_text===undefined?support_text:ai_support_text??"Información privada omitida"};}),
-    coverage:snapshot.competency_information,curriculum:curriculum.map(c=>({id:c.id,name:c.name})),
+    ...(context.document_generation_mode?{}:{coverage:snapshot.competency_information}),curriculum:curriculum.map(c=>({id:c.id,name:c.name})),
     calendar:{initial_stage:calendar.initial_stage,starts_on:context.starts_on,ends_on:context.ends_on,blocks:calendar.blocks,days:calendar.days?.filter(d=>d.calendar_type!=="instructional_day").map(d=>({date:d.date,type:d.calendar_type,reason:d.reason}))},
-    unknowns:snapshot.competency_information.filter(c=>!c.recorded_performances).map(c=>c.competency_id),
-    source_policy:"individual evidence remains individual; preferences are teacher decisions, missing records are unknown"};
+    ...(context.document_generation_mode?{}:{unknowns:snapshot.competency_information.filter(c=>!c.recorded_performances).map(c=>c.competency_id)}),
+    source_policy:context.document_generation_mode?"El contexto y las preferencias docentes orientan propuestas futuras; no se requieren registros de evaluación.":"individual evidence remains individual; preferences are teacher decisions, missing records are unknown"};
 }
 const publicConversation=(id,p)=>({id,revision:p.revision,status:conversationStatus(p),messages:p.messages,
   question:p.answer?.question??"",chips:p.answer?.chips??[],teacherIdeas:p.teacher_texts.join("\n"),contextItems:p.answer?.context_items??[],contextDraft:p.context_draft??null,calls:p.calls,attempts:p.attempts??p.calls});
@@ -96,7 +99,7 @@ export async function handlePlanningConversation({request,response,url,db,contex
       conversation:payload.messages.filter(m=>m.role==="assistant").map(m=>m.text),teacher_decisions:safeTeacherDecisions,
       effective_context:payload.context_draft?{contextItems:payload.context_draft.value.contextItems.map(item=>({text:annualJourneySafeText(item.text,sources.names,annualJourneyCurriculumTerms(curriculum))})),
         historicalProjects:payload.context_draft.value.historicalProjects.map(item=>({...item,title:annualJourneySafeText(item.title,sources.names,annualJourneyCurriculumTerms(curriculum))}))}:null,
-      teacher_decision_sources:safeTeacherDecisions.map((text,source_turn)=>({source_turn,text}))},plan,CONVERSATION_SCHEMA,PLANNING_CONVERSATION_RULES));
+      teacher_decision_sources:safeTeacherDecisions.map((text,source_turn)=>({source_turn,text}))},plan,CONVERSATION_SCHEMA,context.document_generation_mode?documentPlanningConversationRules():PLANNING_CONVERSATION_RULES));
     answer=result.output;
     if(!["ready","needs_clarification","insufficient_core_information"].includes(answer?.status)||typeof answer.message!=="string"||typeof answer.question!=="string"||!Array.isArray(answer.chips)||answer.chips.some(c=>typeof c!=="string")||answer.chips.length>5)journeyFail("invalid","No pude preparar una respuesta clara. Tu conversación se conserva.");
     if(answer.context_items && (!Array.isArray(answer.context_items)||answer.context_items.length>20||answer.context_items.some(item=>
@@ -105,7 +108,7 @@ export async function handlePlanningConversation({request,response,url,db,contex
       journeyFail("invalid","No pude relacionar el contexto con tus aportes. La conversación se conserva para retomarla.");
     answer={...answer,context_items:completeContextSources(answer.context_items??[],safeTeacherDecisions,payload.context_draft?.importedTurns??[],answer.non_context_turns??[])};
     if(answer.status==="ready")answer={...answer,question:"",chips:[]};
-    if(payload.safe_texts.length>=3)answer={...answer,status:"ready",question:"",chips:[]};
+    if(!context.document_generation_mode&&payload.safe_texts.length>=3)answer={...answer,status:"ready",question:"",chips:[]};
     }
   }catch(error){await db.query(`update ai_pending_generations set payload=jsonb_set(payload,'{lease_until}','null'::jsonb) where id=$1 and payload->>'lease_token'=$2`,[row.id,lease]);throw error;}
   const next={...payload,safe_texts:safeTeacherDecisions,answer,revision:payload.revision+1,calls:payload.calls+(called?1:0),lease_until:null,pending_turn:false,

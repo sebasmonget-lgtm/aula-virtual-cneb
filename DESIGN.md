@@ -1,5 +1,13 @@
 # Diseño de Ayni
 
+## Generador de documentos independiente · 2026-10-25
+
+Extensión Operate de la interfaz existente en una copia propia. Conservar Poppins, azul/teal, paneles blancos, sombras, cabecera y marco docente compartidos. Identificar la variante con Generador de documentos en cabecera/barra lateral y título de pestaña. Tres destinos: Mi año, Documentos y Biblioteca; misma distribución en móvil con tres columnas. El alta conserva formularios de colegio y matrícula, omitiendo el paso de entrevistas/observaciones. Documentos separa formatos vacíos y planes guardados; filtros de alumno, bimestre y mes se apilan en móvil. Biblioteca conserva catálogo y adaptaciones por edad; solo ofrece PDF cuando hay material imprimible. Descargas con estado/error recuperable. Revisión local 1440×900 y 390×844, selector de tres alumnos y sin desborde horizontal observado. Detector mecánico de ocho componentes sin hallazgos. Las capturas de interfaz no certifican la paginación de Word; límite en el recibo del generador.
+
+## Unidocencia integrada · 2026-10-23
+
+Por instrucción expresa, conservar la interfaz de origin/main. Unidocencia usa el mismo frame docente, cinco destinos, Mi aula, timeline anual, carpetas de Documentos, lector de actividad y espacios de Evaluar. Los cambios visibles se limitan a modalidad inicial, grupo curricular de cada niño y oportunidades/referentes por edad. La vista paralela inicial queda descartada. No crear una nueva cabecera, navegación o paleta para este contrato. La versión local sigue usando datos ficticios y preparación manual; no presentar chat o funciones pendientes como disponibles.
+
 ## Documento diagnóstico en Documentos · 2026-10-21
 
 Modo Operate, refinamiento de la interfaz existente. Acción «Preparar diagnóstico de mi aula» visible en Documentos; preparación opcional, separada de entrevistas → chat. Superficie blanca, borde y componentes compartidos, azul/teal actuales, texto breve y acciones de 44–48 px. Propuesta editable lista al terminar, lecturas por competencia en detalle, guardado y confirmación expresos. En móvil los botones se apilan. Las esperas recuperables permiten salir y volver sin otra generación ni sustitución de cambios escritos. Sin modal ni resumen manual obligatorio antes del chat.

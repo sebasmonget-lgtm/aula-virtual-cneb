@@ -1,0 +1,54 @@
+# Consolidado, Excel y cierres de Unidocencia
+
+Fecha: 23 de octubre de 2026. Continuación local autorizada; rama `codex/multiedad-local-20261022`, base `26e51f3`. Sin commit, push ni publicación. Esta fase completa el primer pendiente del recibo 14 y la corrección versionada de valoración/conclusión necesaria para poder reabrir y recerrar de forma útil. No declara terminado todo el piloto.
+
+## Recorrido implementado
+
+Evaluar conserva la navegación y el componente `PeriodConsolidated` de Ayni. Únicamente la ruta curricular 2 incorpora filtro por grupo de 3/4/5 años, el grupo junto al nombre del niño, consulta individual desde cada celda y cierre/historial del bimestre. Las aulas de contrato 1 conservan sus endpoints, presentación y reglas; no se convierten al consultar. La activación continúa siendo explícita mediante Unidocencia y el gate local existente.
+
+`multi-age-period.mjs` construye una sola proyección para tabla, filtros, Excel, comprobación de cierre y manifiesto histórico. Resuelve la asignación curricular activa del niño, las competencias aplicables a su edad y las actividades previstas, observaciones, notas y conclusiones del período. Un criterio previsto no cuenta como evidencia. Una competencia preparada solo para un grupo no obliga a los otros dos a valorarla. El referente ausente para una edad no se sustituye por el de otra.
+
+Una nota solo se proyecta como vigente si está confirmada por la docente, tiene evidencia y coincide su huella de fuentes. Una conclusión debe corresponder a esa versión de nota y a su contexto curricular. Los cambios de fuentes dejan pendiente la revisión; no se recalculan ni inventan notas. A/B/C requieren conclusión para cerrar conforme a la regla existente de Ayni; AD admite conclusión opcional. El estado y los contadores distinguen valoración de conclusión, también cuando AD no tiene texto.
+
+La consulta usa una transacción de lectura consistente. El cierre exige confirmación docente, huella actual y versión de cierre esperada. Los pendientes de observación/valoración pueden conservarse explícitamente sin nivel inventado, mediante reconocimiento docente; una nota obsoleta o una conclusión requerida sin confirmar sí bloquea el cierre. El último período mantiene el control anual de pares niño–competencia aplicables sin valoración vigente en el año. Se probó su rechazo ante faltantes; no se afirma haber recorrido un año pedagógico completo en navegador.
+
+Cada cierre guarda identidad, matrícula/asignación, criterios previstos, fuentes, versiones de nota/conclusión e informes en un manifiesto inmutable. Reabrir exige motivo y versión actual, y agrega un evento durable. Corregir una valoración exige su ID vigente y motivo: archiva la anterior y sus derivados, crea una versión nueva y pide confirmar otra conclusión/informe cuando corresponde. Corregir únicamente una conclusión conserva la nota y crea otra versión del texto. Los documentos familiares archivados siguen siendo descargables. El recierre crea otra versión sin sobreescribir el archivo anterior.
+
+## Excel y controles
+
+Se amplía la rama V2 del exportador OOXML/JSZip instalado; conserva las hojas Resumen y Consolidado, colores, ajuste de texto y estilo Ayni. Consolidado añade Grupo curricular, identifica cada niño y conserva literalmente las notas y conclusiones confirmadas. Una nota vigente no desaparece por estar pendiente su conclusión. Las celdas sin sustento quedan vacías. Hay filtro automático, filas de cabecera repetibles al imprimir y dos columnas inmovilizadas. Resumen cuenta solo las filas del archivo exportado y muestra grupos y versión de cierre.
+
+La descarga actual respeta edad, niño, competencia y estado, igual que la tabla. La descarga histórica usa exclusivamente el manifiesto guardado y su identidad, sin reconstruirlo con fuentes actuales. Se verificaron todas las filas y contadores de una muestra de tres niños; Resumen y Consolidado se importaron y renderizaron con el runtime de hojas de cálculo, con inspección visual. No se acredita Microsoft Excel nativo ni una nueva comprobación de paginación impresa. Son valores estáticos, sin fórmulas ni ejecución de textos como fórmulas.
+
+Las rutas `/api/multi-age/periods/*` usan la autenticación habitual, gate local V2 y propiedad docente/aula/año comprobada en servidor. Excel se sirve `private, no-store`. RLS se prueba con roles/claims sintéticos sobre el esquema Supabase temporal; no equivale a Auth/RLS remoto. Las escrituras y cierres comparten bloqueo de aula, versiones esperadas y recibos idempotentes.
+
+Migraciones **nuevas** `0083_multi_age_period_integrity.sql` y `202610230005_multi_age_period_integrity.sql`: guardas SQL solo para aulas V2 sobre actividades, observaciones ordinarias, valoraciones, conclusiones e informes familiares. Se consideran fechas anteriores y nuevas al actualizar. Se conserva la regla V1 del esquema Supabase y se registra la autoría de confirmación al crear notas V2. Archivar una nota anterior admite únicamente cambio de estado/timestamps/revisión, sin inventar autoría de registros locales previos. Solo se aplicaron a fixtures y almacenamiento sintético separado; ninguna conexión remota ni base de aulas actuales.
+
+Preparar actividades individuales o lotes verifica todos sus días antes de invocar al proveedor. Un cierre/reapertura invalida propuestas anteriores. Si una respuesta termina durante el cierre, se conserva como resultado obsoleto para no perderla ni crear automáticamente actividades; requiere una preparación vigente posterior. Los recibos ya completados se pueden consultar/repetir con el período cerrado. Las lecturas individuales y del aula siguen disponibles tras cerrar y reabrir.
+
+## Validación ejecutada
+
+| Pruebas distintas de esta fase | Resultado |
+| --- | --- |
+| `npm run test:multiedad:cierres` | 12 PASS: núcleo, SQL/RLS, API persistente, reinicios y cola IA |
+| `npm run test:multiedad` | 41 PASS: matrícula, seguridad, generación, diagnóstico, año, documentos y HTTP local |
+| `period-assessment-closure.test.mjs`, `period-evaluation.test.mjs`, `integrated-period-workflow.test.mjs` | 68 PASS de regresión del flujo existente |
+| `multi-age-activity-batch.test.mjs`, `multi-age-conversation-activities.test.mjs`, `multi-age-persistence-generation.test.mjs`, `multi-age-persistent-app.test.mjs`, `multi-age-app.test.mjs`, `database-schema-parity.test.mjs` | 41 PASS: lotes, conversación, persistencia, gate/V1 y paridad |
+
+Total: **162 pruebas distintas**, sin sumar repeticiones ni subconjuntos iniciales. Las doce nuevas se reejecutaron al finalizar la regla AD opcional y el texto del resumen. `npx tsc --noEmit`, `npm run lint` y `npm run build` pasan. Lint conserva una advertencia previa de dependencias de `useEffect` en `diagnostic-generation-control.tsx`; build conserva avisos de PGlite/eval, chunks y clasificación estática. `git diff --check` correcto para archivos seguidos; no incluye los numerosos archivos nuevos aún sin seguimiento.
+
+El recorrido HTTP crea una base nueva, elige Unidocencia, matricula tres niños ficticios, confirma revisión diagnóstica pendiente y año, prepara una actividad manual, observa, valora, confirma conclusiones/informes y cierra. Reinicia, reabre con motivo, reinicia, corrige, recierra y reinicia otra vez. Comprueba que JSON del primer cierre, XML del Excel y Word familiar anterior se mantienen iguales. Las pruebas de IA usan proveedor simulado explícito y verifican cero llamadas cuando está cerrado. **Cero IA real en esta fase**; no se presentan los datos manuales como salida del modelo.
+
+En la interfaz real de Ayni se comprobó el Consolidado de tres edades, filtro de cuatro años, mostrar conclusiones, descarga del Excel filtrado, reapertura, corrección docente del niño de cinco años, nueva conclusión y nuevo informe familiar. El Excel descargado se comprobó independientemente: solo el niño de cuatro años, nota y conclusión literales. Después el navegador devolvió `Local browser use is disabled in Work settings`: no se pudo terminar el recierre en UI ni la nueva revisión móvil/capturas. El recierre se completó por la API local normal, como versión 3 vigente, con notas ficticias A/B/A para 3/4/5 y las dos versiones anteriores conservadas. No se usa otra automatización para eludir la configuración del navegador. Queda pendiente repetir ese último tramo visual y el viewport móvil; no un guardado pendiente ni un fallo de persistencia.
+
+Evidencias privadas, ignoradas por Git, en `.local/multi-age-main-20261023/cierres/`: `receipt.json`, `overview.json`, `consolidado-cierre-v1.xlsx`, `consolidado-cierre-v2.xlsx`, `excel-inspection.json`, `excel-resumen.png`, `excel-consolidado.png`, `preview-receipt.json`, `preview-overview.json` y `preview-cierre-v3.xlsx`. El primer recibo corresponde al test HTTP nuevo; el recibo `preview` identifica la base recorrida en UI. No confundir sus IDs ni sus versiones.
+
+El preview `http://127.0.0.1:5175/` queda sobre la base sintética separada `period-648a37d1-1cb5-4860-aed1-555457a4ecc7`, con IA apagada. El almacenamiento anterior de los lotes de Comunicación/Matemática se conserva; el cambio de preview no lo reemplaza ni migra. No se usan las cuentas actuales de Supabase/Vercel.
+
+## Pendientes y rollback
+
+Esta fase resuelve Consolidado/Excel y cierre/reapertura/recierre locales, además de correcciones de nota y conclusión. Continúan pendientes las correcciones versionadas de matrícula, observaciones y diagnóstico; edición del maestro/reorganización anual preservando proyectos preparados; Word de maestro e índice de actividades en Documentos; diagnóstico grupal/cuestionario familiar completo, talleres, calendario institucional, ingreso tardío y transición anual; voz y ampliación de muestras pedagógicas de IA. La prueba de ciclo anual completo, dispositivos físicos y staging con cuentas nuevas y Auth/RLS reales siguen siendo requisitos de piloto.
+
+Antes de habilitar otra población deben probarse las correcciones de matrícula/evidencia y su efecto sobre cierres y documentos, sin cambiar silenciosamente las asignaciones confirmadas. No se declara un porcentaje nuevo de preparación por sumar pruebas. La lista del recibo 14 es histórica; este documento actualiza el primer punto y la parte de valoración/conclusión del segundo.
+
+Rollback funcional: deshabilitar entrada/escrituras V2 con su gate y conservar un lector compatible para cierres/documentos ya guardados. No redirigir un aula V2 a lectores V1. Las migraciones nuevas aplicadas al fixture persistente no se editan ni eliminan; una corrección posterior debe ser aditiva. Conservar almacenamiento, manifiestos, recibos, versiones archivadas y eventos antes de retirar rutas/UI. No hay backfill, conversión de aulas actuales ni datos cloud que revertir. La publicación requiere autorización expresa posterior y los gates del proyecto.

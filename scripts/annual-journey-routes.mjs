@@ -1,4 +1,5 @@
 import { handlePlanningConversation } from "../src/lib/initial-journey-service.mjs";
+import { isDocumentGenerator } from '../src/lib/ayni-product-mode.mjs';
 import { randomUUID, createHash } from "node:crypto";
 import { ageFilteredAnnualCurriculum } from "../src/lib/annual-preplan-service.mjs";
 import { personalizationSources } from "../src/lib/annual-personalization-service.mjs";
@@ -32,6 +33,7 @@ export async function handleAnnualJourneyRoutes({ request, response, url, db, te
   let draftId = null;
   try {
     const context = await annualPlanningContext();
+    if(context&&await isDocumentGenerator(db,teacherId))context.document_generation_mode=true;
     if (!context || !(await db.query(`select 1 from classrooms c join school_years sy on sy.id=c.school_year_id
       where c.id=$1 and c.teacher_id=$2 and sy.owner_id=$2 and c.status='active'`, [context.id, teacherId])).rows.length)
       journeyFail("not_found", "Aula no disponible.");

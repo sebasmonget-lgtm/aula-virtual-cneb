@@ -3,6 +3,7 @@ import { activityPedagogicalBlocks } from "./pedagogical-blocks.mjs";
 import { activityObservationCriteria } from "./activity-observation-plan.mjs";
 import { ageReference } from "./pedagogical-word-presentation.mjs";
 import path from "node:path";
+import {replacePracticalBody} from './document-generator-practical-word.mjs';
 import { expandTableRow, insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 import { availableSheets, renderSheetPages } from "./workshop-sheet-catalog.mjs";
 import { activityReadingStages } from "./activity-reading-content.mjs";
@@ -96,14 +97,14 @@ function removeSection(xml, startText, endText = null) {
   return xml.slice(0, start.index) + xml.slice(end?.index ?? xml.lastIndexOf("<w:sectPr"));
 }
 
-function transformActivity(xml, evidence, closure, withWorkshop, guide, curriculum, values) {
+function transformActivity(xml, evidence, closure, withWorkshop, guide, curriculum, values, editable = false) {
   let output = xml;
   output = replaceSectionBody(output, "III. REFERENTES CURRICULARES", "IV. MOMENTOS FIJOS", curriculum);
   output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g, row => ["SEDE_COLEGIO","UGEL"].some(key => !values[key] && xmlText(row).includes("{{"+key+"}}")) ? "" : row);
   output = replaceSectionBody(output, "II. PROPÓSITO DE APRENDIZAJE", "III. REFERENTES CURRICULARES", guide.purpose +
-    (!evidence.length ? guideParagraph("Aún no hay observaciones registradas. Puedes registrarlas desde Hoy.", { size: 20, color: "526B87" }) : ""));
+    (!evidence.length&&!editable ? guideParagraph("Aún no hay observaciones registradas. Puedes registrarlas desde Hoy.", { size: 20, color: "526B87" }) : ""));
   output = replaceSectionBody(output, "V. SECUENCIA DE LA ACTIVIDAD", withWorkshop ? "VI. CUADERNO DE CAMPO" : "VI. REGISTRO DE OBSERVACIONES", guide.sequence);
-  if (!evidence.length) {
+  if (!evidence.length&&!editable) {
     output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,
       (table) => table.includes("{{EVIDENCIA_ESTUDIANTE}}") ? "" : table);
     output = output.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g, (paragraph) => {
@@ -116,9 +117,10 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
       });
     });
   }
-  if (!closure) output = removeSection(output, "VII. SÍNTESIS Y REFLEXIÓN DOCENTE", "VIII. TALLER");
+  if (!closure&&!editable) output = removeSection(output, "VII. SÍNTESIS Y REFLEXIÓN DOCENTE", "VIII. TALLER");
   if (!withWorkshop) output = removeSection(output, "VIII. TALLER");
   if (evidence.length) output = expandTableRow(output, "{{EVIDENCIA_ESTUDIANTE}}", evidence);
+  if(editable)output=expandTableRow(output,'{{EVIDENCIA_ESTUDIANTE}}',Array.from({length:4},()=>({EVIDENCIA_ESTUDIANTE:'',EVIDENCIA_CRITERIO:'',EVIDENCIA_TIPO:'',EVIDENCIA_ADJUNTO:'',EVIDENCIA_REGISTRO_CAMPO:'',EVIDENCIA_SIGUIENTE_PASO:''})));
   output = output.replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,
     (row) => row.includes("{{SINTESIS_EVIDENCIAS_REGISTRADAS}}") || row.includes("{{AJUSTES_SIGUIENTE}}") ? "" : row);
   output = output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,
@@ -157,7 +159,7 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
   }
   output = retainCoverPageBreak(output);
   // No empty form or isolated heading when there are no field records yet.
-  if (!evidence.length) {
+  if (!evidence.length&&!editable) {
     output = removeSection(output, withWorkshop ? "VI. CUADERNO DE CAMPO" : "VI. REGISTRO DE OBSERVACIONES",
       closure ? "VII. SÍNTESIS Y REFLEXIÓN DOCENTE" : withWorkshop ? "VIII. TALLER" : undefined);
   }
@@ -169,10 +171,11 @@ function transformActivity(xml, evidence, closure, withWorkshop, guide, curricul
   output=replaceWordText(output,"VI. REGISTRO DE OBSERVACIONES","V. REGISTRO DE OBSERVACIONES");
   output=replaceWordText(output,"VI. CUADERNO DE CAMPO","V. CUADERNO DE CAMPO");
   const numerals=["V","VI","VII"];
-  output=replaceWordText(output,"VII. SÍNTESIS Y REFLEXIÓN DOCENTE",`${numerals[evidence.length?1:0]}. SÍNTESIS Y REFLEXIÓN DOCENTE`);
+  output=replaceWordText(output,"VII. SÍNTESIS Y REFLEXIÓN DOCENTE",`${numerals[evidence.length||editable?1:0]}. SÍNTESIS Y REFLEXIÓN DOCENTE`);
   output=replaceWordText(output,"VIII. TALLER",`${numerals[(evidence.length?1:0)+(closure?1:0)]}. TALLER`);
   if(withWorkshop)output=output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,table=>table.includes("{{TALLER_PROPOSITO}}")?keepShortTableTogether(table):table);
   if(closure)output=output.replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,table=>table.includes('{{REFLEXION_DOCENTE}}')?keepShortTableTogether(table):table);
+  if(editable)output=output.replace(/<w:tbl\b[^>]*>[\s\S]*?<\/w:tbl>/g,table=>xmlText(table).includes('Nombre del estudiante')?keepShortTableTogether(table):table);
   return output;
 }
 
@@ -183,7 +186,7 @@ function observedDate(value) {
 }
 
 /** The planning document shows where observations will appear without inventing field notes or reflections. */
-export async function renderActivityUnifiedWord(document, cards = [], { logo = null } = {}) {
+export async function renderActivityUnifiedWord(document, cards = [], { logo = null, multiAge = null } = {}) {
   const content = Object.fromEntries(Object.entries(document.content??{}).map(([key,value])=>[key,['meaningful_situation','teacher_preparation','child_actions','mediation','evidence_opportunities','closure_or_continuity'].includes(key)?activityTeacherText(value):value]));
   const withWorkshop = content.document_template_version === "activity-with-workshop-v1";
   if (!withWorkshop && content.document_template_version !== "activity-unified-v1") throw new Error("La actividad no usa la plantilla unificada.");
@@ -215,8 +218,8 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const criteria = document.guide?.criteria?.length ? document.guide.criteria : activityObservationCriteria({...route,...content}).map(item => ({...item, details:{...item, ...(item.competency_id===primaryId&&criterion?.observation_focus?{observation_focus: distinctFocus.length ? distinctFocus : [whatToObserve]}:{})}, competency_v4_id:item.competency_id}));
   const blocks = activityPedagogicalBlocks(content,[],criteria);
   const names = new Map(cards.map(card=>[card.id,card.name??card.official_name]));
-  const guide = activityGuide(content, whatToObserve, blocks, names);
-  const curriculum = criteria.map(item => {
+  const guide = multiAge?.guide ?? activityGuide(content, whatToObserve, blocks, names);
+  const curriculum = multiAge?.curriculumXml ?? (criteria.map(item => {
     const id = item.competency_v4_id ?? item.competency_id;
     const reference = cards.find(card => card.id === id);
     return keepShortTableTogether(readableParagraph(names.get(id) ?? id, { bold: true }) + guideDetails([
@@ -225,7 +228,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
       ["Evidencia esperada", item.details?.expected_evidence ?? item.expected_evidence ?? content.expected_evidence],
     ]));
   }).join("") + (integratedIds.some(id => !observedIds.includes(id) && !criteria.some(item => (item.competency_v4_id ?? item.competency_id) === id))
-    ? readableBlock("Integración prevista en el mapa", integrated) : "");
+    ? readableBlock("Integración prevista en el mapa", integrated) : ""));
   // General project supports belong to the project. Daily help is already in
   // each moment's mediation; do not print unrelated inherited safety advice.
   const supports = Array.isArray(content.supports)?content.supports:[];
@@ -240,7 +243,7 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
   const values = {
     "AÑO_ESCOLAR": String(document.school_year), TITULO_ACTIVIDAD: document.title,
     TITULO_PROYECTO: clean(document.experience_title), INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
-    EDAD_AULA: `${document.age || ""} años · ${clean(document.classroom)}`, DOCENTE: clean(document.teacher_name) || "Docente del aula",
+    EDAD_AULA: multiAge?.ageLabel ?? `${document.age || ""} años · ${clean(document.classroom)}`, DOCENTE: clean(document.teacher_name) || "Docente del aula",
     FECHA: document.actual_execution_date&&document.actual_execution_date!==date ? `${document.actual_execution_date.slice(8)}/${document.actual_execution_date.slice(5,7)}/${document.actual_execution_date.slice(0,4)} (prevista: ${date.slice(8)}/${date.slice(5,7)}/${date.slice(0,4)})` : /^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date.slice(8)}/${date.slice(5, 7)}/${date.slice(0, 4)}` : date,
     UGEL: clean(document.ugel), NUMERO_ACTIVIDAD: content.workshop_catalog ? '' : String(route?.number ?? "Del proyecto"),
     DURACION_REFERENCIAL: Number.isInteger(route?.estimated_minutes) ? `${route.estimated_minutes} minutos estimados` : "Tiempo ajustable al grupo", SEDE_COLEGIO: clean(document.district),
@@ -280,11 +283,12 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
     appendixImages = await renderSheetPages(sheet);
   }
   const overview = [
-    ["Qué haremos hoy", clean(content.purpose).length<=180?clean(content.purpose):""],
+    ["Qué haremos hoy", !multiAge?.omitPurposeOverview&&clean(content.purpose).length<=180?clean(content.purpose):""],
+    ...(multiAge?.overview ?? []),
   ].filter(([, value]) => value);
-  return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages, compactTrailingSpace: true,
+  return renderUnifiedWord({ templateUrl: withWorkshop ? workshopTemplateUrl : oldTemplateUrl, values, logo, appendixImages, inlineImages:multiAge?.inlineImages??[], compactTrailingSpace: true,
     transform: (xml) => {
-      let result=compactCoverSpacers(insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide, curriculum, values), "Hoy en el aula", overview));
+      let result=compactCoverSpacers(insertCoverQuickView(transformActivity(xml, evidenceRows, closure, withWorkshop, guide, curriculum, values, Boolean(multiAge)), "Hoy en el aula", overview,{illustrationMarker:multiAge?.inlineImages?.length?'AYNI_GUIA_ILUSTRACION':null}));
       if(content.workshop_catalog){
         result=result.replace(paragraphPattern,paragraph=>{
           const label=xmlText(paragraph).trim();
@@ -295,6 +299,12 @@ export async function renderActivityUnifiedWord(document, cards = [], { logo = n
         });
         result=replaceWordText(result,'N.° {{NUMERO_ACTIVIDAD}} · ','');
         result=replaceWordText(result,'ACTIVIDAD DE APRENDIZAJE','TALLER');
+      }
+      if(multiAge?.bodyXml){
+        const workshopStart=multiAge.preserveWorkshop&&withWorkshop?[...result.matchAll(paragraphPattern)].find(p=>/^[IVX]+\. TALLER/.test(xmlText(p[0]).trim())):null;
+        if(multiAge.preserveWorkshop&&withWorkshop&&!workshopStart)throw new Error('No se encontró el taller vinculado para conservarlo.');
+        const appendix=workshopStart?replaceWordText(result.slice(workshopStart.index,result.lastIndexOf('<w:sectPr')),xmlText(workshopStart[0]),'Taller vinculado'):'';
+        return replacePracticalBody(result,multiAge.bodyXml+appendix,{illustrated:Boolean(multiAge.inlineImages?.length),simplePresentation:multiAge.simplePresentation===true,compactCurriculum:multiAge.compactCurriculum===true,compactGuide:multiAge.compactGuide===true,activityCards:multiAge.activityCards===true});
       }
       return result;
     },

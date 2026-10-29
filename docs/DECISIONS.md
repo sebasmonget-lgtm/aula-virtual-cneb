@@ -1,5 +1,57 @@
 # Decisiones de arquitectura
 
+## 2026-10-25 — Resumen específico y prueba semántica acotada del chat
+
+Separar las fuentes conversacionales de las instrucciones de producción anual: el chat de documentos usa edades/cantidades, calendario ya configurado, nombres curriculares e indicaciones vigentes, sin tramos técnicos ni instrucciones del generador. La política v3 elige una sola laguna útil y permite preparar sin diagnóstico ni cuestionario obligatorio. Validar con conversaciones reales breves en un almacén ficticio independiente, capar llamadas y conservar respuestas incluso si fallan; los controles léxicos son QA, nunca un reparador o aprobador de producción. Servicios anuales y contexto completo para generar se conservan. Recibo `docs/generador/PRUEBAS_CHAT_MI_ANO.md`.
+
+## 2026-10-25 — Misma presentación y política de documentos en servidor
+
+La variante adapta los componentes de alta, matrícula y conversación existentes, en vez de crear pantallas paralelas. Los contratos V1/V2 y sus autorizaciones siguen separados. Compartir fotos privadas/consulta de retirados no abre las rutas pedagógicas V1. El modo persistido selecciona instrucciones versionadas de documentos en todos los generadores relevantes, incluida la capa común del proveedor. El chat reúne contexto docente, no diagnósticos; la acción Crear autoriza usar las respuestas completadas, conserva exclusiones previas y no confirma planes ni registra actuaciones. Los candidatos con prompts anteriores pueden quedar obsoletos; su salida e historia confirmada se conservan, sin regeneración automática. Detalle en `docs/generador/REUTILIZACION_Y_PROMPTS.md`.
+
+## 2026-10-25 — Adaptar contratos V2 a la interfaz original
+
+La variante de documentos simplifica pasos y conserva los componentes visuales y el modelo de interacción de Ayni. El contrato multiedad usa un adaptador de datos para conversación, preparación, timeline y tarjeta originales; no se sustituyen sus servicios ni se fuerza una edad escalar. El ejemplo editorial no es una preparación automática. El vínculo generation_job_id distingue una propuesta preparada de un guardado manual. El avance real y la confirmación son estados diferentes; el anillo de preparación conserva su carácter estimado. Formularios avanzados y preparación de proyecto se abren por acción expresa. No cambia el recorrido cotidiano por defecto, autorización o plantillas Word.
+
+## 2026-10-25 — Inicio limpio y selección expresa de la clave de texto
+
+La instrucción posterior de la usuaria autoriza reutilizar la clave de texto del otro Ayni para pocas pruebas reales. Se lee por selección explícita de un archivo local, solo en memoria, sin copiarlo ni reutilizar sus conexiones o cuentas de despliegue. La web no recibe la clave. `--from-zero` selecciona un almacén local nuevo con identidad propia, manteniendo el anterior; el reinicio conserva el progreso. La comprobación real usa otra base con fuentes ficticias y tope de tres generaciones, sin reintentos. No se crea un Auth público ni se simula que existe una cuenta remota. Ver `docs/generador/PRUEBA_DESDE_CERO.md`.
+
+## 2026-10-25 — Variante de documentos aislada para pruebas
+
+Reutilizar la implementación mediante una copia independiente, sin introducir esta modalidad en la carpeta ni en las cuentas del Ayni existente. Puertos 5185/8805 y almacén local propios. Conservar los contratos de una edad y multiedad; adaptar la exigencia de diagnóstico solo cuando el servidor lee `profiles.preferences.ayni_product_mode=documents`. La matrícula sigue siendo necesaria. El chat aporta contexto confirmado para planificar, nunca observaciones o niveles. Los instrumentos vacíos son descargas de solo lectura y no crean informes ni evaluaciones confirmados. Identidad de sesión y autorización por docente/aula/año preceden a cada exportación; RLS existente permanece sin cambios. No migración nueva. El launcher no hereda servicios ni secretos de las cuentas publicadas. Ver `docs/generador/PRUEBA_INDEPENDIENTE.md`.
+
+## 2026-10-23 — Exportar la actividad V2 confirmada sin reescribirla
+
+Reutilizar plantilla y lector de Ayni, añadiendo el enlace Word solo al recorrido V2 de Hoy. El documento usa identidad congelada del año y actividad/maestro/criterios confirmados. Autorizar propiedad de aula y año en servidor y RLS; validar huella del maestro y criterio padre por competencia/edad. Resolver texto oficial solo desde snapshot o catálogo de la misma versión confirmada; fallar ante historia incompleta, sin sustituir por fuentes actuales. El renderizador es puro y no consulta IA. Exportar no incorpora observaciones de niños ni escribe copias en base. No requiere nueva migración. Biblioteca de actividades y Word del maestro quedan para otra fase vertical. Recibo 14 detalla pruebas y rollback; el porcentaje de preparación es una estimación de alcance y no equivale a un release.
+
+## 2026-10-23 — Variedad pedagógica y evidencia concreta en el prompt de lote
+
+El resultado real de áreas demuestra que un lote puede conservar IDs válidos y aun repetir evidencias genéricas o desplazar el objetivo de cantidad hacia altura. Versionar solo el prompt de lote a v2: variar la necesidad pedagógica, conservar propósito/desarrollo/criterio dentro de competencias seleccionadas y describir una actuación posible de esa edad y situación. No ampliar referentes para justificar una salida incorrecta ni convertir límites curriculares en metas idénticas. La huella invalida candidatos pendientes anteriores conservando su salida; propuestas confirmadas permanecen históricas. Un rechazo semántico requiere revisión registrada y una nueva propuesta expresa, nunca reparación automática oculta. La aceptación de QA de COM_ORAL/MAT_CANTIDAD es acotada y no sustituye revisión docente; recibo 13.
+
+## 2026-10-23 — Verificar semántica del lote antes de confirmar la muestra real
+
+La prueba real separa preparación, revisión del resultado por hash y confirmación sobre datos ficticios. Validar fechas/IDs no sustituye revisar variedad, pertinencia por edad y viabilidad con una profesora. La muestra de PS_IDENTIDAD conserva el foco común de preferencias sin exigir abarcar todo el desempeño ni inventar dificultad para separar edades. Los lectores de actividades V2 ordenan por fecha/posición, no por hora de escritura/UUID: una transacción atómica comparte timestamp. Mantener compatibilidad con posición 1 de la actividad V2 histórica. El preview de lectura de la muestra permanece con IA desactivada; no cambiar proveedores/prompts ni bases remotas por un smoke. Detalle y límites en recibo 12.
+
+## 2026-10-23 — Lote como una propuesta durable y una confirmación atómica
+
+Reutilizar la cola V2 con tipo `activity_batch`, esquema de 2–5 blueprints y workflow de actividad, sin multiplicar llamadas ni crear maestros paralelos. El proyecto debe estar confirmado por su primera actividad. La tarea fija proyecto, posición, competencias y fechas lectivas del tramo; prompts y schema forman parte de la huella. Presupuesto 300 s y mismo lease/reintentos explícitos de la cola. El servidor valida cada variante contra el maestro y la posición futura mediante offset interno no aceptado del cliente. La confirmación revisada guarda todo con un recibo y transacción; no se autoriza un subconjunto ni se deja un lote parcial. Writer V2 compartido, clases V1 sin cambios. Recuperar un lote consulta y no genera; documentos/observaciones anteriores no se reescriben. Migración aditiva 0082, permisos existentes; recibo 11 para pruebas y rollback.
+
+## 2026-10-23 — Conversación sin modificación implícita y continuidad del proyecto
+
+Los alcances anual/proyecto tienen historial y ordinal propios en la cola V2. La consulta nunca factura ni reintenta. Solo una acción docente expresa incorpora su mensaje literal como indicación versionada; una respuesta del asistente no se convierte en evidencia, criterio o nota. La huella completa protege borradores; la huella base del año confirmado permite conservarlo vigente al añadir indicaciones para propuestas futuras, sin relajar cambios reales de diagnóstico o matrícula.
+
+Un proyecto reutiliza su maestro inmutable. Cada actividad siguiente exige propiedad, posición libre, huella del maestro y referentes oficiales exactos del criterio padre por competencia/edad, con recibo transaccional. El lector compartido de Ayni conserva los momentos comunes y añade una consulta de criterios 3/4/5; captura individual restringida por servidor. Migración nueva 0081, sin backfill ni escrituras directas del cliente. Gates y pruebas locales en `docs/multiedad/10_CONVERSACION_Y_VARIAS_ACTIVIDADES.md`; ningún rollout remoto autorizado.
+
+## 2026-10-23 — Almacén local independiente y propuestas de IA recuperables
+
+La continuación autorizada permite persistencia únicamente en un almacén propio bajo `.local/multi-age-stores`, con identidad estable, bloqueo y migraciones verificadas por hash; nunca adopta `.local/pgdata` ni conexiones cloud. El gate sigue apagado por defecto y conserva V1. Cola exclusiva para propuestas de diagnóstico individual, año y actividad, con fuentes y prompts/esquemas en la huella, sin confirmación automática. Resultado original inmutable, aun obsoleto; comprobación vigente dentro de la transacción y después del recibo para conservar retries de confirmación. La tarea interrumpida no se relanza sola: aviso sobre consumo incierto y límite de tres intentos. La preparación anual tiene 300 s; las otras, 90 s; lease de 360 s. Interfaz compartida de Ayni, sin nuevo módulo principal. Runtime con clave propia de servidor y sin credenciales generales heredadas. Solo el smoke real puede elegir expresamente la clave local de texto, con fuentes ficticias y base nueva, sin modificar configuración o aulas. RLS SQL y migraciones remotas únicamente preparadas, no rollout. Alcance y verificación en `docs/multiedad/09_PERSISTENCIA_E_IA_LOCAL.md`.
+
+## 2026-10-23 — Unidocencia como contrato explícito dentro de la interfaz existente
+
+La configuración inicial debe distinguir una sola edad y Unidocencia. El servidor confirma la elección y el grupo de cada niño; no convierte aulas existentes ni deriva el grupo automáticamente del nacimiento. La integración de esta fase solo admite una base nueva en memoria con activación de desarrollo local; se rechaza en cloud/persistencia. Se bloquea el acceso V2 a rutas de edad escalar y se preserva V1 con la función apagada.
+
+Tras la corrección expresa de la usuaria, no crear otra interfaz para multiedad. Reutilizar componentes presentacionales de origin/main: frame docente, cinco destinos, Mi aula, timeline anual, carpetas, lector y tres espacios de Evaluar. Extraer JSX compartido conservando handlers V1; adaptar datos y permisos mediante contrato V2. Las conclusiones pertenecen a Informe a familias después de las notas. Base actual 26e51f3; trabajo multiedad sigue local. Detalle y pendientes en `docs/multiedad/08_INTEGRACION_PRINCIPAL_LOCAL.md`.
+
 ## 2026-10-21 — Documento diagnóstico opcional desde Documentos
 
 La captura inicial mantiene el acceso directo al chat. Preparar el documento diagnóstico es una acción aparte en Documentos, con las fuentes guardadas, la generación recuperable existente y revisión docente antes de confirmar. Una propuesta lista se abre para revisar sin una elección intermedia de «usar resumen». Volver a entrar reutiliza el borrador o trabajo guardado; no genera IA al consultar ni reintenta fallos silenciosamente. No restituir revisiones individuales/prioridades como requisitos del año. Conservar la plantilla y los servicios autorizados actuales.
@@ -1644,3 +1696,235 @@ El perfil debe mostrar la observación cotidiana aunque no tenga una competencia
 ### 22 de octubre — Correcciones del informe publicadas y verificadas
 
 Con solicitud expresa de producción, el enlace https://project-0w0pq.vercel.app/ sirve 1946e799df0daf2ae6e1fb5d987755c185c387ee / dpl_42BheizR5zMcc6ap8yDqX9vi6bsQ. Incluye 4162301 y la etiqueta de DocumentTree corregida tras inspección visual. 164 pruebas locales; candidata final 137 y dominio público 140 comprobaciones PASS. Siete Word y una ficha PDF por destino comprobados; fuentes consultadas de las dos cuentas QA conservadas, cero registros pedagógicos o generaciones IA nuevos. Reloj restringido, QA, RLS, variables globales y protecciones intactos. Navegador público recargado muestra Fecha prevista y Preparado. No equivale a auditoría global ni nueva prueba anual pedagógica completa. Recibo, límites y rollback: QA_PUBLICACION_CORRECCIONES_2026-10-22.md. Las entradas anteriores de publicación pendiente quedan sustituidas por este cierre.
+
+## 2026-10-22 — Propuesta de contrato multiedad pendiente de implementación
+
+Por solicitud de preparar el plan sin afectar aulas ni publicar, se adopta como diseño objetivo el paquete `docs/multiedad/01_MODELO_Y_CRITERIOS.md` a `04_IMPLEMENTACION_MIGRACION_Y_PRUEBAS.md`. No reemplaza todavía contratos ni decisiones operativas instaladas. El contrato curricular 1 y las aulas actuales conservan su ruta; la futura ruta 2 usa composición explícita, asignación curricular individual y variantes de criterio por edad con identidad propia. Se propone extender las filas de `activity_criteria` y su unicidad por contrato/edad, mantener FK de evidencia y usar DTO nuevos de proyecto/actividad sin reescribir V3. Referentes por edad y estándar de ciclo se validan por código; la valoración sigue siendo exclusivamente docente.
+
+La transición será explícita y transaccional, con migraciones nuevas y lectores capaces antes de admitir aulas multi sin edad escalar. Trabajos V2 se separan físicamente de consumidores anteriores. El rollback posterior a escrituras V2 exige un lector compatible, conservando fuentes, notas y documentos. Los cuatro entregables contienen contratos, prompts propuestos, fases y criterios de aceptación; no hay activación, SQL aplicado ni autorización de despliegue en esta ronda.
+
+## 2026-10-22 — Implementación multiedad aislada para el primer flujo vertical
+
+Se implementa el mínimo V2 únicamente en servidor loopback y bases PGlite nuevas en memoria, con guardas que rechazan adaptadores externos. Las aulas actuales siguen V1 y no se convierten al leer o desplegar código. Migraciones nuevas preparan grupo individual, criterios por edad con FK existente y barreras SQL para no mezclar asignación/edad/actividad. Prompts nuevos usan proveedor inyectado y schema separado; la prueba no invoca IA real ni cambia router o credenciales. Evaluación y captura comparten bloqueo de aula y huellas de fuentes; las conclusiones e informes conservan confirmación docente.
+
+La ampliación se prueba con blueprint ficticio y notas escritas por quien recorre la prueba. No se conecta todavía a Mi año, diagnóstico, talleres ni rutas principales; las colas nuevas no tienen consumidor. Una versión de prueba local no autoriza activar V2 persistente ni publicar. El estado detallado y los gates ejecutados constan en `docs/multiedad/05_AVANCE_LOCAL_FASES_0_A_2.md`.
+
+## 2026-10-22 — Diagnóstico y año multiedad en el laboratorio local
+
+La siguiente ampliación reutiliza las tablas canónicas y el catálogo diagnóstico, resolviendo la edad por matrícula individual. Una revisión puede dejar competencias pendientes explícitas: no exige inventar un diagnóstico completo para planificar. La entrevista textual de la prueba es contexto familiar y se versiona por separado; no equivale al cuestionario completo. Mi año conserva un calendario y quince posiciones para el aula, con oportunidades y cobertura verificadas por edad. Se mantienen los contratos V1 y se añaden columnas/guards solo mediante migración 0078 y equivalente remoto, probadas en memoria.
+
+Snapshots y huellas incluyen versiones curriculares, aplicabilidad, fuentes, matrícula y revisiones confirmadas; los cambios invalidan preparación/confirmación hasta revisión, sin reescribir documentos históricos. Guardar borrador y confirmar son acciones distintas. Prompts de individuo/aula/posición usan schemas nuevos y proveedor simulado explícito; una reparación acotada no devuelve ni reemplaza posiciones ajenas. Mientras no exista preservación de proyectos preparados, el servidor rechaza confirmar un reemplazo anual que los afectaría. Integración principal, calendario institucional/ingreso tardío, chat/colas recuperables y Word anual/diagnóstico siguen pendientes. Recibo: `docs/multiedad/06_DIAGNOSTICO_Y_MI_ANO_LOCAL.md`.
+
+## 2026-10-22 — Documentos V2 desde snapshots confirmados
+
+El laboratorio exporta el DTO `AyniMultiAgeDocument/v1` con identidad, edades, referencias y fuentes congeladas al guardar/revisar. Un cambio posterior de roster, nombre o catálogo no reconstruye un documento anterior. La biblioteca se proyecta sobre las tablas canónicas, conserva históricos y aulas archivadas y rechaza borradores o versiones anteriores sin los campos requeridos; no inventa snapshots ni hace backfill. La confirmación existente y sus guardas siguen siendo la única vía de escritura. No hay migración adicional ni activación en la biblioteca principal.
+
+Se reutiliza la papelería Ayni con renderer separado, cabecera por tipo y estilos realmente definidos en la plantilla localizada; no se edita el archivo fuente ni el exportador V1. Diagnóstico individual y Mi año tienen Word probado en contenido y render de ejemplos completos. Síntesis/exportación diagnóstica grupal, Excel, Word de otros módulos e integración principal siguen pendientes. Detalle: `docs/multiedad/07_DOCUMENTOS_Y_BIBLIOTECA_LOCAL.md`.
+
+## 2026-10-23 — Períodos V2 con una proyección y versiones inmutables
+
+Consolidado, Excel y cierre comparten fuentes por niño/asignación curricular/competencia/período. La preparación de un criterio no acredita observación ni exige valorar otra edad. La consulta actual es consistente y valida fuentes; una descarga histórica depende exclusivamente de su manifiesto congelado. Reapertura y recierre agregan versiones/eventos, nunca reemplazan el archivo anterior. Corrección de nota/conclusión exige versión esperada y motivo, archiva derivados pertinentes y conserva sus descargas. Las conclusiones siguen después de las notas, en Informe a familias. La opcionalidad de AD se toma de la regla existente de Ayni.
+
+Los bloqueos de período se validan en servidor y SQL solo para contrato 2, además de RLS. Las colas incluyen estado de cierre/reapertura en la vigencia de actividades/lotes sin alterar las huellas anteriores de períodos sin eventos. Una respuesta terminada pero obsoleta se conserva y no se confirma. No se infiere conversión de aulas actuales ni se activa soporte remoto. El rollback de datos V2 conserva lectores compatibles y usa migraciones aditivas; no se borran cierres ni se revierte la asignación a V1. Pruebas y límites: `docs/multiedad/15_CONSOLIDADO_EXCEL_CIERRES.md`.
+
+## 2026-10-23 — Corregir fuentes conserva su edad y sus documentos
+
+La asignación curricular original de una observación no se cambia por corregir matrícula. Una nueva asignación excluye esas fuentes de la lectura vigente, conservándolas consultables; la profesora observa y confirma con el grupo correcto. La corrección cotidiana reutiliza revisión/atribución canónicas y archiva derivados pertinentes dentro de una sola transacción con recibo. Diagnóstico proyecta corrección/retiro mediante eventos inmutables, exige revisión explícita y conserva cada documento confirmado. Contexto familiar no acredita actuaciones. Niño/fecha/criterio erróneo se resuelve retirando y recapturando, no reasignando la evidencia.
+
+Antes de corregir identidad se congela la actualmente descargable de informes V2 que aún carecen de snapshot; los nuevos la guardan al confirmar. Las notas se mantienen si solo cambia el nombre, mientras informes y diagnóstico requieren nueva revisión; cambiar grupo archiva las decisiones anteriores del niño. Períodos cerrados exigen reapertura según alcance. RLS, servidor y SQL protegen historia y propiedad. No hay replanificación automática ni cambio de prompts/modelos: cambian únicamente las fuentes vigentes y sus huellas. Detalle y límites: `docs/multiedad/16_CORRECCIONES_MATRICULA_OBSERVACIONES_DIAGNOSTICO.md`.
+
+## 2026-10-23 — Ediciones de maestro separadas de actividades y colocación anual
+
+El proyecto conserva su ID y maestro inicial; las ediciones posteriores son snapshots inmutables que orientan solo nuevas actividades. Una actividad fija su edición, referentes y año de confirmación; los lectores históricos no resuelven con el maestro vigente. Un criterio cuyo contenido cambia recibe identidad propia y enlace al anterior. No se reescriben guías, fuentes, notas o informes ni se modifica la aplicación V1.
+
+El año revisado vincula los proyectos ya preparados a sus tramos originales mediante una tabla separada: no cambia su FK de origen ni clona actividades. Se reorganizan propuestas libres entre quince tramos con calendario fijo; los proyectos preparados conservan lugar/propuesta/fechas y un período cerrado exige reapertura. Cambiar competencias/referentes o reprogramar actividades ya preparadas necesita otro flujo explícito. Los borradores comparan fuentes, versión del año y huella de preservación al confirmar; si cambia el trabajo preparado se revisan antes. UI Ayni, motivos, RLS y rollback con lectores compatibles se mantienen. Pruebas y límites en `docs/multiedad/17_EDICION_PROYECTOS_REORGANIZACION_ANUAL.md`.
+
+## 2026-10-23 — Word inmutable del maestro e índice vivo separado
+
+El documento del proyecto V2 se identifica por el ID del maestro inicial o por el ID inmutable de una edición. Usa el año de origen como identidad y referencia curricular conservadas, sin reconstruir desde el perfil o matrícula actuales. La secuencia inicial se recupera de la primera actividad confirmada validando la huella del maestro; las ediciones posteriores la conservan explícitamente. Los referentes se resuelven por competencia/edad/versión, sin sustituirlos por un catálogo distinto.
+
+El índice de Documentos agrega actividades y las agrupa por la edición con que se confirmaron. Queda fuera del Word del maestro para que preparar otra actividad no cambie una descarga histórica. Se reutilizan carpetas y lectores de Ayni mediante el adaptador V2; no cambia el componente V1 ni se crean copias/tablas o migraciones. Descargas privadas, autorización en servidor/RLS y consulta de aula archivada se conservan. Pruebas y límite visual: `docs/multiedad/18_WORD_PROYECTO_E_INDICE_DOCUMENTOS.md`.
+
+## 2026-10-23 — Familia opcional y síntesis grupal con fuentes de la misma edad
+
+Los avances familiares se guardan en la entrevista canónica sin reemplazar el confirmado. La confirmación posterior exige matrícula/borrador/versiones esperadas, reconoce respuestas pendientes y conserva el relato anterior. No se convierten relatos libres en ocho respuestas inventadas ni se interpreta una lengua familiar como cambio de aplicabilidad curricular. Toda proyección familiar sigue como context_only y nunca se inserta como evidencia.
+
+La síntesis grupal agrega lecturas individuales vigentes por edad/competencia con IDs y número de fuentes explícitos. Congela cobertura, identidad, catálogo y familia separada; la organización es una intención docente. Otra entrevista, matrícula o fuente invalida la vigencia y conserva el histórico. Mi año incluye solo lecturas grupales actuales, sin alterar huellas anteriores cuando no existe síntesis. Reutilizar tablas, guardas, RLS, carpetas y estilos Ayni; no imponer conversión V1 ni generación automática. Detalle: `docs/multiedad/19_DIAGNOSTICO_GRUPAL_Y_CUESTIONARIO_FAMILIAR.md`.
+
+## 2026-10-23 — Taller compartido sin maestro anual ficticio
+
+Reutilizar únicamente propuestas existentes con adaptación explícita de cada edad atendida. La profesora selecciona los referentes pertinentes; el servidor no infiere IDs por palabras. Guardar experiencia canónica de tipo workshop, actividad y criterios V2 con snapshot propio, identidad y catálogo congelados. Los proyectos y sus ediciones excluyen talleres expresamente. Las observaciones se capturan con el mismo servicio individual y sus cierres; no se acreditan logros al programar. Preservar interfaz y V1. Detalle: `docs/multiedad/20_TALLERES_COMPARTIDOS.md`.
+
+## 2026-10-23 — Otro año requiere calendario explícito
+
+No desplazar fechas nacionales 2026 ni inventar autoridad de años posteriores. Permitir definición institucional confirmada al crear aula V2 y congelarla con su año. Usar el distribuidor actual de quince tramos; rechazar patrones que no puede representar y días que vacían un tramo. No reprogramar aulas con historia. Detalle: `docs/multiedad/21_CALENDARIO_INSTITUCIONAL.md`.
+
+## 2026-10-23 — Matrícula anual nueva con vínculo histórico explícito
+
+No mover el estudiante canónico del año anterior ni copiar sus fuentes como actuales. Abrir año siguiente solo tras cuatro cierres vigentes y decisiones docentes por niño; relacionar IDs/asignaciones en un manifiesto inmutable. Otro año necesita calendario propio. Una matrícula durante el año declara ingreso y no modifica los cierres anteriores a esa fecha. No rellenar fechas históricas ni promover por cumpleaños. Rectificar una fecha de ingreso o una transición confirmada requiere una revisión específica, fuera del cambio directo de perfil. Detalles: entregables 22 y 23 de `docs/multiedad/`.
+## 2026-10-25 — Historial de informes V2 separado de la evaluación vigente
+
+Documentos usa `reportHistory` con versiones activas y archivadas, edad e identidad resueltas por el mismo proyector del Word. `reports` sigue conteniendo solo informes activos para no reintroducir versiones anteriores en Evaluar. Consulta de lectura con propiedad validada del aula/año, sin migración ni regeneración de archivos. La comprobación repetible `check:multiedad:local` usa dependencias nativas y entornos sin credenciales; su PASS no habilita despliegue ni sustituye navegador o staging. Detalle en `docs/multiedad/25_CIERRE_Y_VALIDACION_REPETIBLE.md`.
+
+## 2026-10-25 — Adaptar el flujo del generador conservando los componentes Ayni
+
+Capturar el FormData antes de activar busy/esperar autosave. Tras crear aula del generador, abrir matrícula con independencia del hash previo. Reutilizar la cola original, distinguiendo un resultado listo de un resultado ya usado por un borrador; usar el ID guardado en document_context, sin ocultar trabajos nuevos o pendientes. Ocultar carpetas vacías mediante prop opcional, conservando defaults diarios. En proyectos nuevos del generador, resolver título/propósito en servidor desde la posición anual confirmada, y mantener el título de la actividad aparte. Las correcciones expresas más recientes orientan el plan; se conserva la fuente literal anterior como historial. Prompt v5; alcance y rollback: docs/generador/ITERACIONES_Y_RECORRIDO_FINAL.md.
+
+### 2026-10-25 — Proyectos con dos competencias y limpieza sin borrar historia
+
+Validar dos competencias distintas por edad desde el servidor; no confiar solo en prompt o chips. Construir el maestro desde todas las oportunidades de la posición anual, conservando criterios de la primera actividad cuando coinciden y referentes de las restantes; las actividades siguientes pueden enfocarse en una competencia. El mínimo es del proyecto, no de cada actividad. Para retirar ejemplos del recorrido, crear almacén limpio con colegio/matrícula y conservar el anterior; no ocultar ni reescribir los archivos confirmados. Mostrar preparación desde el inicio de la acción, seguida del estado persistido y revisión explícita. Sin tiempos artificiales ni fallback editorial cuando está habilitada IA real.
+
+## 2026-10-25 — Reutilizar componentes originales y adaptar operaciones
+
+La variante conserva los componentes del main remoto 26e51f3: detalle, resumen, calendario y progreso. La adaptación es de datos/operaciones V2; se retiran acordeón extra y guardado manual intermedio. Aceptar los días autoriza preparar y guardar todas esas actividades, sin inventar evaluaciones. Cola existente + recibos durables, sin migraciones; aplicación parcial conservada y estado completo solo al terminar todas las fechas. Fallos no reintentan automáticamente; interrupciones exigen aceptar el consumo posible. Cambio de fuentes bloquea aplicación. Política v7 reemplaza cierre temprano: contexto amplio, una pregunta útil por turno y salida expresa con lo disponible. Alcance/pruebas/rollback: docs/generador/REUSO_ORIGINAL_Y_PREPARACION_PROYECTOS.md.
+
+## 2026-10-25 — Crear Mi año es la acción de guardado del generador
+
+La docente pidió retirar la aprobación adicional. Crear/actualizar guarda y activa la planificación de documentos; no confirma observaciones ni niveles. V2 reutiliza escritores/recibos mediante document-year/use y recuperación de borrador propio; V1 activa solo el alcance planificación al finalizar. Historial y verificaciones servidor se conservan. El flujo diario mantiene confirmación explícita. Calendario se abre al elegir un proyecto nuevo; mapa/cantidad de proyectos se actualizan con lo guardado. Sin accesos a Hoy, observaciones ni controles técnicos de sincronización en la variante. El procesador local V1 funciona en su aula propia, con reclamo filtrado por docente; no se ejecutan trabajos ajenos. Recorrido manual, consumo y rollback: docs/generador/RECORRIDO_MANUAL_SIN_CONFIRMACION.md.
+
+## 2026-10-25 — Separar los contenidos sin reescribir lo guardado
+
+La mejora editorial se aplica solo a nuevas generaciones de documentos: summary/rationale y supports por oportunidad, con esquema acotado y lectores compatibles. La ruta antigua del adaptador se mantiene para documentos sin esos campos. El servidor conserva la propuesta original de tramos preparados/cerrados antes de validar una actualización y sigue verificando sus vínculos al guardar. Ante dos timeouts anuales se amplía solo el plazo del generador (600 s, reserva 660 s), sin cambiar modelo, consumir otra llamada ni reintentar de forma automática. El nuevo plazo tiene pruebas de contrato/reserva; queda sin prueba real por el límite de cinco rondas. Detalle: docs/generador/PROYECTOS_CLAROS_Y_DOS_COMPETENCIAS.md.
+
+## 2026-10-26 — Exportar con la plantilla propia de cada documento
+
+Los contratos V2 se adaptan a renderizadores originales, sin reconstruir documentos como texto plano sobre una plantilla anual. Parámetros opcionales mantienen comportamiento diario. Leer contexto del proyecto desde su edición anual inmutable; ninguna escritura por exportar. Instrumentos editables no asignan logros ni niveles. Identidad original y paginación verificadas mediante render e igualdad de estilos/medios. Detalle: docs/generador/PLANTILLAS_ORIGINALES_RESTAURADAS.md.
+
+## 2026-10-26 — Inferencias pedagógicas y dos escalas de planificación
+
+La situación significativa puede desarrollarse con IA desde hipótesis cotidianas compatibles con el contexto; no se atribuyen como hechos a niños o profesora. Primera preparación V2 documental incluye projectPlanning en la misma llamada. Se guarda solo desde el resultado del job autorizado y se exporta desde el maestro inmutable, separado de la actividad. Lectores antiguos sin reescritura; render diario por defecto intacto. Invitación anual y apoyos del proyecto se muestran una sola vez. Plazo 180 s solo para primer proyecto documental, sin reintento automático. Detalle: docs/generador/SITUACION_SIGNIFICATIVA_Y_COHERENCIA.md.
+
+
+## 2026-10-26 — Componer la ruta al descargar sin reescribir el maestro
+
+La ruta breve es una proyección explícita de lectura para el Word del generador: solo actividades confirmadas de la edición exacta, autorizadas y validadas individualmente. Fecha, actividad/propósito y claves de competencias con leyenda; desarrollo y criterios detallados siguen en sus documentos. No se añade otra generación de IA ni un nuevo paso de interfaz. Contratos y rollback: docs/generador/RUTA_BREVE_EN_PROYECTOS.md.
+
+
+## 2026-10-26 — Numerar desde la edición guardada y nombrar al descargar
+
+Un normalizador común sirve a rutas y botones del generador. El servidor resuelve P01 y A01 desde la planificación y contrato guardados, nunca del orden visible actual. Las revisiones del proyecto añaden v02 al prefijo de sus actividades. Año/aula y período o edad distinguen los demás archivos. Se cambian cabeceras y nombres del dispositivo; no filas de artefactos ni datos pedagógicos. Detalle: docs/generador/NOMBRES_DESCARGAS.md.
+
+
+## 2026-10-26 — ZIP de lectura con documentos preparados de la edición elegida
+
+Usar los mismos renderizadores y nombres que las descargas individuales. V2 copia los IDs y valida las fuentes inmutables/huella del padre; V1 conserva un snapshot de lectura repetible. Nada de generación o preparación implícita, mezcla de ediciones ni ZIP parcial ante un error. La revisión pedagógica diferencia planificación prevista, registros por completar y documentación institucional; los hallazgos no autorizan reescribir los contenidos previos. Detalle y rollback: docs/generador/DESCARGA_ZIP_PROYECTO.md.
+
+## 2026-10-26 — Enriquecer próximas generaciones con metadata opcional versionada
+
+El servidor valida la planificación completa desde el resultado privado de generación y persiste campos separados del blueprint oficial. Los lotes vinculan la metadata por fecha exacta. Lectores compatibles y apartados Word opcionales conservan los documentos previos; no se rellenan campos históricos al exportar. Materiales distinguen disponibilidad de verificación, apoyos cubren las edades recibidas, enfoques se concretan en acciones y la ruta muestra decisiones y progresión. Mantener los mismos maestros binarios y componentes visuales de Ayni. Tres iteraciones limitadas sin reintentos automáticos. Detalle: docs/generador/PROYECTOS_COMPLETOS_Y_TRES_ITERACIONES.md.
+
+## 2026-10-26 — Situación y recorrido antes que título y competencias
+
+Seleccionar proyectos por una situación o pregunta que permita experiencias distintas y conectadas a lo largo de los días, con decisiones infantiles y reajustes. El control interno de tres experiencias es de Ayni, no una obligación del MINEDU. Mantener el mínimo de dos solicitado por la usuaria, sin preferencia ni techo de dos, y seleccionar las demás solo por pertinencia curricular. Las rutinas continúan más allá del proyecto. Simplificar las descargas como proyecciones de lectura: guía primero, criterios y sustento después, identidad Ayni original. No alterar selección curricular confirmada ni fuentes históricas al cambiar el prompt o descargar. Detalle: docs/generador/PROYECTOS_ABIERTOS_Y_GUIA_PRACTICA.md.
+
+## 2026-10-26 — Distribuir el foco curricular sin reducir el maestro
+
+En generación documental V2 el servidor declara relevant_subset: confirmed_competency_ids delimita el conjunto autorizado, no una exigencia de repetirlo entero en cada día. Validación acepta un subconjunto no vacío y sigue exigiendo todas las edades, referencias y vínculos de la edición. Escritor conserva todas las oportunidades anuales en el maestro y solo las focalizadas en la actividad. Modo diario mantiene la igualdad anterior. Ruta/materiales y tablas Word son proyecciones de lectura de fuentes guardadas; listas repetidas remiten a su primer día. Detalle/rollback: docs/generador/REFERENCIAS_DOCENTES_Y_FOCO_DIARIO.md.
+## 2026-10-26 — Contexto específico antes de desarrollar cada proyecto
+
+Reutilizar el chat Ayni por tramo anual, antes de crear su maestro, sin formularios de confirmación añadidos. El chat anual orienta Mi año; el chat del proyecto precisa situación, intención, experiencias, recursos y apoyos. Preparar captura una copia de las respuestas docentes y no incorpora sugerencias del asistente como hechos; conserva esa copia en todos los días. La primera actividad planifica con los niños y los aportes reales quedan por recoger. Situaciones significativas describen directamente el grupo e identidad conocidos. No se modifica el año ni la selección curricular de proyectos previos; un cambio fuera del conjunto anual requiere revisión separada. Detalle: docs/generador/CHAT_POR_PROYECTO_Y_SITUACION_DEL_AULA.md.
+## 2026-10-27 — Separar criterio del proyecto y foco del primer día
+
+Nuevas generaciones documentales piden projectCriteriaFamilies propio para todo el recorrido y criteriaFamilies de la primera actividad. Mantener conjunto autorizado, edades y referentes; permitir foco diario pertinente sin copiar su criterio al maestro. El escritor lee únicamente metadata privada validada, con lectura anterior intacta. El calendario seleccionado informa la última fecha para prever un cierre que recupere la pregunta y abra continuidad. Guía Word práctica conserva plantilla, datos y textos guardados, distribuyendo propósito, pasos, apoyos, criterios/evidencias y referencias sin duplicaciones accesorias. Plazo del primer maestro documental 300 s dentro de lease 360; modo diario intacto, sin retry automático. Detalle: docs/generador/CHAT_REAL_TRES_RONDAS_Y_WORD_PRACTICO.md.
+## 2026-10-27 — La profesora debe poder iniciar la actividad leyendo la guía
+
+La brevedad no justifica instrucciones generales. Para nuevas generaciones documentales, vincular cada paso a una acción visible con objeto/material/lugar, una decisión infantil y una intervención docente útil. Describir en el propósito breve la experiencia y su sentido para que la ruta también oriente. Mantener lenguaje curricular oficial en sus apartados; las instrucciones usan palabras comunes. Conservar pregunta común y avance entre días, sin catálogo de temas ni ciclos repetidos de observar/dibujar/contar. La referencia docente orienta la concreción, sin importar su texto como hechos, recursos o decisiones del aula actual. Solo se adaptan rótulos de la ruta, con plantilla y datos guardados intactos. Detalle: docs/generador/REFERENCIAS_DOCENTES_Y_FOCO_DIARIO.md.
+
+## 2026-10-27 — Resumen curricular visible y cierre integrado
+
+Identificar las competencias del maestro y las focalizadas por día desde la portada, sin añadirlas ni repetir todo el conjunto cada jornada. Mantener la planificación con los niños y el cierre como decisiones/experiencias, eliminando rótulos genéricos redundantes. El registro de observación será el instrumento simple previsto y permanecerá vacío para actuaciones reales. El diseño documental práctico conserva papelería Ayni y añade color/ilustración de forma opcional en la proyección; los lectores ordinarios y fuentes anteriores permanecen separados. Detalle y reversión: docs/generador/ESTRUCTURA_ACORDADA_Y_EJEMPLOS_DOCENTES.md.
+
+## 2026-10-27 — Transporte de respuestas largas del año documental
+
+Recibir el año documental con streaming interno del SDK y aplicar solamente el resultado final validado; conservar store:false, modelo, razonamiento, plazos y ausencia de reintentos automáticos. Opt-in limitado a esa tarea, sin alterar el modo diario ni el chat. Un corte de conexión sin respuesta es incierto, no prueba de consumo cero. Registrar solo códigos seguros y recuperar una respuesta válida existente sin volver a generarla cuando sus fuentes coincidan. Informe: docs/generador/RECUPERACION_GENERACION_ANUAL_20261027.md.
+
+## 2026-10-27 — Revisar distribución más allá de presencia mínima
+
+Para el año documental, dos es el mínimo admisible y no la meta de diseño. Explorar integraciones pertinentes más amplias y reencuentros durante el año, permitiendo continuidad cotidiana de competencias ya presentes en proyectos. El brief computado orienta la revisión de la IA con recuentos por edad/bimestre, sin convertirlos en cuotas curriculares ni atribuir logros. El chat puede pedir ejemplos y acepta prioridades amplias expresas; reserva el desarrollo por proyecto para su conversación específica. Versionar las mejoras del año y conservar la historia, matrícula y conversación. Detalle: docs/generador/DISTRIBUCION_ANUAL_V24.md.
+
+## 2026-10-27 — Suficiencia conversacional y herencia curricular de actividades
+
+La valoración de contexto suficiente se entrega en la respuesta habitual del chat documental, sin una segunda llamada ni impedir más mensajes. El botón permanece en la superficie original de conversación; iniciar sigue requiriendo una acción docente. Separar versión del chat v25 de política generativa v24 conserva la recuperación de trabajos anteriores. Para actividades posteriores y lotes, restringir el esquema al maestro guardado; no corregir IDs generados ni relajar validación. Streaming interno opt-in para los tres trabajos largos documentales, con respuesta final completa, límites acotados y sin reintentos automáticos. Ver BOTON_EN_CHAT_Y_ACTIVIDADES_RECUPERABLES_V25.
+
+## 2026-10-27 — Identidad curricular restringida antes de generar
+
+Especializar solo los esquemas privados del generador por catálogo, competencia y edad; no confiar la copia de IDs a instrucciones libres. La primera actividad hereda metadata desde su maestro validado, sin cambiar criterios ni reparar referencias explícitas incorrectas. Fechas, grupos y tramos pertenecen al servidor. Ordenar únicamente filas completas con identidades únicas; las omisiones o duplicados siguen siendo errores. Mantener lectores, versiones editoriales y huellas de fuentes guardadas. Ver PROTECCION_ANO_PROYECTO_ACTIVIDADES_V26.
+
+## 2026-10-27 — Maestro documental por día, sin reescribir el legado
+
+Decisión: proyectos nuevos usan planningVersion 3 y dailyRoute completo; preparaciones y documentos anteriores mantienen versiones/fingerprints. Actividad/lote reciben su entrada exacta, con título/fecha/competencias restringidos y validación de servidor. La ruta permite planificación conjunta y progresión, sin fingir acuerdos infantiles realizados. Básicos se asumen; condiciones especiales se preguntan y restricciones docentes prevalecen. Se distingue supuesto habitual de inventario confirmado. El mínimo de dos días es coherencia de producto para un proyecto nuevo, no requisito atribuido al MINEDU. Pruebas reales, compatibilidad y reversión: docs/generador/RUTA_DIARIA_Y_MATERIALES_BASICOS_V27.md.
+
+## 2026-10-27 — Concreción del origen no reduce alcance de proyecto
+
+Chat por tramo v28 conserva intención docente y distingue episodio/ejemplo de objetivo de todos los días. Opciones sugeridas no obligan a elegir entre partes compatibles de un mismo recorrido. Un recorte del asistente se puede reabrir naturalmente, salvo restricción expresa docente. Conservar criterios autorizados del año, sin prometer competencias nuevas. No cambiar contratos, respuestas anteriores ni versión anual. Validación: una continuación real aislada y dieciséis regresiones; detalles en PROJECT_MEMORY, sección Alcance del proyecto durante el chat v28.
+
+## 2026-10-27 — Referente conversacional separado de hechos docentes
+
+Nuevas preparaciones pueden capturar pares assistantText/teacherReply para interpretar respuestas como Las tres o una negación breve, con sourceKind explícito e IDs de ambos turnos. No se incluye propuesta sin respuesta posterior; messages conserva solo aportes docentes. Una aceptación permite prever propuestas, sin acreditar recursos ni actuaciones infantiles. Lectura anterior y capturas ya guardadas se conservan; autorización servidor por docente/aula/tramo. Detalle y reversión: docs/generador/CONTEXTO_DE_RESPUESTAS_Y_ALCANCE_V29.md.
+
+## 2026-10-27 — Transcripción completa con procedencia para el maestro
+
+A solicitud de considerar todo el chat, nuevas preparaciones capturan transcript ordenado con mensajes completados docentes y de Ayni, autor, sourceKind, IDs y opciones de respuesta. messages permanece solo docente; replyContext anterior y default histórico se conservan, sin backfill ni cambios a preparaciones existentes. La síntesis de Ayni no sustituye intención/correcciones docentes ni acredita recursos, hechos o resultados. El generador y sus lotes reciben la captura completa y privada de su docente/aula/tramo. Diecinueve pruebas de integración conservan aceptación Las tres, rechazo de pantalla, chips, última respuesta y aislamiento; tipos/build PASS, lint sin errores con aviso previo. Cero llamadas IA nuevas y no se regenera P03. Auditoría y límites en OBSERVACIONES_PENDIENTES, sección Auditoría del ZIP P03 aportado.
+
+## 2026-10-27 — Enlazar aportes previstos desde el maestro
+
+Planificación documental V4 solo en proyectos nuevos: reto/intención propios, previousActivityPosition, expectedContribution y newChallenge. startingPoint es derivado por servidor desde el aporte anterior para evitar duplicación de copia IA; no equivale a un resultado observado. El propósito del nuevo proyecto y su pregunta Word proceden del maestro; anual/guardados intactos. Actividades/lotes retoman el aporte como previsión y concretan el reto nuevo; si falta registro, no inventan ni reinician todo. Coherencia semántica se revisa en prueba real, no se equipara a títulos distintos. V1/V2/V3 siguen legibles y reanudables. Evidencia/rollback en MAESTRO_SECUENCIAL_V30.md.
+
+## 2026-10-27 — La continuidad debe aparecer dentro de la guía diaria
+
+En V4, progression y enlaces estructurales no bastan. El desarrollo ejecuta el procedimiento concreto de mainAction y el inicio/primer paso usa la pregunta o aporte previsto anterior sin fingir resultados. Evitar adelantar el reto de otra fecha solo para completar un referente; los criterios pueden focalizarlo. Dos casos completos y un lote correctivo real verifican el ajuste, conservando contrato, fuentes docentes y formato. Detalle: docs/generador/DOS_PRUEBAS_SECUENCIALES_V30.md.
+
+## 2026-10-27 — Intención anual y catálogo completo; escritura focalizada solo documental
+
+El maestro V4 nuevo selecciona referentes propios desde el catálogo por competencia/edad. Su breve anual omite únicamente IDs provisionales de oportunidades, conservando intención y chat; fuentes persistidas y validación permanecen completas. Actividades heredan después el maestro confirmado. Para Word, policy 4.0.1-documents-v31 usa focused_writing en workflow activity documental; runtime y petición comparten resolver, sin retries. Políticas del modo diario, maestro, anual y chat no cambian. La mejora de procedimientos se verifica mediante dos lotes reales, aceptando mayor coste por lote y sin afirmar menor tiempo universal. Evidencia: TRES_RONDAS_GENERALES_V31.md.
+
+
+## 2026-10-28 · Lenguaje sencillo sin perder currículo
+La guía usa acciones directas para la profesora y los niños, conservando competencias oficiales, criterios/evidencias y diferencias por edad. La papelería práctica guarda document_presentation_version=2 al confirmar resultados V32; nunca se aplica retroactivamente a documentos anteriores. Guía operativa primero, referencias después. No se añade otra llamada de IA. Dos rondas/22 Word revisados; detalle en `docs/generador/DOS_RONDAS_SIMPLICIDAD_V32.md`.
+
+
+## 2026-10-28 · Espera de IA no equivale a fallo del documento
+En la variante documental, anual/maestro/actividad/lote persisten un ID privado al iniciar una respuesta background y consultan esa misma respuesta. Polling y reinicio no incrementan intentos de creación ni disparan otro POST; se respetan backoff y límites. Solo respuestas válidas se aplican a fuentes vigentes. Corte antes de guardar ID y expiración siguen requiriendo recuperación explícita, con causa clara. Mantener store=false y explicar su retención temporal en documentación técnica. Modo diario/chat y prompts conservados. Validación y recuperación real: `docs/generador/RECUPERACION_DURABLE_IA_20261028.md`.
+
+
+## 2026-10-28 · Organización y revisión como contrato, no solo prompt
+Nuevas actividades documentales exigen planning V3: organización en apertura y revisión inicial/actual únicamente en cierre de última fecha. La guía se compone en servidor para servir igual a UI/Word, reservando longitudes; histórico V2 sigue legible. Nuevas fuentes guardan presentación 3, sin modificar estilos ni cuerpos anteriores. Citas cortas imprimen órdenes/páginas del catálogo y conservan IDs/textos completos congelados. No imponer método experimental a todo proyecto. Prueba real aislada de puentes completa; límites semánticos explícitos y 49 Word docentes idénticos tras activar. Ver `docs/generador/MEJORAS_GENERALES_Y_PRUEBA_PUENTES_V33.md`.
+
+
+## 2026-10-28 · Propuesta narrativa autorizada y selección curricular V2
+Con autorización expresa se permite crear situación significativa concreta cuando falta episodio docente, identificándola una vez como propuesta adaptable y preservando vacíos de evaluación real. Nuevos proyectos documentales guardan document_reference_selection_version=2: cada actividad selecciona de uno a tres referentes oficiales de su competencia/edad, sin copiar obligatoriamente el array del maestro. Históricos mantienen herencia exacta. Guardar/leer/exportar conserva padre, titularidad, fechas, edades y versión oficial. Prosa generada usa contrato de español, sin modificar enums/nombres protegidos ni fuentes antiguas. Recursos aplazados por usuario. Evidencia y límites en `docs/generador/SITUACION_PROPUESTA_Y_REFERENTES_DIARIOS_V34.md`.
+
+
+## 2026-10-28 · Identidades curriculares privadas y presentación 4
+El wire de nuevas generaciones documentales usa claves de competencia/edad para exigir una sola entrada autorizada; se adapta a listas canónicas, sin fusionar duplicados ni inventar faltantes. Mantener lectura de listas anteriores y política 2 de selección propia. Una investigación puede culminar comunicando sin fabricar un producto. La restricción de español debe ser idempotente sobre referencias compartidas. Normalizar nombres de schema a 64 caracteres con hash estable para evitar rechazo del proveedor. Presentación 4 solo para fuentes nuevas V35; 2/3 mantienen sus cuerpos. Guías y currículo ajustan espacios, sin disminuir tamaño de letra; enfoques del proyecto acompañan el currículo. Ver prueba real y conservación en `docs/generador/PRUEBA_COMPLETA_ANIMALES_V35.md`.
+
+## 2026-10-28 · Presentación 5 propia de la actividad
+La plantilla puede evolucionar sin modificar el proyecto ni sus textos. Nuevas actividades documentales emiten presentación 5 cuando la ruta anterior emitiría 4; mantener lectores y salida de 2/3/4. Tres momentos en cuadros de ancho completo y hojas diferenciadas para apoyos y currículo, aceptando una página adicional en la muestra corta antes que comprimir tipografía. Portada y arte aprobados conservados; ninguna llamada IA ni migración. Rollback conserva lectura de 5. Evidencia `docs/generador/PLANTILLA_ACTIVIDADES_CUADROS_V5.md`.
+
+## 2026-10-28 · Nómina congelada en el registro de cada actividad
+La presentación 6 conserva una lista autorizada de alumnos activos y sus edades curriculares al confirmar, sin enviar nombres nuevos a IA. Exportar utiliza esa fuente y no la matrícula posterior. Solo nombres/edades se completan automáticamente; observación, criterio registrado y apoyo siguen a cargo docente. Registros editables con filas amplias, encabezados repetidos y llenado opcional. Mantener formatos históricos y lector 6 en rollback. Ver `docs/generador/REGISTRO_ALUMNOS_ACTIVIDAD_V6.md`.
+
+## 2026-10-28 · Presentación propia del proyecto V7
+El proyecto puede mejorar su aspecto sin reescribir contenido ni cambiar la presentación de sus actividades. Nuevos maestros de la ruta V35 guardan 7, actividades 6; históricos intactos. Usar tablas para relaciones estructuradas, prosa a ancho completo para la situación y filas legibles con fechas completas. Conservar portada, estilos y arte; aceptar una hoja adicional en P11 para dar espacio. Mantener lectores en rollback. Detalle `docs/generador/PLANTILLA_PROYECTO_CUADROS_V7.md`.
+
+## 2026-10-28 · Exportaciones complementarias útiles sin registrar en Ayni
+Los formatos en blanco usan datos actuales autorizados del colegio y alumnos; las fuentes guardadas de planes/proyectos/actividades siguen congeladas. Precargar nombres/edades y datos existentes, nunca observaciones, calificaciones ni conclusiones. Informes por niño y talleres solo con su edad. Una casilla vacía no implica un nivel. Mantener arte Ayni y filas amplias editables en Word; el chat de planificación no se considera evidencia diagnóstica. Ver docs/generador/FORMATOS_COMPLEMENTARIOS_LISTOS_V8.md.
+
+## 2026-10-28 · Incorporar utilidad sin ampliar el trabajo docente
+Mantener el generador como base sencilla. Reutilizar oportunidades y cierre ya congelados para el mapa anual y revisión final; no añadir generación IA ni formularios. Presentaciones nuevas únicamente: anual 2, proyecto 8 y actividad 7, manteniendo las anteriores. Aclarar actores en los títulos existentes para conservar una guía completa por página incluso en el caso largo. No copiar Hoy ni registros operativos al generador. Detalle docs/generador/MEJORAS_SENCILLAS_Y_AISLAMIENTO_V9.md.
+
+## 2026-10-28 · Pruebas reales aisladas y orientación anual completa
+Probar generación real en almacén ficticio distinto, conservando y comparando el docente al restaurar. Usar createdAt para el reloj anual y conservar la etapa entre consultas. Versionar solo la política anual cuando cambia su organización: pedir 80–120 palabras y validar longitud/final, sin cortar texto ni modificar planes existentes. Citas del proyecto 8 antes de su tabla para evitar pies aislados; no cambiar presentaciones antiguas. Un archivo válido del servidor no equivale a una descarga de navegador comprobada. Detalle docs/generador/PRUEBA_INTERFAZ_REAL_V9.md.
+
+## 2026-10-28 · Mismo resultado documental con entradas distintas
+Adoptar la proyección y layouts compartidos para los tres documentos de planificación. No trasladar Hoy, evidencia operativa ni nuevas entrevistas al generador. Los referentes oficiales se conservan por edad/versión; las capacidades faltantes se resuelven desde catálogo local congelado coincidente. La nómina participa de la identidad de un nuevo artefacto del original y no modifica archivos anteriores. Proteger contratos antiguos incompletos con lectores existentes, sin fabricar contenido para exportar. Mantener ambas copias de los módulos comunes sincronizadas y comparar todas las partes DOCX. Detalle y validación: `docs/PLANNING_DOCUMENTS_COMMON.md`.
+
+
+### 2026-10-28 — Comparación real y reparación localizada del Master
+
+Mantener una política y presentación compartidas de proyecto/actividad, con enfoques oficiales y situación centrada en los niños. Las diferencias de edad y contexto no exigen texto de IA idéntico. Los nuevos párrafos documentales del Master original se validan con cierre de frase durante la generación; si uno queda cortado, una sola reparación de `document_planning` conserva actividades, competencias, criterios y fechas. En segundo plano se guarda y recupera el mismo ID de respuesta. No se endurece la lectura de históricos. Se conserva la guía breve separada del sustento y de la nómina. Evidencia y límites: `PLANNING_DOCUMENTS_REAL_QA.md`.
+
+
+## 2026-10-29 — Modalidades y publicación documental
+
+La elección de modalidad pertenece a la cuenta y se conserva al crear el aula; no convertir cuentas previas. El generador cloud usa el mismo motor y Word aprobados, también para una sola edad, con rol NOLOGIN/NOBYPASSRLS y claims transaccionales verificados. El Data API de navegadores mantiene sus permisos anteriores. Serverless continúa tareas por docente mediante after, lease, firma con identidad y nonce de un solo uso. Publicación autorizada en cuentas actuales por confirmación expresa del usuario; se conserva staging antes del alias.

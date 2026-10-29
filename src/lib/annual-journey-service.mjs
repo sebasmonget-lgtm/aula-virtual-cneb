@@ -1,3 +1,4 @@
+import { DOCUMENT_GENERATOR_ANNUAL_RULES } from './document-generator-prompts.mjs';
 import { annualFollowupForSnapshot } from './annual-current-context.mjs';
 import { resourceEligibleCompetencies } from "./annual-resource-policy.mjs";
 import {proposalIntentIssues} from "./annual-proposal-intent.mjs";
@@ -110,7 +111,7 @@ export async function generateAnnualJourney({ context, snapshot, curriculum, cal
       background, resumeResponseId: state.provider_responses?.[index], onResponseStarted: async responseId => {
         state.provider_responses ??= {}; state.provider_responses[index] = responseId; await persist(state.stage);
       } }).generate(buildProviderRequest(workflow,
-      { ...bundle, curriculum: { age: context.age, competency_cards: curriculum }, classroom: providerSnapshot(snapshot) }, routing, schema, JOURNEY_RULES));
+      { ...bundle, ...(context.document_generation_mode?{document_generation_mode:true}:{}), curriculum: { age: context.age, competency_cards: curriculum }, classroom: providerSnapshot(snapshot) }, routing, schema, context.document_generation_mode?`${JOURNEY_RULES}\n${DOCUMENT_GENERATOR_ANNUAL_RULES}`:JOURNEY_RULES));
     events.push({ ...metadata(response, routing, workflow, affected), duration_ms: Date.now() - begin });
     const output = response.output;
     state.outputs[index] = output;
@@ -252,7 +253,7 @@ export async function applyAnnualJourneyChanges(plan, { context, curriculum, pro
     }
     const routing = resolvePlan({ workflow, task: "generation" }), begin = Date.now();
     const response = await createProvider(routing, { timeoutMs: 180000 }).generate(buildProviderRequest(workflow,
-      { ...requestBundle, classroom: providerSnapshot(plan.classroom_snapshot), curriculum: { age: context.age, competency_cards: resourceEligibleCompetencies(curriculum, plan.classroom_snapshot.resources) } }, routing, requestSchema, JOURNEY_RULES));
+      { ...requestBundle, ...(context.document_generation_mode?{document_generation_mode:true}:{}), classroom: providerSnapshot(plan.classroom_snapshot), curriculum: { age: context.age, competency_cards: resourceEligibleCompetencies(curriculum, plan.classroom_snapshot.resources) } }, routing, requestSchema, context.document_generation_mode?`${JOURNEY_RULES}\n${DOCUMENT_GENERATOR_ANNUAL_RULES}`:JOURNEY_RULES));
     events.push({ ...metadata(response, routing, workflow, affected), duration_ms: Date.now() - begin });
     const output = assertJourneySchema(response.output, requestSchema);
     return scopedPatch ? { ...output, everyday_opportunities: plan.everyday_opportunities,

@@ -5,9 +5,9 @@ import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
 
 type Account = { id: string; name: string; role: "admin" | "teacher"; createdAt: string | null;
-  lastSignInAt: string | null; ai: { calls: number; unpricedCalls: number; estimatedCalls: number;
+  lastSignInAt: string | null; productMode?:'daily'|'documents'|null; ai: { calls: number; unpricedCalls: number; estimatedCalls: number;
     costUsd: number; monthCalls: number; monthCostUsd: number } };
-type Directory = { month: string; pricingVersion: string; accounts: Account[]; totalCostUsd: number; monthCostUsd: number };
+type Directory = { month: string; pricingVersion: string; accounts: Account[]; totalCostUsd: number; monthCostUsd: number; documentGeneratorAvailable?:boolean };
 const money = (value: number) => new Intl.NumberFormat("es-PE", { style: "currency", currency: "USD", maximumFractionDigits: 4 }).format(value);
 const date = (value: string | null) => value ? new Intl.DateTimeFormat("es-PE", { dateStyle: "medium" }).format(new Date(value)) : "Sin ingreso";
 const inputClass = "mt-2 w-full rounded-xl border border-[#bdd0dd] bg-white px-4 py-3 text-[#19334d] outline-none focus:border-[#087d96] focus:ring-2 focus:ring-[#087d96]/15";
@@ -21,6 +21,7 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
   const [dni, setDni] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [productMode,setProductMode]=useState<'daily'|'documents'>('daily');
   const [resetId, setResetId] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirmation, setNewPasswordConfirmation] = useState("");
@@ -50,10 +51,10 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
       if (password !== passwordConfirmation) throw new Error("Las contraseñas no coinciden.");
       const response = await apiFetch(`${localDatabaseApiUrl}/api/admin/accounts`, {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), dni, password }),
+        body: JSON.stringify({ name: name.trim(), dni, password,productMode }),
       });
       if (!response.ok) throw new Error("No se pudo crear la cuenta. Verifica el DNI, el nombre y si ya existe.");
-      setName(""); setDni(""); setPassword(""); setPasswordConfirmation("");
+      setName(""); setDni(""); setPassword(""); setPasswordConfirmation("");setProductMode('daily');
       await reload(); setNotice("Cuenta docente creada. Entrega la contraseña por un canal privado.");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo crear la cuenta."); }
     finally { setBusy(false); }
@@ -97,11 +98,16 @@ export function AdminWorkspace({ onSignOut }: { onSignOut: () => void }) {
             <div className="divide-y divide-[#e6edf3]">{directory.accounts.map((account) => <article key={account.id} className="p-5">
               <div className="flex flex-wrap justify-between gap-3"><div><h3 className="font-bold">{account.name}</h3><p className="text-sm text-[#526b87]">{account.role === "admin" ? "Administrador" : "Docente"} · Cuenta {account.id.slice(0, 8)} · Alta {date(account.createdAt)} · Último ingreso {date(account.lastSignInAt)}</p></div>
                 {account.role === "teacher" && <button type="button" onClick={() => { setResetId(account.id); setNewPassword(""); setNewPasswordConfirmation(""); setError(""); }} className="rounded-xl border border-[#bdd0dd] px-3 py-2 text-sm font-semibold text-[#087d96]">Restablecer contraseña</button>}</div>
+              {account.role === "teacher" && <p className="mt-2 text-sm font-semibold">{account.productMode==='documents'?'Solo generar documentos':'Acompañamiento del aula'}</p>}
               {account.role === "teacher" && <p className="mt-3 text-sm">IA: <strong>{money(account.ai.monthCostUsd)}</strong> este mes · <strong>{money(account.ai.costUsd)}</strong> acumulado · {account.ai.calls} llamadas{account.ai.unpricedCalls ? ` · ${account.ai.unpricedCalls} sin precio` : ""}{account.ai.estimatedCalls ? ` · ${account.ai.estimatedCalls} estimadas` : ""}</p>}
             </article>)}</div>}
         </section>
         <aside className="self-start rounded-2xl border border-[var(--ayni-panel-border)] bg-white p-5"><h2 className="text-xl font-bold">Nueva docente</h2><p className="mt-1 text-sm text-[#526b87]">La profesora ingresará con su DNI y la contraseña que le entregues.</p>
           <form onSubmit={(event) => void create(event)} className="mt-5 space-y-4">
+            <fieldset disabled={busy} className="space-y-3"><legend className="mb-2 text-sm font-semibold">Modalidad de Ayni</legend>
+              <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-[#bdd0dd] p-3"><input className="mt-1 h-5 w-5 shrink-0 accent-[#087d96]" type="radio" name="productMode" value="daily" checked={productMode==='daily'} onChange={()=>setProductMode('daily')}/><span><strong className="block">Acompañamiento del aula</strong><span className="text-sm text-[#526b87]">Planificación, observaciones y evaluación en Ayni.</span></span></label>
+              {directory?.documentGeneratorAvailable&&<label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-[#bdd0dd] p-3"><input className="mt-1 h-5 w-5 shrink-0 accent-[#087d96]" type="radio" name="productMode" value="documents" checked={productMode==='documents'} onChange={()=>setProductMode('documents')}/><span><strong className="block">Solo generar documentos</strong><span className="text-sm text-[#526b87]">Plan anual, proyectos y actividades para descargar y completar en Word.</span></span></label>}
+            </fieldset>
             <label className="block text-sm font-semibold">Nombre<input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} minLength={2} maxLength={100} required autoComplete="off" /></label>
             <label className="block text-sm font-semibold">DNI<input className={inputClass} value={dni} onChange={(event) => setDni(event.target.value.replace(/\D/g, ""))} inputMode="numeric" pattern="[0-9]{8}" maxLength={8} required autoComplete="off" /></label>
             <label className="block text-sm font-semibold">Contraseña inicial<input className={inputClass} type="password" value={password} onChange={(event) => setPassword(event.target.value)} minLength={12} required autoComplete="new-password" /></label>

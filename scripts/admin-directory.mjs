@@ -18,7 +18,7 @@ export async function loadAdminDirectory(db, authConfig, now = new Date()) {
   const accounts = users.map((user) => {
     const row = usage.get(user.id);
     return { id: user.id, name: String(user.user_metadata?.display_name ?? "Sin nombre").slice(0, 100),
-      role: user.app_metadata.ayni_role, createdAt: user.created_at ?? null, lastSignInAt: user.last_sign_in_at ?? null,
+      role: user.app_metadata.ayni_role, productMode:user.app_metadata.ayni_product_mode??null, createdAt: user.created_at ?? null, lastSignInAt: user.last_sign_in_at ?? null,
       ai: { calls: Number(row?.calls ?? 0), unpricedCalls: Number(row?.unpriced_calls ?? 0),
         estimatedCalls: Number(row?.estimated_calls ?? 0), costUsd: Number(row?.cost_usd ?? 0),
         monthCalls: Number(row?.month_calls ?? 0), monthCostUsd: Number(row?.month_cost_usd ?? 0) } };

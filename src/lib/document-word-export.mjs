@@ -1,3 +1,5 @@
+import {renderCommonPlanningWord,supportsCommonPlanning,AYNI_PLANNING_PRESENTATION} from './ayni-planning-document.mjs';
+import {planningExportRoster} from './ayni-planning-export-roster.mjs';
 import { renderAnnualJourneyWord } from "./annual-journey-word.mjs";
 import { AlignmentType, BorderStyle, Document, Footer, Header, HeadingLevel, ImageRun, PageNumber, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType } from "docx";
 import { buildAnnualPlanPresentation } from "./annual-plan-presentation.mjs";
@@ -273,6 +275,10 @@ export async function prepareWordDownload(db, teacherId, kind, id, competencyCar
   if(kind==="family_report"&&options.photoStorage){
     const student=(await db.query(`select s.profile_photo_path from students s join classrooms c on c.id=s.classroom_id where s.id=$1 and c.teacher_id=$2`,[document.student_id,teacherId])).rows[0];
     if(student?.profile_photo_path){const photo=await options.photoStorage.read(student.profile_photo_path,{teacherId,studentId:document.student_id});options={...options,studentPhoto:photo};}
+  }
+  if(options.planningPresentation!=='legacy'&&supportsCommonPlanning(document)){
+    const roster=options.roster??await planningExportRoster(db,teacherId,kind,id);
+    return {filename:wordFilenameFor(document),presentation:AYNI_PLANNING_PRESENTATION,buffer:await renderCommonPlanningWord(document,competencyCards,{...options,roster})};
   }
   return { filename: wordFilenameFor(document), buffer: await renderSavedDocumentWord(document, competencyCards, options) };
 }

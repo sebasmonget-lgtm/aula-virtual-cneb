@@ -1,0 +1,91 @@
+{
+  "version": "CNEB2016-capacities-v1",
+  "official_performance_version": "pci-inicial-2016-performances-v1",
+  "source": {
+    "id": "PCI_INICIAL_CANONICAL",
+    "title": "Programa Curricular de Educación Inicial",
+    "publisher": "Ministerio de Educación del Perú",
+    "year": 2016,
+    "url": "https://www.minedu.gob.pe/curriculo/pdf/programa-curricular-educacion-inicial.pdf",
+    "sha256": "1f5e7330099c894181b82265dccab9478e094b15cc766ef680608468a82c0821"
+  },
+  "competencies": {
+    "PS_IDENTIDAD": [
+      "Se valora a sí mismo",
+      "Autorregula sus emociones"
+    ],
+    "PS_CONVIVE": [
+      "Interactúa con todas las personas",
+      "Construye normas, y asume acuerdos y leyes",
+      "Participa en acciones que promueven el bienestar común"
+    ],
+    "PS_RELIGION": [
+      "Conoce a Dios y asume su identidad religiosa y espiritual como persona digna, libre y trascendente",
+      "Cultiva y valora las manifestaciones religiosas de su entorno argumentando su fe de manera comprensible y respetuosa"
+    ],
+    "PSICO_MOTRICIDAD": [
+      "Comprende su cuerpo",
+      "Se expresa corporalmente"
+    ],
+    "COM_ORAL": [
+      "Obtiene información del texto oral",
+      "Infiere e interpreta información del texto oral",
+      "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+      "Utiliza recursos no verbales y paraverbales de forma estratégica",
+      "Interactúa estratégicamente con distintos interlocutores",
+      "Reflexiona y evalúa la forma, el contenido y contexto del texto oral"
+    ],
+    "COM_LECTURA": [
+      "Obtiene información del texto escrito",
+      "Infiere e interpreta información del texto escrito",
+      "Reflexiona y evalúa la forma, el contenido y contexto del texto escrito"
+    ],
+    "COM_ESCRITURA": [
+      "Adecúa el texto a la situación comunicativa",
+      "Organiza y desarrolla las ideas de forma coherente y cohesionada",
+      "Utiliza convenciones del lenguaje escrito de forma pertinente",
+      "Reflexiona y evalúa la forma, el contenido y contexto del texto escrito"
+    ],
+    "COM_ARTE": [
+      "Explora y experimenta los lenguajes del arte",
+      "Aplica procesos creativos",
+      "Socializa sus procesos y proyectos"
+    ],
+    "CAST_L2_ORAL": [
+      "Obtiene información del texto oral",
+      "Infiere e interpreta información del texto oral",
+      "Adecúa, organiza y desarrolla el texto de forma coherente y cohesionada",
+      "Utiliza recursos no verbales y paraverbales de forma estratégica",
+      "Interactúa estratégicamente con distintos interlocutores",
+      "Reflexiona y evalúa la forma, el contenido y contexto del texto oral"
+    ],
+    "MAT_CANTIDAD": [
+      "Traduce cantidades a expresiones numéricas",
+      "Comunica su comprensión sobre los números y las operaciones",
+      "Usa estrategias y procedimientos de estimación y cálculo"
+    ],
+    "MAT_FORMA": [
+      "Modela objetos con formas geométricas y sus transformaciones",
+      "Comunica su comprensión sobre las formas y relaciones geométricas",
+      "Usa estrategias y procedimientos para orientarse en el espacio"
+    ],
+    "CYT_INDAGA": [
+      "Problematiza situaciones para hacer indagación",
+      "Diseña estrategias para hacer indagación",
+      "Genera y registra datos o información",
+      "Analiza datos e información",
+      "Evalúa y comunica el proceso y resultado de su indagación"
+    ],
+    "TRANS_TIC": [
+      "Personaliza entornos virtuales",
+      "Gestiona información del entorno virtual",
+      "Interactúa en entornos virtuales",
+      "Crea objetos virtuales en diversos formatos"
+    ],
+    "TRANS_AUTONOMO": [
+      "Define metas de aprendizaje",
+      "Organiza acciones estratégicas para alcanzar sus metas de aprendizaje",
+      "Monitorea y ajusta su desempeño durante el proceso de aprendizaje"
+    ]
+  }
+}

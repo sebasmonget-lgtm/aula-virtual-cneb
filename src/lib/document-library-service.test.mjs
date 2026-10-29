@@ -7,6 +7,7 @@ import { loadKnowledgeBaseV4 } from "./knowledge-base-v4.mjs";
 import { renderActivityUnifiedWord } from "./activity-unified-word.mjs";
 import { renderSavedDocumentWord } from "./document-word-export.mjs";
 import {diagnosticReportPeriod} from './diagnostic-report-reading.mjs';
+import {buildDocumentGeneratorProjectZip} from './document-generator-project-zip.mjs';
 
 const id = (number) => `00000000-0000-4000-8000-${String(number).padStart(12, "0")}`;
 
@@ -116,6 +117,20 @@ async function fixture() {
     [id(14), id(13), JSON.stringify({ introduction: "Compartimos avances", sections: [], closing_note: "Seguimos juntos", source_snapshot: "hidden" }), JSON.stringify({ tokens: 300 })]);
   return db;
 }
+
+test('ZIP V1 conserva proyecto, actividad y nombres sin incluir otras aulas o borradores',async()=>{
+ const db=await fixture();try{
+  await db.exec("alter table profiles add column preferences jsonb default '{}'::jsonb");
+  await db.query("update profiles set preferences='{\"ayni_product_mode\":\"documents\"}'::jsonb where user_id=$1",[id(1)]);
+  await db.query(`update learning_experiences set details=details||$1::jsonb where id=$2`,[JSON.stringify({activity_route:[{id:'ruta-1',number:1,title:'Jugar con sombras',date:'2026-04-02',specific_purpose:'Observar luz',competency_id:'CYT_INDAGA',evaluation_criterion:'Explora',expected_evidence:'Acción'}]}),id(10)]);
+  await db.query(`update activities set details=details||'{"route_item_id":"ruta-1"}'::jsonb where id=$1`,[id(12)]);
+  const before=(await db.query('select to_jsonb(a) as data from activities a order by id')).rows;
+  const result=await buildDocumentGeneratorProjectZip(db,id(1),id(10),{legacy:true}),zip=await JSZip.loadAsync(result.bytes),files=Object.keys(zip.files).filter(name=>!zip.files[name].dir);
+  assert.equal(files.length,2);assert.ok(files[0].startsWith('01 Proyecto/P01 - El huerto - '));assert.ok(files[1].startsWith('02 Actividades/P01 - A01 - Jugar con sombras - '));
+  assert.deepEqual((await db.query('select to_jsonb(a) as data from activities a order by id')).rows,before);
+  await assert.rejects(buildDocumentGeneratorProjectZip(db,id(2),id(10),{legacy:true}),/no está disponible/);
+ }finally{await db.close();}
+});
 
 test("la biblioteca lista registros canónicos de la docente y excluye contenido y filas legacy", async () => {
   const db = await fixture();

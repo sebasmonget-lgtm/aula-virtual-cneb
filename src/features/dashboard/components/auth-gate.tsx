@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { apiFetch } from "@/src/lib/ayni-api-fetch";
 import { localDatabaseApiUrl } from "@/src/lib/local-database";
-import { TeacherWorkspace } from "./teacher-workspace";
+import { CurriculumWorkspace as TeacherWorkspace } from "./curriculum-workspace";
 import { AdminWorkspace } from "./admin-workspace";
 import { QAClockControl } from "./qa-clock-control";
 

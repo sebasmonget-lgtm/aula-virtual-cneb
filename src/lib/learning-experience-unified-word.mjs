@@ -2,6 +2,7 @@ import { retainCoverPageBreak, compactCoverSpacers, guideDetails, keepShortTable
 import { routeObservationCriteria } from "./activity-observation-plan.mjs";
 import {projectFlexibilityGuidance,projectFlexibilityText,projectMediationNotes} from './activity-teacher-reading.mjs';
 import { ageReference, compactPlanningTable } from "./pedagogical-word-presentation.mjs";
+import {replacePracticalBody} from './document-generator-practical-word.mjs';
 import path from "node:path";
 import { insertCoverQuickView, removePageBreakAfterTable, removeParagraphsContaining, renderUnifiedWord, replaceWordText, xmlEscape } from "./unified-word-template.mjs";
 
@@ -38,10 +39,10 @@ function removeBetween(xml, startText, endText = null) {
   return xml.slice(0, start.index) + xml.slice(end?.index ?? xml.lastIndexOf("<w:sectPr"));
 }
 
-function valuesFor(document, cards) {
+function valuesFor(document, cards, multiAge = null) {
   const content = document.content ?? {};
   const modern = content.document_template_version === "experience-unified-v2";
-  if (!["experience-unified-v1", "experience-unified-v2"].includes(content.document_template_version) || !content.activity_route?.length)
+  if (!["experience-unified-v1", "experience-unified-v2"].includes(content.document_template_version) || !Array.isArray(content.activity_route) || !content.activity_route.length&&!multiAge)
     throw new Error("Esta experiencia no tiene ruta estructurada para la plantilla unificada.");
   const byId = new Map(cards.map((card) => [card.id, card]));
   const primary = content.primary_competency_ids ?? [];
@@ -50,7 +51,7 @@ function valuesFor(document, cards) {
   const title = document.subtype === "project" ? "PROYECTO" : "UNIDAD";
   const capacity = (card) => list(card?.capacities?.map((item) => item.official_name));
   const focus = (card, context) => ageReference(card,document.age,context);
-  const competencyRows = selected.map((id) => {
+  const competencyRows = multiAge?.competencyRows ?? selected.map((id) => {
     const card = byId.get(id);
     if (!card) throw new Error(`Competencia no disponible en la plantilla: ${id}.`);
     const activities = content.activity_route.filter((item) => (item.competency_ids ?? [item.competency_id]).includes(id));
@@ -73,7 +74,7 @@ function valuesFor(document, cards) {
     CODIGO_EXPERIENCIA: document.id.slice(0, 8).toUpperCase(), TITULO_EXPERIENCIA: document.title,
     FECHA_INICIO: dateLabel(document.starts_on), FECHA_FIN: dateLabel(document.ends_on),
     DURACION_REFERENCIAL: modern ? `${durationWeeks(document.starts_on, document.ends_on)}${content.activity_route.length?` · ${content.activity_route.length} ${content.activity_route.length===1?'día elegido: '+dateLabel(content.activity_route[0].date??content.activity_route[0].planned_date):'días elegidos'}`:''}` : "Ajustable según el grupo", INSTITUCION_EDUCATIVA: clean(document.institution_name) || "Institución educativa",
-    EDAD_AULA: `${document.age || ""} años · ${clean(document.classroom)}`,
+    EDAD_AULA: multiAge?.ageLabel ?? `${document.age || ""} años · ${clean(document.classroom)}`,
     DOCENTE: clean(document.teacher_name) || "Docente del aula", UGEL: clean(document.ugel),
     PRIORIDAD_ANUAL_O_PROYECTO_ORIGEN: document.origin === "planned" ? "Propuesta del plan anual" : clean(content.planning_reason),
     FECHA_SIGNIFICATIVA: clean(content.significant_date), ORIGEN_NECESIDAD_INTERES_PROBLEMA: clean(content.trigger_or_interest || content.learning_need_or_context || content.starting_point),
@@ -104,10 +105,10 @@ function valuesFor(document, cards) {
 }
 
 /** Render the planning state only; actual evidence and reflections enter after implementation. */
-export async function renderLearningExperienceUnifiedWord(document, cards = [], { logo = null } = {}) {
-  const { values, competencyRows } = valuesFor(document, cards);
+export async function renderLearningExperienceUnifiedWord(document, cards = [], { logo = null, multiAge = null } = {}) {
+  const { values, competencyRows } = valuesFor(document, cards, multiAge);
   const content = document.content ?? {};
-  const origin = guideDetails([
+  const origin = multiAge?.originXml ?? guideDetails([
     ["De dónde parte", clean(content.project_master?.meaningful_situation) || values.ORIGEN_NECESIDAD_INTERES_PROBLEMA === values.SITUACION_SIGNIFICATIVA ? "" : values.ORIGEN_NECESIDAD_INTERES_PROBLEMA],
     ["Situación para empezar", values.SITUACION_SIGNIFICATIVA],
     ["Fundamentación pedagógica", clean(content.project_master?.meaningful_situation) ? clean(content.project_master?.foundation) : clean(content.formal_content?.foundation)],
@@ -122,7 +123,7 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     ["Qué harán los niños", childJourney.length?childJourney:list((content.possible_pathways || content.proposed_situations)?.map(item=>item.possible_child_actions))],
     ["Cómo acompañará la docente", mediation.length?mediation:clean(content.formal_content?.methodology)],
     ["Materiales y recursos previstos", content.spaces_and_materials],
-    ["Acompañamiento y flexibilidad", values.AJUSTES_FLEXIBILIDAD],
+    ["Acompañamiento y flexibilidad", multiAge?"":values.AJUSTES_FLEXIBILIDAD],
   ]).replace(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g,row=>xmlText(row).startsWith('Cómo acompañará la docente')&&xmlText(row).length<=1400
     ?row.replace('<w:tr>','<w:tr><w:trPr><w:cantSplit/></w:trPr>'):row);
   const competencies = competencyRows.map(row => paragraph(row.COMPETENCIA, true) + guideDetails([
@@ -138,7 +139,7 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     ["Cómo acompañar los próximos encuentros", values.USO_EVIDENCIAS_PARA_AJUSTAR],
   ]);
   const byId = new Map(cards.map(card=>[card.id,card.name??card.official_name]));
-  const route = content.activity_route.some(item=>routeObservationCriteria(item).length>1)
+  const route = multiAge?.routeXml ?? (content.activity_route.some(item=>routeObservationCriteria(item).length>1)
     ? content.activity_route.map(item=>paragraph(`${item.number}. ${item.title} · ${dateLabel(item.date)}`,true)+
       paragraph(`Propósito: ${item.specific_purpose}`,false,false,true)+routeObservationCriteria(item).map(criterion=>
         paragraph(byId.get(criterion.competency_id)??criterion.competency_id,true)+keepShortTableTogether(guideDetails([
@@ -148,17 +149,17 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     `${item.number}. ${item.title}\n${dateLabel(item.date)}`,
     item.specific_purpose,
     routeObservationCriteria(item).map(criterion=>`${byId.get(criterion.competency_id)??criterion.competency_id}\n${criterion.criterion_text}\nEvidencia: ${criterion.expected_evidence}`).join("\n\n")
-  ]),[2600,2900,4500]);
-  const overview = [
+  ]),[2600,2900,4500]));
+  const overview = multiAge?.overview ?? [
     ["Así podría empezar", (content.activity_route ?? []).slice(0, 3).map((item) => item.title).filter(Boolean).join(" · ")],
   ].filter(([, value]) => value);
-  return renderUnifiedWord({ templateUrl, values, logo, compactTrailingSpace: true, transform(xml) {
+  return renderUnifiedWord({ templateUrl, values, logo, inlineImages:multiAge?.inlineImages??[], compactTrailingSpace: true, transform(xml) {
     let output = removeBetween(xml, "XI. SEGUIMIENTO DEL PROYECTO / UNIDAD");
     output = removeBetween(output, "IV. PLANIFICACIÓN CON LOS NIÑOS", "V. PROPÓSITO GENERAL");
     output = replaceSectionBody(output, "II. ORIGEN Y SITUACIÓN SIGNIFICATIVA", "III. PREPLANIFICACIÓN DOCENTE", origin);
     output = replaceSectionBody(output, "III. PREPLANIFICACIÓN DOCENTE", "V. PROPÓSITO GENERAL", preplan);
     output = replaceSectionBody(output, "VI. PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", "VII. ENFOQUES", competencies);
-    const transversal = guideDetails([["Enfoques previstos", content.transversal_approaches], ["Actitudes a acompañar", content.observable_attitudes], ["Apoyos previstos", values.APOYOS_DIVERSIDAD], ["Participación familiar acordada", values.PARTICIPACION_FAMILIA_COMUNIDAD]]);
+    const transversal = multiAge?.transversalXml ?? guideDetails([["Enfoques previstos", content.transversal_approaches], ["Actitudes a acompañar", content.observable_attitudes], ["Apoyos previstos", values.APOYOS_DIVERSIDAD], ["Participación familiar acordada", values.PARTICIPACION_FAMILIA_COMUNIDAD]]);
     output = transversal ? replaceSectionBody(output,"VII. ENFOQUES","VIII. ESTRATEGIA",transversal) : removeBetween(output,"VII. ENFOQUES","VIII. ESTRATEGIA");
     output = replaceSectionBody(output, "VIII. ESTRATEGIA GENERAL DE EVALUACIÓN", "IX. RUTA DE ACTIVIDADES", assessment);
     output = replaceSectionBody(output, "IX. RUTA DE ACTIVIDADES", "X. RECURSOS", route);
@@ -171,6 +172,7 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     output = removePageBreakAfterTable(output, "Materiales y recursos base");
     output = retainCoverPageBreak(output);
     output = replaceWordText(output, "RUTA DE ACTIVIDADES / SESIONES", "RUTA DE ACTIVIDADES");
+    if(multiAge)output=replaceWordText(output,'RUTA DE ACTIVIDADES','ORGANIZACIÓN PREVISTA');
     output = replaceWordText(output, "Desempeño / referente", "Referente para observar");
     for (const [from, to] of [["V", "IV"], ["VI", "V"], ["VII", "VI"], ["VIII", "VII"], ["IX", "VIII"], ["X", "IX"]]) {
       const heading = { V: "PROPÓSITO GENERAL", VI: "PROPÓSITOS DE APRENDIZAJE Y EVALUACIÓN", VII: "ENFOQUES",
@@ -181,9 +183,10 @@ export async function renderLearningExperienceUnifiedWord(document, cards = [], 
     const numerals=["I","II","III","IV","V","VI","VII","VIII","IX","X"];
     output=output.replace(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g,part=>{
       const title=xmlText(part);
-      if(!/^[IVX]+\. (?:DATOS GENERALES|ORIGEN|PREPLANIFICACIÓN|PROPÓSITO|ENFOQUES|ESTRATEGIA|RUTA)/.test(title))return part;
+      if(!/^[IVX]+\. (?:DATOS GENERALES|ORIGEN|PREPLANIFICACIÓN|PROPÓSITO|ENFOQUES|ESTRATEGIA|RUTA|ORGANIZACIÓN PREVISTA)/.test(title))return part;
       return replaceWordText(part,title,title.replace(/^[IVX]+/,numerals[section++]));
     });
+    if(multiAge?.bodyXml)return replacePracticalBody(compactCoverSpacers(insertCoverQuickView(output, 'El proyecto en una mirada', overview,{illustrationMarker:multiAge.inlineImages?.length?'AYNI_GUIA_ILUSTRACION':null})),multiAge.bodyXml,{illustrated:Boolean(multiAge.inlineImages?.length),simplePresentation:multiAge.simplePresentation===true,compactCurriculum:multiAge.compactCurriculum===true,compactGuide:multiAge.compactGuide===true,projectCards:multiAge.projectCards===true});
     return keepShortRowsTogether(compactCoverSpacers(insertCoverQuickView(output, "El proyecto en una mirada", overview)).replace(/<w:tbl(?:\s[^>]*)?>[\s\S]*?<\/w:tbl>/g,keepShortTableTogether));
   } });
 }

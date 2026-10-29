@@ -310,7 +310,7 @@ function LegacyAnnualPreplanWorkspace({ onConfirmed, onGoDiagnostic, onDevelop }
   </section>;
 }
 
-export function AnnualPreplanWorkspace(props: { explicitConversationStart?: boolean; onConfirmed?: () => void; onGoDiagnostic?: () => void; onDevelop?: (proposalId: string) => void;onGoToday?:()=>void }) {
+export function AnnualPreplanWorkspace(props: { documentsOnly?:boolean; explicitConversationStart?: boolean; onConfirmed?: () => void; onGoDiagnostic?: () => void; onDevelop?: (proposalId: string) => void;onGoToday?:()=>void }) {
   const [legacy, setLegacy] = useState(process.env.NEXT_PUBLIC_AYNI_ANNUAL_JOURNEY === "0");
   return legacy ? <><Button variant="ghost" onClick={() => setLegacy(false)}>Volver a Mi año con Ayni</Button><LegacyAnnualPreplanWorkspace {...props} /></>
     : <AnnualJourneyWorkspace {...props} onLegacy={() => setLegacy(true)} />;

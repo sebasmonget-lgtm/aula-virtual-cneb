@@ -24,7 +24,7 @@
 .suggestions { margin-top:14px; padding:12px; background:#eff8ff; border-radius:10px; }
 .suggestions h3 { font-size:12px; font-weight:750; margin-bottom:8px; }
 .suggestions>div { display:flex; flex-wrap:wrap; gap:6px; }
-.suggestions button { height:auto; min-height:36px; font-size:12px; white-space:normal; }
+.suggestions button { height:auto; min-height:36px; min-width:0; max-width:100%; flex-shrink:1; font-size:12px; white-space:normal; overflow-wrap:anywhere; text-align:left; }
 .composer { margin-top:14px; }
 .composer>div { display:flex; align-items:end; gap:8px; }
 .composer textarea { min-height:70px; max-height:140px; border:1px solid var(--input); border-radius:10px; padding:12px; resize:vertical; }

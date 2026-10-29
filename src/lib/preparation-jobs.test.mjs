@@ -21,6 +21,9 @@ test("bloque durable conserva resultados, reanuda sin IA, no duplica y confirma 
   const {db,teacher,project}=await fixture();try{
     const job=await enqueueActivityBlock(db,teacher,project);assert.equal((await enqueueActivityBlock(db,teacher,project)).id,job.id);
     await assert.rejects(()=>ownedPreparationJob(db,randomUUID(),job.id));
+    const untouched=await ownedPreparationJob(db,teacher,job.id);
+    assert.equal(await runPreparationStep(db,async()=>{throw Error('No ejecutar una preparación ajena');},{teacherId:randomUUID()}),null);
+    assert.deepEqual(await ownedPreparationJob(db,teacher,job.id),untouched);
     const pending=createPendingAIGenerationsStore(db);let calls=0,saves=0;
     const execute=preparationExecutor({db,pending,request:async(_job,path,body,_method,extra)=>{
       if(path==="/api/ai/activities/generate"){
