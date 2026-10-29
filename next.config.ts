@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     "/health": ["./assets/project-images/masters/**/*"],
   },
   outputFileTracingIncludes: {
+    // Word exports read these images from disk; CDN availability is insufficient.
+    "/api/**": ["./public/ayni-thinking-v2.webp", "./public/ayni-profesora.webp"],
     "/api/*": ["./knowledge/**/*", "./assets/**/*", "./public/workshops/**/*", "./public/competencies/compact/*.svg", "./public/project-illustrations/*.webp", "./biblioteca-talleres/**/*", "./skills/**/*", "./docs/auditoria-biblioteca-fichas-inventario.json", "./experiments/jev-competency-classifier/config/**/*", "./experiments/jev-competency-classifier/src/current-v2.mjs"],
     "/health": ["./knowledge/**/*", "./assets/**/*", "./public/workshops/**/*", "./public/competencies/compact/*.svg", "./public/project-illustrations/*.webp", "./biblioteca-talleres/**/*", "./skills/**/*", "./docs/auditoria-biblioteca-fichas-inventario.json", "./experiments/jev-competency-classifier/config/**/*", "./experiments/jev-competency-classifier/src/current-v2.mjs"],
   },
