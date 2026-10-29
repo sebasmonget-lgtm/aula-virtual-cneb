@@ -59,8 +59,14 @@ for(const ages of [[4],[3,4,5]])test(`RLS cloud ${ages.join('/')}: alta, año, p
   await drainDocumentCloud({db:scoped,teacherId:a,providerForJob,continueWork:async()=>{throw new Error('La prueba no necesita continuación');},budgetMs:60000});
   assert.equal((await loadMultiAgeGeneration(scoped,a,job.id)).status,'ready');
   await useDocumentGeneratorYear(scoped,a,{...confirmation(),classroomId:room,generationJobId:job.id});
+  // Match node-postgres BIGINT decoding at the workspace response boundary.
+  const query=scoped.query;scoped.query=async(sql,params)=>{const result=await query(sql,params);if(/select \* from annual_plans/iu.test(sql))return {...result,rows:result.rows.map(row=>({...row,revision:String(row.revision)}))};return result;};
   const planning=await multiAgeAnnualWorkspace(scoped,a,room),plan=planning.plans.find(p=>p.status==='active'),slot=planning.calendar.projects[0];
-  await startDocumentGeneratorProjectPreparation(scoped,a,{...confirmation(),classroomId:room,annualPlanId:plan.id,annualSlotId:slot.slot_id,expectedPlanRevision:plan.revision,selectedDates:slot.instructional_dates.slice(0,2)},{mode:'openai'});
+  scoped.query=query;
+  assert.equal(typeof plan.revision,'number');
+  const projectInput={...confirmation(),classroomId:room,annualPlanId:plan.id,annualSlotId:slot.slot_id,selectedDates:slot.instructional_dates.slice(0,2)};
+  for(const invalid of [plan.revision+1,true,[plan.revision],null,'2.0'])await assert.rejects(()=>startDocumentGeneratorProjectPreparation(scoped,a,{...projectInput,expectedPlanRevision:invalid},{mode:'openai'}),/Mi año cambió/u);
+  await startDocumentGeneratorProjectPreparation(scoped,a,{...projectInput,expectedPlanRevision:ages.length===1?String(plan.revision):plan.revision},{mode:'openai'});
   await drainDocumentCloud({db:scoped,teacherId:a,providerForJob,continueWork:async()=>{throw new Error('La prueba no necesita continuación');},budgetMs:60000});
   const prepared=await readDocumentGeneratorProjectPreparation(scoped,a,{classroomId:room,annualPlanId:plan.id,annualSlotId:slot.slot_id});
   assert.equal(prepared.status,'succeeded');assert.equal(prepared.completed,2);

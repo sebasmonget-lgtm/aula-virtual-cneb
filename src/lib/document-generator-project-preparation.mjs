@@ -39,7 +39,10 @@ export async function startDocumentGeneratorProjectPreparation(db,teacherId,inpu
  if(input.teacherConfirmed!==true)throw new TypeError('Acepta la propuesta y los días para preparar el proyecto.');
  const plan=(await db.query("select * from annual_plans where id=$1 and classroom_id=$2 and status='active' and curriculum_contract_version=2",[input.annualPlanId,input.classroomId])).rows[0];
  if(!plan)throw new CurriculumPermissionError();
- if(Number(plan.revision)!==input.expectedPlanRevision)throw new VersionConflictError('Mi año cambió. Recupera la propuesta antes de prepararla.');
+ // node-postgres returns bigint revisions as strings; older open clients may
+ // echo that representation. Keep the optimistic lock, accepting integers only.
+ const rawRevision=input.expectedPlanRevision,expectedRevision=typeof rawRevision==='number'||typeof rawRevision==='string'&&/^[1-9]\d*$/u.test(rawRevision)?Number(rawRevision):NaN;
+ if(!Number.isSafeInteger(expectedRevision)||Number(plan.revision)!==expectedRevision)throw new VersionConflictError('Mi año cambió. Recupera la propuesta antes de prepararla.');
  const slot=plan.document_context.calendar.projects.find(s=>s.slot_id===input.annualSlotId),row=plan.proposal.proposals.find(p=>p.slot_id===input.annualSlotId),dates=input.selectedDates;
  if(!slot||!row||!Array.isArray(dates)||!dates.length||dates.length>30||dates.some((d,i)=>!slot.instructional_dates.includes(d)||i>0&&d<=dates[i-1]))throw new TypeError('Elige días lectivos distintos y ordenados de este proyecto.');
  const previous=(await roots(db,teacherId,input.classroomId)).find(r=>r.input.annualPlanId===plan.id&&r.input.annualSlotId===input.annualSlotId);

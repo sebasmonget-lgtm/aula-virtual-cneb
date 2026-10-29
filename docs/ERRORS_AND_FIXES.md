@@ -2812,3 +2812,10 @@ La variante funcionaba solo con un servidor local y factories que bloqueaban clo
 Publicación cloud: el chat anual y su Word funcionaron; la siguiente llamada devolvió cuota insuficiente. Se confirmó mediante una petición mínima con la clave original: HTTP 429 `credit_balance_exhausted`, no límite de peticiones. La captura de gasto 29,31/120 USD no acredita saldo de créditos. Se conservó el contexto, con un intento y error conocido, sin reintentos automáticos de pago ni cambios de facturación. La prueba completa del proyecto en Vercel queda pendiente de resolver la cuota; no declarar todo el recorrido real aprobado.
 
 CLI Vercel 63.1.2 asignó el alias predeterminado aun usando `--skip-domain`. Se detectó consultando los dos aliases, se restauró el predeterminado al estable durante el smoke y se promovieron explícitamente al finalizar. El alias público nunca cambió durante la prueba previa. Prevención: verificar los destinos por API después de crear candidata, sin confiar solo en el flag.
+
+### 2026-10-28 — Revisión anual BIGINT al iniciar un proyecto cloud
+
+- Síntoma: después de recuperar el chat al recargar créditos, iniciar el proyecto devolvió 409 «Mi año cambió» sin haber modificado el anual ni iniciado otra generación.
+- Causa raíz: node-postgres devuelve `annual_plans.revision` BIGINT como string; PGlite lo entrega como número. La respuesta del workspace no normalizaba ese campo y el inicio comparaba estrictamente número contra string.
+- Corrección: revision numérica en la respuesta del workspace; aceptar en la comprobación un entero seguro o su representación decimal, conservando la comprobación de versión y rechazando booleanos, arrays, valores ausentes y versiones distintas. Sin cambios de fuentes, prompts ni migraciones.
+- Prevención: regresión cloud que reproduce la decodificación de PostgreSQL al leer el workspace y completa proyectos/ZIP para una y tres edades, con clientes numéricos y clientes anteriores que envían string. Validación real de la candidata y publicación de este ajuste se registrarán en RELEASE_MODALIDADES_20261029.md.

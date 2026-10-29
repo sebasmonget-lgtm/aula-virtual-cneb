@@ -163,7 +163,7 @@ export async function confirmMultiAgeAnnualPlan(db,teacherId,input){
 export async function multiAgeAnnualWorkspace(db,teacherId,classroomId){
   const data=await multiAgeAnnualContext(db,teacherId,classroomId),plans=(await db.query(`select * from annual_plans where classroom_id=$1 and curriculum_contract_version=2 order by version desc`,[classroomId])).rows;
   const active=plans.find(p=>p.status==='active'),preservation=active?await annualPreservation(db,data.diagnosis.classroom,active,active.proposal):{protectedSlots:[],links:[]};
-  return {diagnostic:data.diagnosis,calendar:data.calendar,sourceFingerprint:data.sourceFingerprint,protectedSlots:preservation.protectedSlots,projectLinks:preservation.links,plans:plans.map(p=>({...p,current:multiAgeAnnualPlanCurrent(p,data)})),exampleProposal:sampleMultiAgeAnnualProposal(data),coverage:data.eligible.map(g=>({age:g.age,competencies:g.cards.map(c=>({id:c.id,name:c.official_name,hasAgePerformance:officialPerformances(c.id,g.age).length>0}))}))};
+  return {diagnostic:data.diagnosis,calendar:data.calendar,sourceFingerprint:data.sourceFingerprint,protectedSlots:preservation.protectedSlots,projectLinks:preservation.links,plans:plans.map(p=>({...p,revision:Number(p.revision),current:multiAgeAnnualPlanCurrent(p,data)})),exampleProposal:sampleMultiAgeAnnualProposal(data),coverage:data.eligible.map(g=>({age:g.age,competencies:g.cards.map(c=>({id:c.id,name:c.official_name,hasAgePerformance:officialPerformances(c.id,g.age).length>0}))}))};
 }
 
 /** Validate lineage before the existing activity writer runs inside the SAME transaction. */
